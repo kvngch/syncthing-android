@@ -468,9 +468,11 @@ public class SyncthingService extends Service {
      */
     private void applyCustomRunConditions(RunConditionMonitor runConditionMonitor) {
         synchronized (mStateLock) {
-            if (mRestApi != null && mCurrentState == State.ACTIVE) {
-                // Forward event because syncthing is running.
-                mRestApi.applyCustomRunConditions(runConditionMonitor);
+            final RestApi restApi = mRestApi;
+            if (restApi != null) {
+                // Forward event because syncthing is running or starting. While it starts, it
+                // has read config.xml already: wait for its config to be loaded through the API.
+                restApi.runWhenConfigLoaded(() -> restApi.applyCustomRunConditions(runConditionMonitor));
                 return;
             }
         }

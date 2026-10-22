@@ -168,6 +168,12 @@ public class RestApi {
     private final Object mConfigLock = new Object();
 
     /**
+     * Config writes requested while Syncthing is starting, before its config is loaded.
+     * Run by {@link #onReloadConfigComplete}. Guarded by {@link #mConfigLock}.
+     */
+    private final List<Runnable> mPendingUntilConfigLoaded = new ArrayList<>();
+
+    /**
      * Stores the latest result of device and folder completion events.
      */
     private LocalCompletion mLocalCompletion;
@@ -295,6 +301,15 @@ public class RestApi {
             throw new RuntimeException("config is null: " + configResult);
         }
         Log.d(TAG, "onReloadConfigComplete: Successfully parsed configuration.");
+
+        List<Runnable> pendingActions;
+        synchronized (mConfigLock) {
+            pendingActions = new ArrayList<>(mPendingUntilConfigLoaded);
+            mPendingUntilConfigLoaded.clear();
+        }
+        for (Runnable action : pendingActions) {
+            action.run();
+        }
 
         synchronized (mConfigLock) {
             String logRemoteIgnoredDevices = mGson.toJson(mConfig.remoteIgnoredDevices);
@@ -824,6 +839,21 @@ public class RestApi {
                 Log.e(TAG, "getSystemStatus: Parsing REST API result failed. result=" + result);
             }
         }, error -> {});
+    }
+
+    /**
+     * Runs action now if the config is loaded. Otherwise Syncthing is starting: it has read
+     * config.xml already, so the action waits for the config to be loaded through the API.
+     */
+    public void runWhenConfigLoaded(Runnable action) {
+        synchronized (mConfigLock) {
+            if (mConfig == null) {
+                LogV("runWhenConfigLoaded: Config not loaded yet, deferring a config change.");
+                mPendingUntilConfigLoaded.add(action);
+                return;
+            }
+        }
+        action.run();
     }
 
     public boolean isConfigLoaded() {

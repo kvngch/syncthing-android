@@ -112,6 +112,14 @@ public class ConfigXml {
     }
 
     /**
+     * Parses config.xml without {@link #updateIfNeeded}, which may save it.
+     * For reads while the binary may be running.
+     */
+    public void loadConfigReadOnly() throws OpenConfigException {
+        parseConfig();
+    }
+
+    /**
      * This should run within an AsyncTask as it can cause a full CPU load
      * for more than 30 seconds on older phone hardware.
      */
