@@ -5,15 +5,12 @@ import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.Proxy
 import android.net.Uri
 import android.net.http.SslCertificate
 import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Parcelable
-import android.util.ArrayMap
 import android.util.Base64
 import android.util.Log
 import android.webkit.RenderProcessGoneDetail
@@ -42,9 +39,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
-import java.lang.reflect.Constructor
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import java.net.URL
 import java.security.GeneralSecurityException
 import java.security.cert.CertificateException
@@ -87,12 +81,6 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
             view: WebView,
             request: WebResourceRequest,
         ): Boolean = shouldOpenOutsideWebView(request.url)
-
-        // The WebResourceRequest overload above is only dispatched on API >= 24; minSdk is 23,
-        // so the deprecated String overload is required to intercept links on API 23 devices.
-        @Deprecated("Deprecated in Java")
-        override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean =
-            shouldOpenOutsideWebView(url.toUri())
 
         override fun onReceivedError(
             view: WebView,
@@ -284,12 +272,6 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
         webGuiLoadStarted = true
         currentWebView.stopLoading()
-        setWebViewProxy(
-            currentWebView.context.applicationContext,
-            "",
-            0,
-            WEB_VIEW_PROXY_EXCLUSIONS,
-        )
         currentWebView.loadUrl(webGuiUrl.toString(), createAuthHeaders())
     }
 
@@ -385,72 +367,5 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
     companion object {
         private const val TAG = "WebGuiActivity"
-        private const val WEB_VIEW_PROXY_EXCLUSIONS = "localhost|0.0.0.0|127.*|[::1]"
-
-        /**
-         * Set WebView proxy and sites that are not retrieved using proxy.
-         * Compatible with KitKat or higher android version.
-         * Returns boolean if successful.
-         * Source: https://stackoverflow.com/a/26781539
-         */
-        @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
-        private fun setWebViewProxy(
-            appContext: Context,
-            host: String,
-            port: Int,
-            exclusionList: String,
-        ): Boolean {
-            val properties = System.getProperties()
-            properties.setProperty("http.proxyHost", host)
-            properties.setProperty("http.proxyPort", port.toString())
-            properties.setProperty("https.proxyHost", host)
-            properties.setProperty("https.proxyPort", port.toString())
-            properties.setProperty("http.nonProxyHosts", exclusionList)
-            properties.setProperty("https.nonProxyHosts", exclusionList)
-
-            try {
-                val applicationClass = Class.forName("android.app.Application")
-                val loadedApkField: Field = applicationClass.getDeclaredField("mLoadedApk")
-                loadedApkField.isAccessible = true
-                val loadedApk = loadedApkField.get(appContext)
-                val loadedApkClass = Class.forName("android.app.LoadedApk")
-                val receiversField = loadedApkClass.getDeclaredField("mReceivers")
-                receiversField.isAccessible = true
-                val receivers = receiversField.get(loadedApk) as ArrayMap<*, *>
-                for (receiverMap in receivers.values) {
-                    for (receiver in (receiverMap as ArrayMap<*, *>).keys) {
-                        val clazz = receiver?.javaClass ?: continue
-                        if (clazz.name.contains("ProxyChangeListener")) {
-                            val onReceiveMethod: Method = clazz.getDeclaredMethod(
-                                "onReceive",
-                                Context::class.java,
-                                Intent::class.java,
-                            )
-                            val intent = Intent(Proxy.PROXY_CHANGE_ACTION)
-
-                            val proxyInfoClass = Class.forName("android.net.ProxyInfo")
-                            val constructor: Constructor<*> = proxyInfoClass.getConstructor(
-                                String::class.java,
-                                Integer.TYPE,
-                                String::class.java,
-                            )
-                            constructor.isAccessible = true
-                            val proxyProperties = constructor.newInstance(
-                                host,
-                                port,
-                                exclusionList,
-                            )
-                            intent.putExtra("proxy", proxyProperties as Parcelable)
-
-                            onReceiveMethod.invoke(receiver, appContext, intent)
-                        }
-                    }
-                }
-                return true
-            } catch (e: Exception) {
-                Log.w(TAG, "setWebViewProxy exception", e)
-            }
-            return false
-        }
     }
 }
