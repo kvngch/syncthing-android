@@ -23,8 +23,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.folder.FolderForm
 import com.nutomic.syncthingandroid.folder.FolderScreen
 import com.nutomic.syncthingandroid.folder.FolderViewModel
@@ -37,7 +37,6 @@ import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.Util
-import jakarta.inject.Inject
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
@@ -49,8 +48,7 @@ import kotlinx.coroutines.withContext
  */
 class FolderActivity : SyncthingActivity() {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private val viewModel: FolderViewModel by viewModels()
     private lateinit var config: ConfigRouter
@@ -83,7 +81,6 @@ class FolderActivity : SyncthingActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         config = ConfigRouter(this)

@@ -58,8 +58,8 @@ import androidx.core.content.IntentCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RunConditionMonitor
@@ -67,7 +67,6 @@ import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.Util
-import jakarta.inject.Inject
 import java.io.File
 import java.io.IOException
 import java.text.DateFormat
@@ -81,8 +80,7 @@ import kotlinx.coroutines.withContext
  */
 class ShareActivity : SyncthingActivity() {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private lateinit var config: ConfigRouter
 
@@ -112,7 +110,6 @@ class ShareActivity : SyncthingActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         config = ConfigRouter(this)

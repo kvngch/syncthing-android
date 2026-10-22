@@ -77,7 +77,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.inject.Inject;
 
 import static com.nutomic.syncthingandroid.util.Util.getLocalZonedDateTime;
 
@@ -195,11 +194,11 @@ public class RestApi {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    @Inject NotificationHandler mNotificationHandler;
+    NotificationHandler mNotificationHandler;
 
     public RestApi(Context context, URL url, String apiKey, OnApiAvailableListener apiListener,
                    OnConfigChangedListener configListener) {
-        ((SyncthingApp) context.getApplicationContext()).component().inject(this);
+        mNotificationHandler = ((SyncthingApp) context.getApplicationContext()).getNotificationHandler();
         ENABLE_VERBOSE_LOG = AppPrefs.getPrefVerboseLog(context);
         mContext = context;
         mUrl = url;

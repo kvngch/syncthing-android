@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
+import androidx.preference.PreferenceManager;
 import com.google.common.io.Files;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
@@ -39,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import javax.inject.Inject;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -237,10 +237,8 @@ public class SyncthingService extends Service {
     private @Nullable
     SyncthingRunnable mSyncthingRunnable = null;
 
-    @Inject
     NotificationHandler mNotificationHandler;
 
-    @Inject
     SharedPreferences mPreferences;
 
     /**
@@ -264,7 +262,8 @@ public class SyncthingService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        ((SyncthingApp) getApplication()).component().inject(this);
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mNotificationHandler = ((SyncthingApp) getApplication()).getNotificationHandler();
         ENABLE_VERBOSE_LOG = AppPrefs.getPrefVerboseLog(mPreferences);
         LogV("onCreate");
         mConfigRouter = new ConfigRouter(SyncthingService.this);

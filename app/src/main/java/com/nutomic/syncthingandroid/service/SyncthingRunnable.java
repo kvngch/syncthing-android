@@ -12,6 +12,7 @@ import android.net.wifi.WifiManager.MulticastLock;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.preference.PreferenceManager;
 import com.google.common.base.Charsets;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
@@ -32,7 +33,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.inject.Inject;
 
 import static com.nutomic.syncthingandroid.service.SyncthingService.EXTRA_STOP_AFTER_CRASHED_NATIVE;
 
@@ -75,10 +75,8 @@ public class SyncthingRunnable implements Runnable {
      */
     private volatile boolean mStopRequested = false;
 
-    @Inject
     SharedPreferences mPreferences;
 
-    @Inject
     NotificationHandler mNotificationHandler;
 
     public enum Command {
@@ -95,7 +93,8 @@ public class SyncthingRunnable implements Runnable {
      * @param command Which type of Syncthing command to execute.
      */
     public SyncthingRunnable(Context context, Command command) {
-        ((SyncthingApp) context.getApplicationContext()).component().inject(this);
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        mNotificationHandler = ((SyncthingApp) context.getApplicationContext()).getNotificationHandler();
         ENABLE_VERBOSE_LOG = AppPrefs.getPrefVerboseLog(mPreferences);
         mContext = context;
         // Example: mSyncthingBinary="/data/app/${applicationId}-8HsN-IsVtZXc8GrE5-Hepw==/lib/x86/libsyncthingnative.so"

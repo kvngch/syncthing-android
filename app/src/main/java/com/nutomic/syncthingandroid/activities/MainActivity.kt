@@ -14,8 +14,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.fragments.DeviceIdDialogFragment
 import com.nutomic.syncthingandroid.main.MainScreen
 import com.nutomic.syncthingandroid.onboarding.OnboardingActivity
@@ -24,7 +24,6 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.PermissionUtil
-import jakarta.inject.Inject
 import kotlinx.coroutines.channels.Channel
 
 /**
@@ -32,8 +31,7 @@ import kotlinx.coroutines.channels.Channel
  */
 class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeListener {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private var boundService by mutableStateOf<SyncthingService?>(null)
     private var serviceState by mutableStateOf(SyncthingService.State.INIT)
@@ -41,7 +39,6 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
     private val menuKeyPresses = Channel<Unit>(Channel.CONFLATED)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

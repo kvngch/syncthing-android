@@ -45,7 +45,7 @@ public class NotificationHandler {
     private Boolean lastStartForegroundService = false;
     private Boolean appShutdownInProgress = false;
 
-    // Dagger2 constructor injection - receives SharedPreferences directly to avoid circular dependency
+    // Created once, by SyncthingApp.
     public NotificationHandler(Context context, SharedPreferences preferences) {
         mContext = context;
         mPreferences = preferences;

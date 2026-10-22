@@ -43,11 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
-import jakarta.inject.Inject
 
 /**
  * Exceptions to the global run conditions for one folder or device, stored in the preferences
@@ -55,8 +54,7 @@ import jakarta.inject.Inject
  */
 class SyncConditionsActivity : ThemedAppCompatActivity() {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private lateinit var prefix: String
     private var conditions by mutableStateOf<Conditions?>(null)
@@ -83,7 +81,6 @@ class SyncConditionsActivity : ThemedAppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val objectPrefix = intent.getStringExtra(EXTRA_OBJECT_PREFIX_AND_ID)

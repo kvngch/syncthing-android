@@ -38,13 +38,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.os.BundleCompat
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.PermissionUtil
-import jakarta.inject.Inject
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -57,8 +56,7 @@ import java.util.Locale
  */
 class PhotoShootActivity : ThemedAppCompatActivity() {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     /**
      * The file the camera app writes to, until its result comes back.
@@ -79,7 +77,6 @@ class PhotoShootActivity : ThemedAppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

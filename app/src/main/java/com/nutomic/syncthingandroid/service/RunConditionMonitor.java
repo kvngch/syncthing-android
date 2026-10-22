@@ -22,6 +22,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.preference.PreferenceManager;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
 import com.nutomic.syncthingandroid.util.JobUtils;
@@ -29,7 +30,6 @@ import com.nutomic.syncthingandroid.util.JobUtils;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
 
 /**
  * Holds information about the current wifi and charging state of the device.
@@ -113,7 +113,6 @@ public class RunConditionMonitor {
     private int triggeredSyncDurationS = 10;
     private int triggeredSyncSleepIntervalS = 10;
 
-    @Inject
     SharedPreferences mPreferences;
 
     /**
@@ -134,7 +133,7 @@ public class RunConditionMonitor {
     public RunConditionMonitor(Context context,
             OnShouldRunChangedListener onShouldRunChangedListener,
             OnSyncPreconditionChangedListener onSyncPreconditionChangedListener) {
-        ((SyncthingApp) context.getApplicationContext()).component().inject(this);
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         ENABLE_VERBOSE_LOG = AppPrefs.getPrefVerboseLog(mPreferences);
         LogV("Created new instance");
         mContext = context;
