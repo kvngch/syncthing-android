@@ -132,7 +132,7 @@ class RestApi(
      * Config writes requested while Syncthing is starting, before its config is loaded.
      * Run by [onReloadConfigComplete].
      */
-    private val pendingUntilConfigLoaded = mutableListOf<() -> Unit>()
+    private val pendingUntilConfigLoaded = mutableListOf<Runnable>()
 
     /**
      * Results cached from the system status.
@@ -277,7 +277,7 @@ class RestApi(
         val pendingActions = synchronized(configLock) {
             pendingUntilConfigLoaded.toList().also { pendingUntilConfigLoaded.clear() }
         }
-        pendingActions.forEach { it() }
+        pendingActions.forEach { it.run() }
 
         if (verboseLog) {
             synchronized(configLock) {
@@ -660,7 +660,7 @@ class RestApi(
      * Runs action now if the config is loaded. Otherwise Syncthing is starting: it has read
      * config.xml already, so the action waits for the config to be loaded through the API.
      */
-    fun runWhenConfigLoaded(action: () -> Unit) {
+    fun runWhenConfigLoaded(action: Runnable) {
         synchronized(configLock) {
             if (config == null) {
                 logV("runWhenConfigLoaded: Config not loaded yet, deferring a config change.")
@@ -668,7 +668,7 @@ class RestApi(
                 return
             }
         }
-        action()
+        action.run()
     }
 
     /**
