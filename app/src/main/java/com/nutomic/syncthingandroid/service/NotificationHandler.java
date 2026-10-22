@@ -51,39 +51,33 @@ public class NotificationHandler {
         mPreferences = preferences;
         mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mPersistentChannel = new NotificationChannel(
-                    CHANNEL_PERSISTENT, mContext.getString(R.string.notifications_persistent_channel),
-                    NotificationManager.IMPORTANCE_MIN);
-            mPersistentChannel.enableLights(false);
-            mPersistentChannel.enableVibration(false);
-            mPersistentChannel.setSound(null, null);
-            mPersistentChannel.setShowBadge(false);
-            mPersistentChannel.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
-            mNotificationManager.createNotificationChannel(mPersistentChannel);
+        mPersistentChannel = new NotificationChannel(
+                CHANNEL_PERSISTENT, mContext.getString(R.string.notifications_persistent_channel),
+                NotificationManager.IMPORTANCE_MIN);
+        mPersistentChannel.enableLights(false);
+        mPersistentChannel.enableVibration(false);
+        mPersistentChannel.setSound(null, null);
+        mPersistentChannel.setShowBadge(false);
+        mPersistentChannel.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
+        mNotificationManager.createNotificationChannel(mPersistentChannel);
 
-            mPersistentChannelWaiting = new NotificationChannel(
-                    CHANNEL_PERSISTENT_WAITING, mContext.getString(R.string.notification_persistent_waiting_channel),
-                    NotificationManager.IMPORTANCE_MIN);
-            mPersistentChannelWaiting.enableLights(false);
-            mPersistentChannelWaiting.enableVibration(false);
-            mPersistentChannelWaiting.setSound(null, null);
-            mPersistentChannelWaiting.setShowBadge(false);
-            mPersistentChannelWaiting.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
-            mNotificationManager.createNotificationChannel(mPersistentChannelWaiting);
+        mPersistentChannelWaiting = new NotificationChannel(
+                CHANNEL_PERSISTENT_WAITING, mContext.getString(R.string.notification_persistent_waiting_channel),
+                NotificationManager.IMPORTANCE_MIN);
+        mPersistentChannelWaiting.enableLights(false);
+        mPersistentChannelWaiting.enableVibration(false);
+        mPersistentChannelWaiting.setSound(null, null);
+        mPersistentChannelWaiting.setShowBadge(false);
+        mPersistentChannelWaiting.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
+        mNotificationManager.createNotificationChannel(mPersistentChannelWaiting);
 
-            mInfoChannel = new NotificationChannel(
-                    CHANNEL_INFO, mContext.getString(R.string.notifications_other_channel),
-                    NotificationManager.IMPORTANCE_LOW);
-            mInfoChannel.enableVibration(false);
-            mInfoChannel.setSound(null, null);
-            mInfoChannel.setShowBadge(true);
-            mNotificationManager.createNotificationChannel(mInfoChannel);
-        } else {
-            mPersistentChannel = null;
-            mPersistentChannelWaiting = null;
-            mInfoChannel = null;
-        }
+        mInfoChannel = new NotificationChannel(
+                CHANNEL_INFO, mContext.getString(R.string.notifications_other_channel),
+                NotificationManager.IMPORTANCE_LOW);
+        mInfoChannel.enableVibration(false);
+        mInfoChannel.setSound(null, null);
+        mInfoChannel.setShowBadge(true);
+        mNotificationManager.createNotificationChannel(mInfoChannel);
     }
 
     private NotificationCompat.Builder getNotificationBuilder(NotificationChannel channel) {
