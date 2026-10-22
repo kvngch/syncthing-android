@@ -57,6 +57,10 @@ touche() {
 
 ecran_actif() { adb shell dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'; }
 
+# A slow emulator shows "Pixel Launcher isn't responding" over the app, hide_error_dialogs
+# notwithstanding: taps would land on that window.
+attendre_anr() { touche "Wait" >/dev/null && sleep 2; }
+
 retour() { adb shell input keyevent KEYCODE_BACK; sleep 2; }
 
 # Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up.
@@ -65,6 +69,7 @@ sleep 10
 photo 00-onboarding
 for _ in $(seq 1 30); do
   ecran_actif | grep -q MainActivity && break
+  attendre_anr
   touche "Continue" >/dev/null || touche "Finish" >/dev/null
   sleep 5
 done
@@ -85,6 +90,7 @@ touche "Status" && sleep 3 && photo 03-statut
 # screen asks "Discard your changes?".
 principal() {
   for _ in 1 2 3 4 5 6; do
+    attendre_anr
     ecran_actif | grep -q MainActivity && return 0
     touche "OK" >/dev/null && sleep 2 || retour
   done
