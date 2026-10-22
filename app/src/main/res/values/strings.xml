@@ -304,6 +304,7 @@
 
     <!-- Toast shown when trying to create a folder with an empty ID -->
     <string name="folder_id_required">The folder ID must not be empty</string>
+    <string name="folder_id_exists">A folder with this ID already exists.</string>
 
     <!-- Toast shown when trying to create a folder with an empty label -->
     <string name="folder_label_required">The folder label must not be empty</string>

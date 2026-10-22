@@ -114,6 +114,7 @@
     <string name="remove_folder_confirm">Voulez-vous vraiment enlever ce partage de Syncthing ?</string>
     <!-- Toast shown when trying to create a folder with an empty ID -->
     <string name="folder_id_required">L\'ID du partage ne doit pas être vide</string>
+    <string name="folder_id_exists">Un dossier avec cet identifiant existe déjà.</string>
     <!-- Toast shown when trying to create a folder with an empty path -->
     <string name="folder_path_required">Le chemin du répertoire ne doit pas être vide</string>
     <string name="dialog_discard_changes">Annuler vos modifications ?</string>

@@ -522,6 +522,11 @@ public class ConfigXml {
             folder.sendXattrs = getContentOrDefault(r.getElementsByTagName("sendXattrs").item(0), folder.sendXattrs);
             folder.blockIndexing = getContentOrDefault(r.getElementsByTagName("blockIndexing").item(0), folder.blockIndexing);
             folder.filesystemType = getContentOrDefault(r.getElementsByTagName("filesystemType").item(0), folder.filesystemType);
+            folder.markerName = getContentOrDefault(r.getElementsByTagName("markerName").item(0), folder.markerName);
+            folder.disableSparseFiles = getContentOrDefault(r.getElementsByTagName("disableSparseFiles").item(0), folder.disableSparseFiles);
+            folder.pullerMaxPendingKiB = getContentOrDefault(r.getElementsByTagName("pullerMaxPendingKiB").item(0), folder.pullerMaxPendingKiB);
+            folder.scanProgressIntervalS = getContentOrDefault(r.getElementsByTagName("scanProgressIntervalS").item(0), folder.scanProgressIntervalS);
+            folder.pullerPauseS = getContentOrDefault(r.getElementsByTagName("pullerPauseS").item(0), folder.pullerPauseS);
 
             // Devices
             /*
