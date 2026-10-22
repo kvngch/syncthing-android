@@ -106,6 +106,28 @@ public class ConfigRouter {
         restApi.runWhenConfigLoaded(() -> restApi.updateFolder(folder));       // This will send the config afterwards.
     }
 
+    /**
+     * Same as updateFolder for several folders, written at once: one config.xml save or one send.
+     */
+    public void updateFolders(RestApi restApi, final List<Folder> folders) {
+        if (folders.isEmpty()) {
+            return;
+        }
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
+            configXml.loadConfig();
+            for (Folder folder : folders) {
+                configXml.updateFolder(folder);
+            }
+            configXml.saveChanges();
+            return;
+        }
+
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.updateFolders(folders));
+    }
+
     public void removeFolder(RestApi restApi, final String folderId) {
         if (restApi == null) {
             // Syncthing is not running: config.xml is not in use.

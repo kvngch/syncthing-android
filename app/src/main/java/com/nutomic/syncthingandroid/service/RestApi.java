@@ -801,9 +801,18 @@ public class RestApi {
     }
 
     public void updateFolder(Folder newFolder) {
+        updateFolders(Collections.singletonList(newFolder));
+    }
+
+    /**
+     * Replaces several folders, then sends the config once.
+     */
+    public void updateFolders(List<Folder> newFolders) {
         synchronized (mConfigLock) {
-            removeFolderInternal(newFolder.id);
-            mConfig.folders.add(newFolder);
+            for (Folder newFolder : newFolders) {
+                removeFolderInternal(newFolder.id);
+                mConfig.folders.add(newFolder);
+            }
             sendConfig();
         }
     }

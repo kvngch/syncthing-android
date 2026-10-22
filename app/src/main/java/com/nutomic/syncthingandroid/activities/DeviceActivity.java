@@ -57,6 +57,7 @@ import com.nutomic.syncthingandroid.util.ConfigXml.OpenConfigException;
 import com.nutomic.syncthingandroid.util.TextWatcherAdapter;
 import com.nutomic.syncthingandroid.util.Util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -631,8 +632,25 @@ public class DeviceActivity extends SyncthingActivity {
                     .show();
             return;
         }
+        if (mIsCreateMode) {
+            // Adding a device already in the config would silently overwrite it.
+            List<Device> existingDevices;
+            try {
+                existingDevices = mConfig.getDevices(getApi(), true);
+            } catch (OpenConfigException e) {
+                Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show();
+                return;
+            }
+            for (Device device : existingDevices) {
+                if (device.deviceID.equals(mDevice.deviceID)) {
+                    Toast.makeText(this, R.string.device_id_exists, Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+        }
 
         // Loop through devices the folder is shared to and update encryptionPassword property.
+        List<Folder> foldersToUpdate = new ArrayList<>();
         for (int i = 0; i < mFoldersContainer.getChildCount(); i++) {
             if (mFoldersContainer.getChildAt(i) instanceof TextView) {
                 continue;
@@ -651,8 +669,10 @@ public class DeviceActivity extends SyncthingActivity {
             } else {
                 folder.removeDevice(mDevice.deviceID);
             }
-            mConfig.updateFolder(getApi(), folder);
+            foldersToUpdate.add(folder);
         }
+        // One write for all folders, instead of one config send per folder.
+        mConfig.updateFolders(getApi(), foldersToUpdate);
 
         if (mIsCreateMode) {
             Log.v(TAG, "onSave: Adding device with ID = \'" + mDevice.deviceID + "\'");
