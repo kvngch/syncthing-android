@@ -1,17 +1,18 @@
 package com.nutomic.syncthingandroid.service
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.nutomic.syncthingandroid.model.Gui
 import com.nutomic.syncthingandroid.model.Options
+import com.nutomic.syncthingandroid.model.SyncthingJson
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class RestApiTest {
 
-    private fun json(s: String): JsonObject = JsonParser.parseString(s).asJsonObject
+    private fun json(s: String): JsonObject = SyncthingJson.parseToJsonElement(s).jsonObject
 
     @Test
     fun mergeKeepsFieldsUnknownToTheModel() {
@@ -90,12 +91,11 @@ class RestApiTest {
 
     @Test
     fun xmlNamedFieldsAreNotSentAsJson() {
-        val gson = Gson()
-        val options = gson.toJsonTree(Options()).asJsonObject
-        val gui = gson.toJsonTree(Gui()).asJsonObject
-        assertFalse(options.has("stunServer"))
-        assertFalse(options.has("featureFlag"))
-        assertFalse(options.has("unackedNotificationID"))
-        assertFalse(gui.has("insecureSkipHostCheck"))
+        val options = SyncthingJson.encodeToJsonElement(Options()).jsonObject
+        val gui = SyncthingJson.encodeToJsonElement(Gui()).jsonObject
+        assertFalse("stunServer" in options)
+        assertFalse("featureFlag" in options)
+        assertFalse("unackedNotificationID" in options)
+        assertFalse("insecureSkipHostCheck" in gui)
     }
 }

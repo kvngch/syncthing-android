@@ -1,13 +1,14 @@
 package com.nutomic.syncthingandroid.model
 
 import com.nutomic.syncthingandroid.service.Constants
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
 /**
  * Sources:
  * - https://github.com/syncthing/syncthing/tree/master/lib/config
  * - https://github.com/syncthing/syncthing/blob/master/lib/config/folderconfiguration.go
  */
+@Serializable
 class Folder {
     // Folder Configuration
     @JvmField var group: String = ""
@@ -81,7 +82,8 @@ class Folder {
     // Folder Status
     @JvmField var invalid: String? = null
 
-    class Versioning : Serializable {
+    @Serializable
+    class Versioning {
         @JvmField var type: String? = null
         @JvmField var cleanupIntervalS: Int = 0
         @JvmField var params: MutableMap<String, String> = HashMap()
@@ -91,6 +93,7 @@ class Folder {
         @JvmField var fsType: String? = null // default: "basic"
     }
 
+    @Serializable
     class MinDiskFree {
         @JvmField var value: Float = 1f
         @JvmField var unit: String = "%"

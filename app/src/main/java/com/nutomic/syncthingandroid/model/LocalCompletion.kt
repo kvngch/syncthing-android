@@ -1,7 +1,6 @@
 package com.nutomic.syncthingandroid.model
 
 import android.util.Log
-import com.google.gson.Gson
 import java.util.AbstractMap.SimpleEntry
 import kotlin.math.floor
 
@@ -11,7 +10,6 @@ import kotlin.math.floor
  */
 class LocalCompletion(private val verboseLog: Boolean) {
 
-    private val gson = Gson()
     private val folderMap = HashMap<String, Map.Entry<FolderStatus, CachedFolderStatus>>()
 
     /**
@@ -57,7 +55,7 @@ class LocalCompletion(private val verboseLog: Boolean) {
     @Synchronized
     fun getFolderStatus(folderId: String?): Map.Entry<FolderStatus, CachedFolderStatus> {
         val entry = folderId?.let(folderMap::get) ?: return SimpleEntry(FolderStatus(), CachedFolderStatus())
-        return SimpleEntry(copyOf(entry.key), copyOf(entry.value))
+        return SimpleEntry(entry.key.deepCopy(), entry.value.deepCopy())
     }
 
     /**
@@ -112,8 +110,6 @@ class LocalCompletion(private val verboseLog: Boolean) {
         entry.value.update()
         folderMap[folderId] = SimpleEntry(entry.key, entry.value)
     }
-
-    private inline fun <reified T> copyOf(value: T): T = gson.fromJson(gson.toJson(value), T::class.java)
 
     private fun logV(message: String) {
         if (verboseLog) {

@@ -1,8 +1,11 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * REST API endpoint "/rest/system/status"
  */
+@Serializable
 class SystemStatus {
     // Example: 25857744
     @JvmField var alloc: Long = 0

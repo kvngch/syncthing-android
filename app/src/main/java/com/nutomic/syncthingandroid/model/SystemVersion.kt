@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class SystemVersion {
     @JvmField var arch: String? = null
     @JvmField var codename: String? = null

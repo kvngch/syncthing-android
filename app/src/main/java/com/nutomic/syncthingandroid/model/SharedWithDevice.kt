@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class SharedWithDevice {
     @JvmField var deviceID: String? = null
     @JvmField var introducedBy: String = ""

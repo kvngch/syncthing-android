@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class FolderStatus {
     @JvmField var error: String = ""
     @JvmField var errors: Long = 0

@@ -10,17 +10,20 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import com.google.gson.Gson
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
-import com.google.gson.JsonPrimitive
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.model.Event
 import com.nutomic.syncthingandroid.model.FolderStatus
+import com.nutomic.syncthingandroid.model.SyncthingJson
 import java.io.File
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * Run by the syncthing service to forward Syncthing's events to the REST API's caches, the
@@ -40,7 +43,6 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
-    private val gson = Gson()
 
     /**
      * Runs the media store deletions on a worker thread. Created on the main thread, where events
@@ -81,8 +83,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
      * Performs the actual event handling.
      */
     override fun onEvent(event: Event, json: JsonElement) {
-        val data: Map<String, Any?> = event.data.orEmpty()
-        fun string(key: String) = data[key] as? String
+        val data = event.data ?: JsonObject(emptyMap())
+        fun string(key: String) = data.text(key)
         when (event.type) {
             "ConfigSaved" -> {
                 logV("Forwarding ConfigSaved event to RestApi to get the updated config.")
@@ -95,8 +97,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             "FolderCompletion" -> restApi.setRemoteCompletionInfo(
                 string("device"),
                 string("folder"),
-                data["needBytes"] as? Double,
-                data["completion"] as? Double,
+                data.number("needBytes"),
+                data.number("completion"),
             )
             "FolderErrors" -> {
                 logV("Event ${event.type}, data ${event.data}")
@@ -117,7 +119,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             "RemoteIndexUpdated" -> {
                 val deviceId = string("device")
                 val folderId = string("folder")
-                if (deviceId != null && folderId != null && ((data["items"] as? Double) ?: 0.0) > 0) {
+                if (deviceId != null && folderId != null && (data.number("items") ?: 0.0) > 0) {
                     restApi.setRemoteIndexUpdated(deviceId, folderId, true)
                 }
             }
@@ -180,21 +182,21 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     /**
      * The entries "added" by a PendingDevicesChanged or PendingFoldersChanged event.
      */
-    private fun added(data: Map<String, Any?>): List<Map<*, *>> =
-        (data["added"] as? List<*>).orEmpty().filterIsInstance<Map<*, *>>()
+    private fun added(data: JsonObject): List<JsonObject> =
+        (data["added"] as? JsonArray).orEmpty().filterIsInstance<JsonObject>()
 
-    private fun onPendingDeviceAdded(added: Map<*, *>) {
-        val deviceId = added["deviceID"] as? String ?: return
-        val deviceName = added["name"] as? String
+    private fun onPendingDeviceAdded(added: JsonObject) {
+        val deviceId = added.text("deviceID") ?: return
+        val deviceName = added.text("name")
         Log.d(TAG, "Unknown device '$deviceName' ($deviceId) wants to connect")
         // Show device approve/ignore notification.
-        notificationHandler.showDeviceConnectNotification(deviceId, deviceName, added["address"] as? String)
+        notificationHandler.showDeviceConnectNotification(deviceId, deviceName, added.text("address"))
     }
 
-    private fun onPendingFolderAdded(added: Map<*, *>) {
-        val deviceId = added["deviceID"]?.toString() ?: return
-        val folderId = added["folderID"]?.toString() ?: return
-        val folderLabel = added["folderLabel"]?.toString().orEmpty()
+    private fun onPendingFolderAdded(added: JsonObject) {
+        val deviceId = added.string("deviceID") ?: return
+        val folderId = added.string("folderID") ?: return
+        val folderLabel = added.string("folderLabel").orEmpty()
         Log.d(TAG, "Device '$deviceId' wants to share folder '$folderLabel' ($folderId)")
         val deviceName = restApi.getDevices(false).firstOrNull { it.deviceID == deviceId }?.displayName
         // Show folder approve/ignore notification.
@@ -203,8 +205,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             deviceName,
             folderId,
             folderLabel,
-            added["receiveEncrypted"] as? Boolean,
-            added["remoteEncrypted"] as? Boolean,
+            added.boolean("receiveEncrypted"),
+            added.boolean("remoteEncrypted"),
             restApi.folders.none { it.id == folderId },
         )
     }
@@ -230,9 +232,10 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             return
         }
         val folderStatus = try {
-            gson.fromJson(summary, FolderStatus::class.java)
-        } catch (e: JsonParseException) {
-            Log.e(TAG, "onFolderSummary: gson.fromJson failed", e)
+            SyncthingJson.decodeFromJsonElement<FolderStatus>(summary)
+        } catch (e: IllegalArgumentException) {
+            // SerializationException included.
+            Log.e(TAG, "onFolderSummary: Failed to read the summary", e)
             return
         }
         restApi.setLocalFolderStatus(folderId, folderStatus)
@@ -299,8 +302,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             return
         }
         // Send the last (latest) local change to the UI.
-        val filename = (filenames.lastOrNull() as? JsonPrimitive)?.asString
-        logV("onLocalIndexUpdated: ${filenames.size()} files, last=[$filename], time=[$dateTimeStamp]")
+        val filename = (filenames.lastOrNull() as? JsonPrimitive)?.contentOrNull
+        logV("onLocalIndexUpdated: ${filenames.size} files, last=[$filename], time=[$dateTimeStamp]")
         if (!filename.isNullOrEmpty()) {
             restApi.setLocalFolderLastItemFinished(folderId, "update", filename, dateTimeStamp)
         }
@@ -308,7 +311,19 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
 
     private fun eventData(json: JsonElement) = (json as? JsonObject)?.get("data") as? JsonObject
 
-    private fun JsonObject.string(name: String) = (get(name) as? JsonPrimitive)?.asString
+    /**
+     * The value of a string, number or boolean field, as text.
+     */
+    private fun JsonObject.string(name: String) = (get(name) as? JsonPrimitive)?.contentOrNull
+
+    /**
+     * The value of a string field only.
+     */
+    private fun JsonObject.text(name: String) = (get(name) as? JsonPrimitive)?.takeIf { it.isString }?.content
+
+    private fun JsonObject.number(key: String) = (get(key) as? JsonPrimitive)?.takeUnless { it.isString }?.doubleOrNull
+
+    private fun JsonObject.boolean(key: String) = (get(key) as? JsonPrimitive)?.takeUnless { it.isString }?.booleanOrNull
 
     /**
      * The file and its folder, e.g. "Camera/IMG_1.jpg", for a notification.

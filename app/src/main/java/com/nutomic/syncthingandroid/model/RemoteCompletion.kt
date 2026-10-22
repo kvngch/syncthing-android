@@ -1,7 +1,6 @@
 package com.nutomic.syncthingandroid.model
 
 import android.util.Log
-import com.google.gson.Gson
 import kotlin.math.floor
 
 /**
@@ -15,7 +14,6 @@ class RemoteCompletion(private val verboseLog: Boolean) {
         val folders = HashMap<String, RemoteCompletionInfo>()
     }
 
-    private val gson = Gson()
     private val devices = HashMap<String, DeviceCompletion>()
 
     /**
@@ -106,7 +104,7 @@ class RemoteCompletion(private val verboseLog: Boolean) {
      */
     @Synchronized
     fun getDeviceStatus(deviceId: String?): Connection =
-        deviceId?.let(devices::get)?.connection?.let(::copyOf) ?: Connection()
+        deviceId?.let(devices::get)?.connection?.deepCopy() ?: Connection()
 
     @Synchronized
     fun getOnlineDeviceCount(): Int = devices.values.count { it.connection.connected }
@@ -119,7 +117,7 @@ class RemoteCompletion(private val verboseLog: Boolean) {
         if (deviceId == null || connection == null) {
             return
         }
-        devices.getOrPut(deviceId) { DeviceCompletion() }.connection = copyOf(connection)
+        devices.getOrPut(deviceId) { DeviceCompletion() }.connection = connection.deepCopy()
     }
 
     /**
@@ -133,9 +131,6 @@ class RemoteCompletion(private val verboseLog: Boolean) {
         }
         return floor(syncing.sum() / syncing.size).toInt().coerceIn(0, 100)
     }
-
-    private fun copyOf(connection: Connection): Connection =
-        gson.fromJson(gson.toJson(connection), Connection::class.java)
 
     /**
      * The first characters of the device ID, for logging.

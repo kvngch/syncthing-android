@@ -24,7 +24,6 @@ compose-material-icons = "1.7.8"
 compose-ui = "1.11.3"
 core-ktx = "1.19.1"
 documentfile = "1.1.0"
-gson = "2.14.0"
 jbcrypt = "0.4"
 junit = "4.13.2"
 kotlin = "2.4.20"
@@ -52,10 +51,9 @@ compose-material-icons-extended = { module = "androidx.compose.material:material
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
 junit = { module = "junit:junit", version.ref = "junit" }
-kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationCore" }
 lingala-zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "lingala-zip4j" }
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }

@@ -11,8 +11,9 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.nutomic.syncthingandroid.model.Folder
+import com.nutomic.syncthingandroid.model.SyncthingJson
+import com.nutomic.syncthingandroid.model.deepCopy
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RestApi
 import com.nutomic.syncthingandroid.service.RunConditionMonitor
@@ -27,6 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 
 private const val TAG = "FolderViewModel"
 private const val KEY_FORM = "form"
@@ -57,7 +60,6 @@ data class FolderForm(
 class FolderViewModel(application: Application, private val savedState: SavedStateHandle) :
     AndroidViewModel(application) {
 
-    private val gson = Gson()
     private val app get() = getApplication<Application>()
     private val _form = MutableStateFlow(savedState.get<Bundle>(KEY_FORM)?.let(::fromBundle))
     val form: StateFlow<FolderForm?> = _form.asStateFlow()
@@ -100,7 +102,7 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
      * Applies [change] to a copy of the folder: the previous state keeps its own instance.
      */
     fun editFolder(change: Folder.() -> Unit) {
-        edit { it.copy(folder = gson.fromJson(gson.toJson(it.folder), Folder::class.java).apply(change)) }
+        edit { it.copy(folder = it.folder.deepCopy().apply(change)) }
     }
 
     fun setPath(path: String, uri: Uri?) {
@@ -186,7 +188,7 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
     }
 
     private fun toBundle(form: FolderForm) = bundleOf(
-        "folder" to gson.toJson(form.folder),
+        "folder" to SyncthingJson.encodeToString(form.folder),
         "isCreate" to form.isCreate,
         "needsUpdate" to form.needsUpdate,
         "ignoreList" to form.ignoreList,
@@ -200,7 +202,7 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
     private fun fromBundle(bundle: Bundle): FolderForm? {
         val folder = bundle.getString("folder") ?: return null
         return FolderForm(
-            folder = gson.fromJson(folder, Folder::class.java),
+            folder = SyncthingJson.decodeFromString<Folder>(folder),
             isCreate = bundle.getBoolean("isCreate"),
             needsUpdate = bundle.getBoolean("needsUpdate"),
             ignoreList = bundle.getString("ignoreList"),

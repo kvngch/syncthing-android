@@ -1,10 +1,14 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
 /**
  * Sources:
  * - https://github.com/syncthing/syncthing/tree/main/lib/config
  * - https://github.com/syncthing/syncthing/blob/main/lib/config/optionsconfiguration.go
  */
+@Serializable
 class Options {
     @JvmField var listenAddresses: Array<String>? = null // json:"listenAddresses" xml:"listenAddress" default:"default"
     @JvmField var globalAnnounceServers: Array<String>? = null // json:"globalAnnounceServers" xml:"globalAnnounceServer" default:"default"
@@ -49,7 +53,7 @@ class Options {
     @JvmField var stunKeepaliveStartS: Int = 180
     @JvmField var stunKeepaliveMinS: Int = 20
 
-    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so it is not read or written as JSON.
     @Transient @JvmField var stunServer: String = "default"
 
     // Since v1.4.0
@@ -69,7 +73,7 @@ class Options {
 
     // Since v1.12.0
     // See https://github.com/syncthing/syncthing/pull/7055
-    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so it is not read or written as JSON.
     @Transient @JvmField var featureFlag: String = ""
 
     // Since v1.13.0
@@ -82,9 +86,10 @@ class Options {
      * crAutoDisabled                  (crash reporting after upgrade to v1.2.0)
      * crAutoEnabled                   (crash reporting after upgrade to v1.2.0)
      */
-    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so it is not read or written as JSON.
     @Transient @JvmField var unackedNotificationID: String = ""
 
+    @Serializable
     class MinHomeDiskFree {
         @JvmField var value: Float = 1f
         @JvmField var unit: String = "%"
