@@ -290,6 +290,7 @@ private fun UsageReportingDialog(api: RestApi?, serviceState: SyncthingService.S
     }
 
     val shownReport = report ?: return
+    val usageStatsUrl = stringResource(R.string.syncthing_usage_stats_url)
     fun answer(accept: Boolean) {
         api?.setUsageReporting(accept)
         api?.sendConfig()
@@ -322,7 +323,7 @@ private fun UsageReportingDialog(api: RestApi?, serviceState: SyncthingService.S
                     onClick = {
                         context.startActivity(
                             Intent(context, WebViewActivity::class.java)
-                                .putExtra(WebViewActivity.EXTRA_WEB_URL, context.getString(R.string.syncthing_usage_stats_url))
+                                .putExtra(WebViewActivity.EXTRA_WEB_URL, usageStatsUrl)
                         )
                         report = null
                     }
