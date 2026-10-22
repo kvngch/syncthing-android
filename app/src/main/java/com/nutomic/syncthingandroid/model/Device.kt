@@ -2,7 +2,9 @@ package com.nutomic.syncthingandroid.model
 
 import com.nutomic.syncthingandroid.util.Luhn
 import java.util.Locale
+import kotlinx.serialization.Serializable
 
+@Serializable
 class Device {
     @JvmField var deviceID: String? = null
     @JvmField var name: String = ""

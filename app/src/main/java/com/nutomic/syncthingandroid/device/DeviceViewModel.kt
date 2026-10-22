@@ -5,14 +5,17 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
+import com.nutomic.syncthingandroid.model.SyncthingJson
+import com.nutomic.syncthingandroid.model.deepCopy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 
 private const val KEY_FORM = "form"
 
@@ -54,7 +57,6 @@ data class DeviceForm(
  */
 class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
 
-    private val gson = Gson()
     private val _form = MutableStateFlow(savedState.get<Bundle>(KEY_FORM)?.let(::fromBundle))
     val form: StateFlow<DeviceForm?> = _form.asStateFlow()
 
@@ -88,7 +90,7 @@ class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
      * Applies [change] to a copy of the device: the previous state keeps its own instance.
      */
     fun editDevice(change: Device.() -> Unit) {
-        edit { it.copy(device = gson.fromJson(gson.toJson(it.device), Device::class.java).apply(change)) }
+        edit { it.copy(device = it.device.deepCopy().apply(change)) }
     }
 
     /**
@@ -113,7 +115,7 @@ class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
     }
 
     private fun toBundle(form: DeviceForm) = bundleOf(
-        "device" to gson.toJson(form.device),
+        "device" to SyncthingJson.encodeToString(form.device),
         "isCreate" to form.isCreate,
         "addresses" to form.addresses,
         "needsUpdate" to form.needsUpdate,
@@ -129,7 +131,7 @@ class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
         val device = bundle.getString("device") ?: return null
         val shares = bundle.getBundle("shares")
         return DeviceForm(
-            device = gson.fromJson(device, Device::class.java),
+            device = SyncthingJson.decodeFromString<Device>(device),
             isCreate = bundle.getBoolean("isCreate"),
             addresses = bundle.getString("addresses").orEmpty(),
             needsUpdate = bundle.getBoolean("needsUpdate"),

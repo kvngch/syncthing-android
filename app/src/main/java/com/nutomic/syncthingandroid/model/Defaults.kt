@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Defaults {
     @JvmField var device: Device? = null
     @JvmField var folder: Folder? = null

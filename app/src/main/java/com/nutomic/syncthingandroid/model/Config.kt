@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Config {
     @JvmField var version: Int = 0
     @JvmField var devices: MutableList<Device>? = null

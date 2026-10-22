@@ -1,5 +1,7 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * This receives the deserialization result of the URI_SYSTEM_DISCOVERY query.
  *
@@ -14,6 +16,7 @@ package com.nutomic.syncthingandroid.model
  *          }
  *    }
  */
+@Serializable
 class DiscoveredDevice {
     @JvmField var addresses: Array<String>? = null
 }

@@ -1,8 +1,11 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * /rest/db/completion?device=deviceId&folder=folderId
  */
+@Serializable
 class CompletionInfo {
     @JvmField var completion: Double = 0.0
     @JvmField var globalBytes: Double = 0.0

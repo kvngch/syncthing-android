@@ -1,8 +1,11 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * REST API endpoint "/rest/events/disk"
  */
+@Serializable
 class DiskEventData {
     // action = {"added", "deleted", "modified"}
     @JvmField var action: String = ""

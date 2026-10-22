@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class Connection {
     @JvmField var address: String = ""
     @JvmField var at: String = "" // "0001-01-01T00:00:00Z"

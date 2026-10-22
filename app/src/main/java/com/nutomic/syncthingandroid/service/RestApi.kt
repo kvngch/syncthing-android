@@ -8,14 +8,6 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
-import com.google.gson.JsonParser
-import com.google.gson.reflect.TypeToken
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.activities.ShareActivity
 import com.nutomic.syncthingandroid.http.ApiRequest
@@ -43,17 +35,32 @@ import com.nutomic.syncthingandroid.model.PendingFolder
 import com.nutomic.syncthingandroid.model.RemoteCompletion
 import com.nutomic.syncthingandroid.model.RemoteCompletionInfo
 import com.nutomic.syncthingandroid.model.RemoteIgnoredDevice
+import com.nutomic.syncthingandroid.model.SyncthingJson
 import com.nutomic.syncthingandroid.model.SystemStatus
+import com.nutomic.syncthingandroid.model.deepCopy
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.Util
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.Type
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.Locale
 import java.util.concurrent.Executors
 import kotlin.math.floor
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Provides functions to interact with the syncthing REST API.
@@ -114,7 +121,6 @@ class RestApi(
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     private val verboseLog = AppPrefs.getPrefVerboseLog(context)
-    private val gson = Gson()
 
     /**
      * Object that must be locked upon accessing config, rawConfig and pendingUntilConfigLoaded.
@@ -185,7 +191,7 @@ class RestApi(
             asyncQuerySystemStatusComplete = false
         }
         get(GetRequest.URI_VERSION) { result ->
-            version = JsonParser.parseString(result).asJsonObject["version"].asString
+            version = SyncthingJson.parseToJsonElement(result).jsonObject["version"]?.jsonPrimitive?.contentOrNull
             updateDebugFacilitiesCache()
             synchronized(asyncQueryCompleteLock) {
                 asyncQueryVersionComplete = true
@@ -244,7 +250,7 @@ class RestApi(
                 .mapNotNull { folder -> folder.versioning?.let { folder.id.orEmpty() to it.cleanupIntervalS } }
                 .toMap()
         }
-        val originalIntervalsJson = gson.toJson(originalIntervals)
+        val originalIntervalsJson = SyncthingJson.encodeToString(originalIntervals)
         // commit(), not apply(): the original intervals must be on disk before the lowered ones are sent.
         preferences.edit(commit = true) { putString(Constants.PREF_VERSIONING_CLEANUP_RESTORE, originalIntervalsJson) }
         setVersioningCleanupIntervals(originalIntervals.mapValues { 2 })
@@ -258,19 +264,21 @@ class RestApi(
     }
 
     private fun restoreVersioningCleanupIntervals(intervalsJson: String) {
-        setVersioningCleanupIntervals(gson.fromJson(intervalsJson, INTERVALS))
+        setVersioningCleanupIntervals(SyncthingJson.decodeFromString<Map<String, Int>>(intervalsJson))
         preferences.edit { remove(Constants.PREF_VERSIONING_CLEANUP_RESTORE) }
     }
 
     fun reloadConfig() = get(GetRequest.URI_CONFIG, onSuccess = ::onReloadConfigComplete)
 
     private fun onReloadConfigComplete(configResult: String) {
-        synchronized(configLock) {
-            config = gson.fromJson(configResult, Config::class.java)
-            rawConfig = config?.let { JsonParser.parseString(configResult).asJsonObject }
+        val raw = try {
+            SyncthingJson.parseToJsonElement(configResult).jsonObject
+        } catch (e: IllegalArgumentException) {
+            throw RuntimeException("config could not be parsed: $configResult", e)
         }
-        if (config == null) {
-            throw RuntimeException("config is null: $configResult")
+        synchronized(configLock) {
+            config = SyncthingJson.decodeFromJsonElement<Config>(raw)
+            rawConfig = raw
         }
         Log.d(TAG, "onReloadConfigComplete: Successfully parsed configuration.")
 
@@ -281,13 +289,13 @@ class RestApi(
 
         if (verboseLog) {
             synchronized(configLock) {
-                val remoteIgnoredDevices = gson.toJson(loadedConfig.remoteIgnoredDevices)
+                val remoteIgnoredDevices = SyncthingJson.encodeToString(loadedConfig.remoteIgnoredDevices.orEmpty())
                 if (remoteIgnoredDevices != "[]") {
                     logV("ORCC: remoteIgnoredDevices = $remoteIgnoredDevices")
                 }
                 // Loop through devices to get ignoredFolders per device.
                 for (device in getDevices(false)) {
-                    val ignoredFolders = gson.toJson(device.ignoredFolders)
+                    val ignoredFolders = SyncthingJson.encodeToString(device.ignoredFolders.orEmpty())
                     if (ignoredFolders != "[]") {
                         logV("ORCC: device[${device.displayName}].ignoredFolders = $ignoredFolders")
                     }
@@ -296,8 +304,8 @@ class RestApi(
         }
 
         get(GetRequest.URI_PENDING_DEVICES) { result ->
-            for ((deviceId, value) in JsonParser.parseString(result).asJsonObject.entrySet()) {
-                val pendingDevice = gson.fromJson(value, PendingDevice::class.java)
+            for ((deviceId, value) in SyncthingJson.parseToJsonElement(result).jsonObject) {
+                val pendingDevice = SyncthingJson.decodeFromJsonElement<PendingDevice>(value)
                 if (pendingDevice.time.isNullOrEmpty()) {
                     continue
                 }
@@ -306,10 +314,10 @@ class RestApi(
             }
         }
         get(GetRequest.URI_PENDING_FOLDERS) { result ->
-            for ((folderId, value) in JsonParser.parseString(result).asJsonObject.entrySet()) {
-                val offeredBy = value.asJsonObject["offeredBy"]?.asJsonObject ?: continue
-                for ((offeredByDeviceId, offer) in offeredBy.entrySet()) {
-                    val pendingFolder = gson.fromJson(offer, PendingFolder::class.java)
+            for ((folderId, value) in SyncthingJson.parseToJsonElement(result).jsonObject) {
+                val offeredBy = (value as? JsonObject)?.get("offeredBy") as? JsonObject ?: continue
+                for ((offeredByDeviceId, offer) in offeredBy) {
+                    val pendingFolder = SyncthingJson.decodeFromJsonElement<PendingFolder>(offer)
                     Log.d(TAG, "ORCC: resultFolderId = $folderId('${pendingFolder.label}')")
                     // The offering device may have been removed from the config meanwhile.
                     val matchingDevice = getDevices(false).firstOrNull { it.deviceID == offeredByDeviceId } ?: continue
@@ -338,7 +346,7 @@ class RestApi(
             for (device in folder.sharedWithDevices) {
                 val params = mapOf("device" to device.deviceID.orEmpty(), "folder" to folder.id.orEmpty())
                 get(GetRequest.URI_DB_COMPLETION, params) { result ->
-                    val completionInfo = gson.fromJson(result, CompletionInfo::class.java)
+                    val completionInfo = parseOrNull<CompletionInfo>(result, "completion") ?: return@get
                     logV(
                         "ORCC: /rest/db/completion: folder=${folder.id}, device=${device.displayName}" +
                             ", completion=${completionInfo.completion}" +
@@ -369,7 +377,7 @@ class RestApi(
         // First binary launch or binary upgraded case.
         get(GetRequest.URI_SYSTEM_LOGLEVELS) { result ->
             try {
-                val facilities = JsonParser.parseString(result).asJsonObject.getAsJsonObject("packages").keySet()
+                val facilities = SyncthingJson.parseToJsonElement(result).jsonObject.getValue("packages").jsonObject.keys
                 // The binary version is stored so that this is only read again after an update.
                 preferences.edit {
                     putStringSet(Constants.PREF_DEBUG_FACILITIES_AVAILABLE, facilities.toSet())
@@ -425,7 +433,7 @@ class RestApi(
                 time = Util.getLocalZonedDateTime()
             }
             device.ignoredFolders = (device.ignoredFolders ?: mutableListOf()).apply { add(ignoredFolder) }
-            logV("ignoreFolder: device.ignoredFolders = " + gson.toJson(device.ignoredFolders))
+            logV("ignoreFolder: device.ignoredFolders = " + SyncthingJson.encodeToString(device.ignoredFolders.orEmpty()))
             sendConfig()
             Log.d(TAG, "Ignored folder [$folderId] announced by device [$deviceId]")
         }
@@ -493,7 +501,7 @@ class RestApi(
             // POST /rest/system/config replaces the whole configuration, resetting any field
             // absent from the body. Merging onto the config read from Syncthing keeps the fields
             // the model does not know (ldap, stunServers, gui authMode, ...).
-            mergeConfigJson(rawConfig, gson.toJsonTree(loadedConfig).asJsonObject).also { rawConfig = it }.toString()
+            mergeConfigJson(rawConfig, SyncthingJson.encodeToJsonElement(loadedConfig).jsonObject).also { rawConfig = it }.toString()
         }
         post(PostRequest.URI_SYSTEM_CONFIG, body = jsonConfig) { error ->
             // Syncthing rejected the config, e.g. a duplicate folder id: resync the model with it.
@@ -519,7 +527,7 @@ class RestApi(
      */
     val folders: List<Folder>
         get() {
-            val folders: List<Folder> = synchronized(configLock) { copyOf(loadedConfig.folders.orEmpty(), FOLDER_LIST) }
+            val folders: List<Folder> = synchronized(configLock) { loadedConfig.folders.orEmpty().deepCopy() }
             for (folder in folders) {
                 val path = folder.path
                 if (path != null && path.startsWith("~/")) {
@@ -581,7 +589,7 @@ class RestApi(
      * @param includeLocal True if the local device should be included in the result.
      */
     fun getDevices(includeLocal: Boolean): List<Device> {
-        val devices: List<Device> = synchronized(configLock) { copyOf(loadedConfig.devices.orEmpty(), DEVICE_LIST) }
+        val devices: List<Device> = synchronized(configLock) { loadedConfig.devices.orEmpty().deepCopy() }
         return if (includeLocal) devices else devices.filter { it.deviceID != localDeviceId }
     }
 
@@ -624,10 +632,10 @@ class RestApi(
     }
 
     val options: Options
-        get() = synchronized(configLock) { copyOf(checkNotNull(loadedConfig.options), Options::class.java) }
+        get() = synchronized(configLock) { checkNotNull(loadedConfig.options).deepCopy() }
 
     val gui: Gui
-        get() = synchronized(configLock) { copyOf(checkNotNull(loadedConfig.gui), Gui::class.java) }
+        get() = synchronized(configLock) { checkNotNull(loadedConfig.gui).deepCopy() }
 
     fun editSettings(newGui: Gui, newOptions: Options) {
         synchronized(configLock) {
@@ -649,7 +657,7 @@ class RestApi(
     fun getSystemStatus(listener: OnResultListener1<SystemStatus>) {
         get(GetRequest.URI_SYSTEM_STATUS) { result ->
             try {
-                listener.onResult(gson.fromJson(result, SystemStatus::class.java))
+                listener.onResult(SyncthingJson.decodeFromString<SystemStatus>(result))
             } catch (e: Exception) {
                 Log.e(TAG, "getSystemStatus: Parsing REST API result failed. result=$result")
             }
@@ -675,10 +683,11 @@ class RestApi(
      * Parses a REST response, or returns null (logged) when Syncthing sent something unexpected,
      * e.g. while restarting. Callers then drop the result, as they do on a failed request.
      */
-    private fun <T> parseOrNull(json: String, type: Type, caller: String): T? =
+    private inline fun <reified T> parseOrNull(json: String, caller: String): T? =
         try {
-            gson.fromJson(json, type)
-        } catch (e: JsonParseException) {
+            SyncthingJson.decodeFromString<T>(json)
+        } catch (e: IllegalArgumentException) {
+            // SerializationException included.
             Log.w(TAG, "$caller: Failed to parse the response", e)
             null
         }
@@ -692,7 +701,7 @@ class RestApi(
     fun getDiscoveredDevices(listener: OnResultListener1<Map<String, DiscoveredDevice>>) {
         get(GetRequest.URI_SYSTEM_DISCOVERY) { result ->
             val discoveredDevices: Map<String, DiscoveredDevice> =
-                parseOrNull(result, DISCOVERED_DEVICES, "getDiscoveredDevices") ?: return@get
+                parseOrNull(result, "getDiscoveredDevices") ?: return@get
             listener.onResult(discoveredDevices)
         }
     }
@@ -702,8 +711,7 @@ class RestApi(
      */
     fun getFolderIgnoreList(folderId: String?, listener: OnResultListener1<FolderIgnoreList>) {
         get(GetRequest.URI_DB_IGNORES, mapOf("folder" to folderId.orEmpty())) { result ->
-            val folderIgnoreList = parseOrNull<FolderIgnoreList>(result, FolderIgnoreList::class.java, "getFolderIgnoreList")
-                ?: return@get
+            val folderIgnoreList = parseOrNull<FolderIgnoreList>(result, "getFolderIgnoreList") ?: return@get
             listener.onResult(folderIgnoreList)
         }
     }
@@ -712,7 +720,7 @@ class RestApi(
      * Posts ignore list for given folder.
      */
     fun postFolderIgnoreList(folderId: String?, ignore: Array<String>) {
-        val body = gson.toJson(FolderIgnoreList().apply { this.ignore = ignore })
+        val body = SyncthingJson.encodeToString(FolderIgnoreList().apply { this.ignore = ignore })
         post(PostRequest.URI_DB_IGNORES, mapOf("folder" to folderId.orEmpty()), body)
     }
 
@@ -732,7 +740,7 @@ class RestApi(
         get(GetRequest.URI_CONNECTIONS) { result ->
             // We got connection status information for ALL devices instead of one.
             // It does not hurt storing all of them.
-            val connections = parseOrNull<Connections>(result, Connections::class.java, "getRemoteDeviceStatus") ?: return@get
+            val connections = parseOrNull<Connections>(result, "getRemoteDeviceStatus") ?: return@get
             val byDevice = connections.connections ?: return@get
             calculateConnectionStats(connections)
             byDevice.forEach { (id, connection) -> remoteCompletion.setDeviceStatus(id, connection) }
@@ -741,8 +749,8 @@ class RestApi(
             // We got the last seen timestamp for ALL devices - including the local device - instead of one.
             // It does not hurt storing all of them.
             preferences.edit {
-                for ((id, value) in JsonParser.parseString(result).asJsonObject.entrySet()) {
-                    val deviceStat = gson.fromJson(value, DeviceStat::class.java)
+                for ((id, value) in SyncthingJson.parseToJsonElement(result).jsonObject) {
+                    val deviceStat = SyncthingJson.decodeFromJsonElement<DeviceStat>(value)
                     putString(Constants.PREF_CACHE_DEVICE_LASTSEEN_PREFIX + id, deviceStat.lastSeen)
                 }
             }
@@ -755,7 +763,7 @@ class RestApi(
     fun getRemoteDeviceNeedBytes(deviceId: String?): Double = remoteCompletion.getDeviceNeedBytes(deviceId)
 
     val totalConnectionStatistic: Connection
-        get() = previousConnections?.total?.let { copyOf(it, Connection::class.java) } ?: Connection()
+        get() = previousConnections?.total?.deepCopy() ?: Connection()
 
     /**
      * Calculate transfer rates for each remote device connection and the "total device" stats.
@@ -816,7 +824,8 @@ class RestApi(
         get(GetRequest.URI_EVENTS_DISK, mapOf("limit" to limit.toString(), "timeout" to "1")) { result ->
             try {
                 listener.onResult(
-                    JsonParser.parseString(result).asJsonArray.reversed().map { gson.fromJson(it, DiskEvent::class.java) }
+                    SyncthingJson.parseToJsonElement(result).jsonArray.reversed()
+                        .map { SyncthingJson.decodeFromJsonElement<DiskEvent>(it) }
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "getDiskEvents: Parsing REST API result failed. result=$result")
@@ -833,13 +842,10 @@ class RestApi(
         val params = mapOf("since" to sinceId.toString(), "limit" to limit.toString())
         get(GetRequest.URI_EVENTS, params, onError = { listener.onError() }) { result ->
             val jsonEvents: JsonArray = try {
-                JsonParser.parseString(result).asJsonArray
-            } catch (e: JsonParseException) {
-                // Same as a failed request: the event processor schedules the next poll.
-                Log.w(TAG, "getEvents: Failed to parse the response", e)
-                listener.onError()
-                return@get
-            } catch (e: IllegalStateException) {
+                SyncthingJson.parseToJsonElement(result).jsonArray
+            } catch (e: IllegalArgumentException) {
+                // Not JSON, or not an array. Same as a failed request: the event processor
+                // schedules the next poll.
                 Log.w(TAG, "getEvents: Failed to parse the response", e)
                 listener.onError()
                 return@get
@@ -847,10 +853,10 @@ class RestApi(
             var lastId = 0L
             for (json in jsonEvents) {
                 try {
-                    val event = gson.fromJson(json, Event::class.java)
+                    val event = SyncthingJson.decodeFromJsonElement<Event>(json)
                     lastId = maxOf(lastId, event.id.toLong())
                     listener.onEvent(event, json)
-                } catch (e: JsonParseException) {
+                } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "getEvents: Skipping event due to JsonSyntaxException, raw=[$json]")
                 }
             }
@@ -873,7 +879,7 @@ class RestApi(
                     Log.e(TAG, "getFolderStatus#GetRequest#onResult: folderId == null")
                     return@get
                 }
-                val folderStatus = parseOrNull<FolderStatus>(result, FolderStatus::class.java, "getFolderStatus") ?: return@get
+                val folderStatus = parseOrNull<FolderStatus>(result, "getFolderStatus") ?: return@get
                 localCompletion.setFolderStatus(folderId, folder.paused, folderStatus)
             }
         }
@@ -1017,7 +1023,7 @@ class RestApi(
      */
     fun getUsageReport(listener: OnResultListener1<String>) {
         get(GetRequest.URI_REPORT) { result ->
-            listener.onResult(GsonBuilder().setPrettyPrinting().create().toJson(JsonParser.parseString(result)))
+            listener.onResult(PRETTY_JSON.encodeToString(SyncthingJson.parseToJsonElement(result)))
         }
     }
 
@@ -1161,11 +1167,6 @@ class RestApi(
         PostRequest(context, url, path, apiKey, params, body, null, onError)
     }
 
-    /**
-     * A deep copy of [value], through Gson.
-     */
-    private fun <T> copyOf(value: T, type: Type): T = gson.fromJson(gson.toJson(value, type), type)
-
     private fun logV(message: String) {
         if (verboseLog) {
             Log.v(TAG, message)
@@ -1193,10 +1194,7 @@ class RestApi(
          */
         private val SUBSCRIBED_PACKAGES = listOf("org.decsync.cc")
 
-        private val FOLDER_LIST = object : TypeToken<List<Folder>>() {}.type
-        private val DEVICE_LIST = object : TypeToken<List<Device>>() {}.type
-        private val DISCOVERED_DEVICES = object : TypeToken<Map<String, DiscoveredDevice>>() {}.type
-        private val INTERVALS = object : TypeToken<Map<String, Int>>() {}.type
+        private val PRETTY_JSON = Json { prettyPrint = true }
 
         /**
          * Compares folders by labels, uses the folder ID as fallback if the label is empty
@@ -1210,27 +1208,22 @@ class RestApi(
          * from update are dropped. Other arrays and values are taken from update.
          */
         @JvmStatic
-        fun mergeConfigJson(base: JsonObject?, update: JsonObject): JsonObject = mergeJson(base, update).asJsonObject
+        fun mergeConfigJson(base: JsonObject?, update: JsonObject): JsonObject = mergeJson(base, update) as JsonObject
 
         private fun mergeJson(base: JsonElement?, update: JsonElement): JsonElement {
-            if (base != null && base.isJsonObject && update.isJsonObject) {
-                val merged = base.asJsonObject.deepCopy()
-                for ((key, value) in update.asJsonObject.entrySet()) {
-                    merged.add(key, mergeJson(merged[key], value))
-                }
-                return merged
+            if (base is JsonObject && update is JsonObject) {
+                // A key of base keeps its place, a new one comes last.
+                return JsonObject(base + update.mapValues { (key, value) -> mergeJson(base[key], value) })
             }
-            if (base != null && base.isJsonArray && update.isJsonArray) {
-                val idKey = getArrayIdKey(update.asJsonArray)
+            if (base is JsonArray && update is JsonArray) {
+                val idKey = getArrayIdKey(update)
                 if (idKey != null) {
-                    val baseById = base.asJsonArray
-                        .filter { it.isJsonObject && it.asJsonObject.has(idKey) }
-                        .associateBy { it.asJsonObject[idKey].asString }
-                    val merged = JsonArray()
-                    for (element in update.asJsonArray) {
-                        merged.add(mergeJson(baseById[element.asJsonObject[idKey].asString], element))
-                    }
-                    return merged
+                    val baseById = base.filterIsInstance<JsonObject>()
+                        .filter { idKey in it }
+                        .associateBy { it.getValue(idKey).jsonPrimitive.content }
+                    return JsonArray(
+                        update.map { element -> mergeJson(baseById[element.jsonObject.getValue(idKey).jsonPrimitive.content], element) }
+                    )
                 }
             }
             return update
@@ -1241,7 +1234,9 @@ class RestApi(
          */
         private fun getArrayIdKey(array: JsonArray): String? =
             listOf("id", "deviceID").firstOrNull { key ->
-                array.size() > 0 && array.all { it.isJsonObject && it.asJsonObject[key]?.isJsonPrimitive == true }
+                array.isNotEmpty() && array.all { element ->
+                    (element as? JsonObject)?.get(key).let { it is JsonPrimitive && it !is JsonNull }
+                }
             }
     }
 }

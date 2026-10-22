@@ -1,10 +1,14 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+
 /**
  * Sources:
  * - https://github.com/syncthing/syncthing/tree/master/lib/config
  * - https://github.com/syncthing/syncthing/blob/master/lib/config/guiconfiguration.go
  */
+@Serializable
 class Gui {
     @JvmField var enabled: Boolean = true
 
@@ -27,7 +31,7 @@ class Gui {
     @JvmField var insecureAdminAccess: Boolean = false
     @JvmField var insecureAllowFrameLoading: Boolean = false
 
-    // The JSON name is insecureSkipHostcheck, so Gson skips this field.
+    // The JSON name is insecureSkipHostcheck, so it is not read or written as JSON.
     @Transient @JvmField var insecureSkipHostCheck: Boolean = false
 
     // Split on the last colon: an IPv6 host such as [::1] holds colons too.

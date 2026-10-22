@@ -1,5 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class IgnoredFolder {
     @JvmField var id: String = ""
     @JvmField var label: String = ""
