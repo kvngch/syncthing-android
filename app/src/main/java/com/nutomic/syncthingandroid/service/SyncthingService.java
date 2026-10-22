@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -35,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import javax.inject.Inject;
 
@@ -339,14 +341,17 @@ public class SyncthingService extends Service {
              * 3. Relaunch syncthing native if it was previously running.
              */
             Log.i(TAG, "Invoking reset of database");
-            if (mCurrentState != State.DISABLED) {
-                // Shutdown synchronously.
-                shutdown(State.DISABLED);
-            }
-            new SyncthingRunnable(this, SyncthingRunnable.Command.resetdatabase).run();
-            if (mLastDeterminedShouldRun) {
-                launchStartupTask(SyncthingRunnable.Command.main);
-            }
+            runWhenNotStarting(() -> {
+                if (mCurrentState != State.DISABLED) {
+                    // Shutdown synchronously.
+                    shutdown(State.DISABLED);
+                }
+                new SyncthingRunnable(this, SyncthingRunnable.Command.resetdatabase).run();
+                Toast.makeText(this, R.string.st_reset_database_done, Toast.LENGTH_LONG).show();
+                if (mLastDeterminedShouldRun) {
+                    launchStartupTask(SyncthingRunnable.Command.main);
+                }
+            });
         } else if (ACTION_RESET_DELTAS.equals(intent.getAction())) {
             /**
              * 1. Stop syncthing native if it's running.
@@ -358,15 +363,17 @@ public class SyncthingService extends Service {
              *      be shutdown synchronously.
              */
             Log.i(TAG, "Invoking reset of delta indexes");
-            if (mCurrentState != State.DISABLED) {
-                // Shutdown synchronously.
-                shutdown(State.DISABLED);
-            }
-            launchStartupTask(SyncthingRunnable.Command.resetdeltas);
-            if (!mLastDeterminedShouldRun) {
-                // Shutdown if syncthing was not running before the UI action was raised.
-                shutdown(State.DISABLED);
-            }
+            runWhenNotStarting(() -> {
+                if (mCurrentState != State.DISABLED) {
+                    // Shutdown synchronously.
+                    shutdown(State.DISABLED);
+                }
+                launchStartupTask(SyncthingRunnable.Command.resetdeltas);
+                if (!mLastDeterminedShouldRun) {
+                    // Shutdown if syncthing was not running before the UI action was raised.
+                    shutdown(State.DISABLED);
+                }
+            });
         } else if (ACTION_REFRESH_NETWORK_INFO.equals(intent.getAction())) {
             if (mRunConditionMonitor != null) {
                 mRunConditionMonitor.updateShouldRunDecision();
@@ -551,6 +558,10 @@ public class SyncthingService extends Service {
                 Log.e(TAG, "launchStartupTask: Wrong state " + mCurrentState + " detected. Cancelling.");
                 return;
             }
+        }
+        if (mConfigTransferInProgress) {
+            Log.i(TAG, "launchStartupTask: Import or export in progress. The binary starts when it ends.");
+            return;
         }
 
         mConfig = new ConfigXml(this);
@@ -737,6 +748,58 @@ public class SyncthingService extends Service {
         }
     }
 
+    /**
+     * Runs task now, or once State.STARTING was left: {@link #shutdown} only defers in that
+     * state, so a task that needs the binary stopped must not start before. Main thread only.
+     */
+    private void runWhenNotStarting(Runnable task) {
+        if (mCurrentState == State.STARTING) {
+            mHandler.postDelayed(() -> runWhenNotStarting(task), 1000);
+            return;
+        }
+        task.run();
+    }
+
+    /**
+     * Set while import or export works on the files of the stopped binary,
+     * so that a run condition change cannot start it meanwhile.
+     */
+    private volatile boolean mConfigTransferInProgress = false;
+
+    /**
+     * Called on a worker thread by import and export, never on the main thread (it would
+     * deadlock). Stops the binary on the main thread, where the state machine lives, and blocks
+     * until it is down.
+     * Returns false if interrupted, with the binary left as it was.
+     */
+    private boolean stopBinaryForConfigTransfer() {
+        CountDownLatch stopped = new CountDownLatch(1);
+        mHandler.post(() -> runWhenNotStarting(() -> {
+            if (mCurrentState != State.DISABLED) {
+                // Shutdown synchronously.
+                shutdown(State.DISABLED);
+            }
+            mConfigTransferInProgress = true;
+            stopped.countDown();
+        }));
+        try {
+            stopped.await();
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private void endConfigTransfer() {
+        mHandler.post(() -> {
+            mConfigTransferInProgress = false;
+            if (mLastDeterminedShouldRun) {
+                launchStartupTask(SyncthingRunnable.Command.main);
+            }
+        });
+    }
+
     public @Nullable
     RestApi getApi() {
         return mRestApi;
@@ -846,9 +909,8 @@ public class SyncthingService extends Service {
         Boolean failSuccess = true;
         Log.d(TAG, "exportConfig BEGIN");
 
-        if (mCurrentState != State.DISABLED) {
-            // Shutdown synchronously.
-            shutdown(State.DISABLED);
+        if (!stopBinaryForConfigTransfer()) {
+            return false;
         }
 
         // Create export dir if non-existant.
@@ -946,16 +1008,7 @@ public class SyncthingService extends Service {
         Log.d(TAG, "exportConfig END");
 
         // Start syncthing after export if run conditions apply.
-        if (mLastDeterminedShouldRun) {
-            Handler mainLooper = new Handler(Looper.getMainLooper());
-            Runnable launchStartupTaskRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    launchStartupTask(SyncthingRunnable.Command.main);
-                }
-            };
-            mainLooper.post(launchStartupTaskRunnable);
-        }
+        endConfigTransfer();
         return failSuccess;
     }
 
@@ -1018,9 +1071,8 @@ public class SyncthingService extends Service {
         // Shutdown SyncthingNative.
         Boolean failSuccess = true;
         Log.d(TAG, "importConfig BEGIN");
-        if (mCurrentState != State.DISABLED) {
-            // Shutdown synchronously.
-            shutdown(State.DISABLED);
+        if (!stopBinaryForConfigTransfer()) {
+            return false;
         }
 
         // Remove database folder if it exists.
@@ -1076,16 +1128,7 @@ public class SyncthingService extends Service {
         }
 
         // Start syncthing after import if run conditions apply.
-        if (mLastDeterminedShouldRun) {
-            Handler mainLooper = new Handler(Looper.getMainLooper());
-            Runnable launchStartupTaskRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    launchStartupTask(SyncthingRunnable.Command.main);
-                }
-            };
-            mainLooper.post(launchStartupTaskRunnable);
-        }
+        endConfigTransfer();
         return failSuccess;
     }
 
@@ -1217,7 +1260,7 @@ public class SyncthingService extends Service {
         final Runnable[] watchdog = new Runnable[1];
         final HttpsCertReplaceResult[] failureReason = {HttpsCertReplaceResult.FAILED_NOT_ONLINE};
 
-        final Runnable finishFailure = () -> {
+        final Runnable finishFailure = () -> runWhenNotStarting(() -> {
             // Stop first, then restore. In the FAILED_CERT_REJECTED case syncthing is running and
             // serving a certificate that differs from the file on disk; restoring the file underneath
             // a live instance would leave ApiRequest pinning against a certificate that is not the one
@@ -1230,7 +1273,7 @@ public class SyncthingService extends Service {
             // Bring the previous, known-good certificate back online.
             launchStartupTask(SyncthingRunnable.Command.main);
             listener.onResult(failureReason[0], null);
-        };
+        });
         final Runnable finishSuccess = () -> {
             if (expectedFingerprint != null && !certFileHasFingerprint(certFile, expectedFingerprint)) {
                 Log.w(TAG, "verifyRestartAndRollback: Syncthing replaced the supplied certificate " +
