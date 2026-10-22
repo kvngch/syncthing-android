@@ -14,12 +14,9 @@ import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.TreeSet;
 
 public class UtilTest {
@@ -78,13 +75,10 @@ public class UtilTest {
     }
 
     @Test
-    public void getLocalZonedDateTimeIsCurrentUtcTime() throws ParseException {
+    public void getLocalZonedDateTimeIsCurrentUtcTime() {
         String now = Util.getLocalZonedDateTime();
-        // Unit tests run with Build.VERSION.SDK_INT == 0: the pre-API 26 format.
-        assertTrue(now, now.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z"));
-        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
-        long skewMillis = Math.abs(parser.parse(now).getTime() - System.currentTimeMillis());
+        assertTrue(now, now.endsWith("Z"));
+        long skewMillis = Math.abs(ZonedDateTime.parse(now).toInstant().toEpochMilli() - System.currentTimeMillis());
         assertTrue("skew " + skewMillis + " ms", skewMillis < 60_000);
     }
 }

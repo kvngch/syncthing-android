@@ -640,7 +640,7 @@ public class RestApi {
 
     public URL getWebGuiUrl() {
         synchronized (mConfigLock) {
-            String urlProtocol = Constants.osSupportsTLS12() ? "https" : "http";
+            String urlProtocol = "https";
             try {
                 if (mConfig.gui.address == null) {
                     Log.e(TAG, "getWebGuiUrl: mConfig.gui.address == null, returning 127.0.0.1:8384");

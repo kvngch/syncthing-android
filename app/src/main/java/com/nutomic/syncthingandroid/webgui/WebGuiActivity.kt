@@ -27,8 +27,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.SyncthingActivity
 import com.nutomic.syncthingandroid.service.Constants
@@ -49,7 +49,6 @@ import java.security.GeneralSecurityException
 import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
 /**
@@ -112,7 +111,6 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
         // Without this override, a renderer killed by the system takes the whole process down,
         // SyncthingService included. Leave the screen instead; onDestroy destroys the WebView.
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
             Log.w(TAG, "WebView renderer gone, crashed=${detail.didCrash()}")
             finish()
@@ -257,12 +255,7 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
     }
 
     private fun startSyncthingService() {
-        val serviceIntent = Intent(this, SyncthingService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
+        startForegroundService(Intent(this, SyncthingService::class.java))
     }
 
     private fun registerServiceListener(service: SyncthingService) {

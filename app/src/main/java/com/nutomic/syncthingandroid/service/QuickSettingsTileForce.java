@@ -6,11 +6,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.drawable.Icon;
-import android.os.Build;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 
-import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
@@ -18,7 +16,6 @@ import com.nutomic.syncthingandroid.R;
 
 import static com.nutomic.syncthingandroid.service.RunConditionMonitor.ACTION_UPDATE_SHOULDRUN_DECISION;
 
-@RequiresApi(api = Build.VERSION_CODES.N)
 public class QuickSettingsTileForce extends TileService {
     public QuickSettingsTileForce() {
 
