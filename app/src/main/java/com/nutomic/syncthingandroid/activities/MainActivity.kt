@@ -13,10 +13,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.fragments.DeviceIdDialogFragment
+import com.nutomic.syncthingandroid.device.DeviceIdDialog
 import com.nutomic.syncthingandroid.main.MainScreen
 import com.nutomic.syncthingandroid.onboarding.OnboardingActivity
 import com.nutomic.syncthingandroid.service.Constants
@@ -52,15 +53,20 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
 
         setContent {
             ApplicationTheme {
+                // Name and ID of the device shown, kept across a rotation.
+                var deviceIdDialog by rememberSaveable { mutableStateOf<Pair<String, String>?>(null) }
                 MainScreen(
                     service = boundService,
                     serviceState = serviceState,
                     preferences = sharedPreferences,
                     runAsService = runAsService,
                     menuKeyPresses = menuKeyPresses,
-                    onShowDeviceId = ::showDeviceIdDialog,
+                    onShowDeviceId = { localDeviceToShow()?.let { deviceIdDialog = it } },
                     onExit = ::doExit,
                 )
+                deviceIdDialog?.let { (name, id) ->
+                    DeviceIdDialog(name, id, isCurrentDevice = true) { deviceIdDialog = null }
+                }
             }
         }
     }
@@ -119,17 +125,20 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
         return super.onKeyDown(keyCode, event)
     }
 
-    private fun showDeviceIdDialog() {
+    /**
+     * Name and ID of this device, null after telling the user it is not known yet.
+     */
+    private fun localDeviceToShow(): Pair<String, String>? {
         val deviceId = sharedPreferences.getString(Constants.PREF_LOCAL_DEVICE_ID, "")
         if (deviceId.isNullOrEmpty()) {
             Toast.makeText(this, R.string.could_not_access_deviceid, Toast.LENGTH_SHORT).show()
-            return
+            return null
         }
         val deviceName = ConfigRouter(this).getDevices(api, true)
             .firstOrNull { it.deviceID == deviceId }
             ?.displayName
             .orEmpty()
-        DeviceIdDialogFragment.show(supportFragmentManager, deviceName.trim(), deviceId, true)
+        return deviceName.trim() to deviceId
     }
 
     /**

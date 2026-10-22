@@ -1,6 +1,5 @@
-package com.nutomic.syncthingandroid.fragments
+package com.nutomic.syncthingandroid.device
 
-import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -8,7 +7,6 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Build
-import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +34,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -52,114 +51,69 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.theme.ApplicationTheme
 
-class DeviceIdDialogFragment : DialogFragment() {
+/**
+ * The device ID with its QR code, to copy or share.
+ */
+@Composable
+fun DeviceIdDialog(deviceName: String, deviceId: String, isCurrentDevice: Boolean, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val qrCode = remember(deviceId) { generateQrCode(deviceId) }
+    DeviceIdDialogContent(
+        onDismiss = onDismiss,
+        deviceName = deviceName,
+        deviceId = deviceId,
+        qrCode = qrCode,
+        onCopy = { copyDeviceId(context, deviceId) },
+        onShare = { shareDeviceId(context, deviceId) },
+        isCurrentDevice = isCurrentDevice,
+    )
+}
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val args = requireArguments()
-        val deviceName = args.getString(ARG_DEVICE_NAME)!!
-        val deviceId = args.getString(ARG_DEVICE_ID)!!
-        val isCurrentDevice = args.getBoolean(ARG_IS_CURRENT_DEVICE)
+private fun generateQrCode(deviceId: String): Bitmap {
+    val qrSize = 232
+    val black = 0xFF000000
+    val white = 0x00000000
 
-        val qrCode = generateQrCode(deviceId)
+    val bitMatrix = MultiFormatWriter()
+        .encode(deviceId, BarcodeFormat.QR_CODE, qrSize, qrSize)
+    val bitMap = createBitmap(bitMatrix.width, bitMatrix.height, Bitmap.Config.ARGB_8888)
 
-        return Dialog(requireContext()).apply {
-            setContentView(
-                ComposeView(context).apply {
-                    setContent {
-                        DeviceIdDialog(
-                            onDismiss = { dismiss() },
-                            deviceName,
-                            deviceId,
-                            qrCode,
-                            onCopy = { copyDeviceId(deviceId) },
-                            onShare = { shareDeviceId(deviceId) },
-                            isCurrentDevice,
-                        )
-                    }
-                }
-            )
+    for (x in 0 until qrSize) {
+        for (y in 0 until qrSize) {
+            val pixel = if (bitMatrix[x, y]) black else white
+            bitMap[x, y] = pixel.toInt()
         }
     }
 
-    private fun generateQrCode(deviceId: String): Bitmap {
-        val qrSize = 232
-        val black = 0xFF000000
-        val white = 0x00000000
+    return bitMap
+}
 
-        val bitMatrix = MultiFormatWriter()
-            .encode(deviceId, BarcodeFormat.QR_CODE, qrSize, qrSize)
-        val bitMap = createBitmap(bitMatrix.width, bitMatrix.height, Bitmap.Config.ARGB_8888)
+private fun copyDeviceId(context: Context, id: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-        for (x in 0 until qrSize) {
-            for (y in 0 until qrSize) {
-                val pixel = if (bitMatrix[x, y]) black else white
-                bitMap[x, y] = pixel.toInt()
-            }
-        }
+    val clip = ClipData.newPlainText(context.getString(R.string.device_id), id)
+    clipboard.setPrimaryClip(clip)
 
-        return bitMap
-    }
-
-    private fun copyDeviceId(id: String) {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-
-        val clip = ClipData.newPlainText(getString(R.string.device_id), id)
-        clipboard.setPrimaryClip(clip)
-
-        // Android 13+ shows a system confirmation automatically
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            Toast.makeText(
-                requireContext(),
-                R.string.device_id_copied_to_clipboard,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    private fun shareDeviceId(deviceId: String) {
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, deviceId)
-        }
-
-        startActivity(
-            Intent.createChooser(shareIntent, getString(R.string.share_device_id_chooser))
-        )
-    }
-
-
-    companion object {
-        private const val ARG_DEVICE_NAME = "device_name"
-        private const val ARG_DEVICE_ID = "device_id"
-        private const val ARG_IS_CURRENT_DEVICE = "is_current_device"
-
-        fun show(
-            fm: FragmentManager,
-            deviceName: String,
-            deviceId: String,
-            isCurrentDevice: Boolean = false,
-        ) {
-            DeviceIdDialogFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_DEVICE_NAME, deviceName)
-                    putString(ARG_DEVICE_ID, deviceId)
-                    putBoolean(ARG_IS_CURRENT_DEVICE, isCurrentDevice)
-                }
-            }.show(fm, "DeviceIdDialog")
-        }
+    // Android 13+ shows a system confirmation automatically
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        Toast.makeText(context, R.string.device_id_copied_to_clipboard, Toast.LENGTH_SHORT).show()
     }
 }
 
+private fun shareDeviceId(context: Context, deviceId: String) {
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, deviceId)
+    }
+    context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_device_id_chooser)))
+}
 
 @Composable
-fun DeviceIdDialog(
+private fun DeviceIdDialogContent(
     onDismiss: () -> Unit,
     deviceName: String,
     deviceId: String,
@@ -168,49 +122,47 @@ fun DeviceIdDialog(
     onShare: () -> Unit,
     isCurrentDevice: Boolean,
 ) {
-    ApplicationTheme {
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            modifier = Modifier.let { if (!isLandscape()) it.widthIn(max = 460.dp).fillMaxWidth(0.9f) else it },
-            onDismissRequest = { onDismiss() },
-            title = {
-                if (isLandscape()) {
-                    Row(Modifier.fillMaxWidth()) {
-                        DialogTitle(deviceName, isCurrentDevice, Modifier.weight(1f))
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Outlined.Close, stringResource(R.string.close_device_id))
-                        }
-                    }
-                } else {
-                    DialogTitle(deviceName, isCurrentDevice)
-                }
-            },
-            text = {
-                if (isLandscape()) {
-                    LandscapeDialogContent(deviceId, qrCode, onCopy, onShare)
-                } else {
-                    PortraitDialogContent(deviceId, qrCode, onCopy, onShare)
-                }
-            },
-            confirmButton = {
-                if (!isLandscape()) {
-                    TextButton(onClick = { onDismiss() }) {
-                        Text(stringResource(R.string.finish))
+    AlertDialog(
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier.let { if (!isLandscape()) it.widthIn(max = 460.dp).fillMaxWidth(0.9f) else it },
+        onDismissRequest = { onDismiss() },
+        title = {
+            if (isLandscape()) {
+                Row(Modifier.fillMaxWidth()) {
+                    DialogTitle(deviceName, isCurrentDevice, Modifier.weight(1f))
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Outlined.Close, stringResource(R.string.close_device_id))
                     }
                 }
-            },
-        )
-    }
+            } else {
+                DialogTitle(deviceName, isCurrentDevice)
+            }
+        },
+        text = {
+            if (isLandscape()) {
+                LandscapeDialogContent(deviceId, qrCode, onCopy, onShare)
+            } else {
+                PortraitDialogContent(deviceId, qrCode, onCopy, onShare)
+            }
+        },
+        confirmButton = {
+            if (!isLandscape()) {
+                TextButton(onClick = { onDismiss() }) {
+                    Text(stringResource(R.string.finish))
+                }
+            }
+        },
+    )
 }
 
 @Composable
-fun isLandscape(): Boolean {
+private fun isLandscape(): Boolean {
     val configuration = LocalConfiguration.current
     return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
 @Composable
-fun DialogTitle(
+private fun DialogTitle(
     deviceName: String,
     isCurrentDevice: Boolean,
     modifier: Modifier = Modifier
@@ -258,7 +210,7 @@ fun DialogTitle(
 }
 
 @Composable
-fun PortraitDialogContent(
+private fun PortraitDialogContent(
     deviceId: String,
     qrCode: Bitmap,
     onCopy: () -> Unit,
@@ -310,7 +262,7 @@ fun PortraitDialogContent(
 }
 
 @Composable
-fun LandscapeDialogContent(
+private fun LandscapeDialogContent(
     deviceId: String,
     qrCode: Bitmap,
     onCopy: () -> Unit,

@@ -24,7 +24,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.core.ktx)
     implementation(libs.documentfile)
-    implementation(libs.fragment.ktx)
     implementation(libs.gson)
     implementation(libs.guava)
     implementation(libs.jbcrypt)

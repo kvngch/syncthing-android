@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,7 +27,7 @@ import com.nutomic.syncthingandroid.device.Discovery
 import com.nutomic.syncthingandroid.device.FoundDevice
 import com.nutomic.syncthingandroid.device.DYNAMIC_ADDRESS
 import com.nutomic.syncthingandroid.device.parseAddresses
-import com.nutomic.syncthingandroid.fragments.DeviceIdDialogFragment
+import com.nutomic.syncthingandroid.device.DeviceIdDialog
 import com.nutomic.syncthingandroid.model.Connection
 import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
@@ -95,6 +96,8 @@ class DeviceActivity : SyncthingActivity() {
             ApplicationTheme {
                 val form by viewModel.form.collectAsStateWithLifecycle()
                 val folders by viewModel.folders.collectAsStateWithLifecycle()
+                // Shown with the device's ID, kept across a rotation.
+                var showDeviceId by rememberSaveable { mutableStateOf(false) }
                 form?.let { current ->
                     DeviceScreen(
                         form = current,
@@ -107,14 +110,7 @@ class DeviceActivity : SyncthingActivity() {
                         onEditDevice = viewModel::editDevice,
                         onScanQrCode = { scanQrCode.launch(QRScannerActivity.intent(this)) },
                         onSearchDevices = ::searchDevices,
-                        onShareDeviceId = {
-                            DeviceIdDialogFragment.show(
-                                supportFragmentManager,
-                                current.device.displayName.trim(),
-                                current.device.deviceID.orEmpty(),
-                                false,
-                            )
-                        },
+                        onShareDeviceId = { showDeviceId = true },
                         onAddFolder = { addFolder.launch(FolderActivity.createIntent(this)) },
                         onOpenSyncConditions = {
                             startActivity(
@@ -132,6 +128,13 @@ class DeviceActivity : SyncthingActivity() {
                             finish()
                         },
                     )
+                    if (showDeviceId) {
+                        DeviceIdDialog(
+                            current.device.displayName.trim(),
+                            current.device.deviceID.orEmpty(),
+                            isCurrentDevice = false,
+                        ) { showDeviceId = false }
+                    }
                 }
             }
         }
