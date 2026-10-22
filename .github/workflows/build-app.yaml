@@ -16,6 +16,7 @@ jobs:
     uses: ./.github/workflows/common-build.yaml
     with:
       buildType: "Debug"
+      gradleOptions: "testDebugUnitTest"
 
   sign:
     name: Sign

@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.zxing.android.embedded) { isTransitive = false }
     implementation(libs.zxing.core)
     ksp(libs.dagger.compiler)
+    testImplementation(libs.junit)
 }
 
 android {
