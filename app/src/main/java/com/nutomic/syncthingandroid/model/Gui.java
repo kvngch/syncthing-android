@@ -34,15 +34,16 @@ public class Gui {
         if (address == null) {
             return "";
         }
-        String[] split = address.split(":");
-        return split.length < 1 ? "" : split[0];
+        // Split on the last colon: an IPv6 host such as [::1] holds colons too.
+        int colon = address.lastIndexOf(':');
+        return colon < 0 ? address : address.substring(0, colon);
     }
 
     public String getBindPort() {
         if (address == null) {
             return "";
         }
-        String[] split = address.split(":");
-        return split.length < 2 ? "" : split[1];
+        int colon = address.lastIndexOf(':');
+        return colon < 0 ? "" : address.substring(colon + 1);
     }
 }

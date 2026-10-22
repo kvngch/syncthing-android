@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -15,7 +14,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -177,13 +175,7 @@ private fun PasswordPreference() {
                             .padding(horizontal = 24.dp)
                             .focusRequester(focusRequester)
                 ) {
-                    OutlinedTextField(
-                        value = dialogText,
-                        onValueChange = { dialogText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardActions = KeyboardActions { onOk() },
-                        singleLine = true,
-                    )
+                    PasswordTextField(dialogText, { dialogText = it }) { onOk() }
                 }
                 LaunchedEffect(focusRequester) { focusRequester.requestFocus() }
             },
