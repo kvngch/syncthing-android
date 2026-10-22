@@ -181,8 +181,8 @@ private fun ResetDatabasePreference() {
                         val intent = Intent(context, SyncthingService::class.java).apply {
                             action = SyncthingService.ACTION_RESET_DATABASE
                         }
+                        // The service shows st_reset_database_done once the reset is done.
                         context.startService(intent)
-                        Toast.makeText(context, R.string.st_reset_database_done, Toast.LENGTH_LONG).show()
                     }
                 ) {
                     Text(stringResource(android.R.string.ok))
