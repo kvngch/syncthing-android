@@ -81,4 +81,15 @@ public class UtilTest {
         long skewMillis = Math.abs(ZonedDateTime.parse(now).toInstant().toEpochMilli() - System.currentTimeMillis());
         assertTrue("skew " + skewMillis + " ms", skewMillis < 60_000);
     }
+
+    @Test
+    public void getPathEllipsisShortensEachPart() {
+        assertEquals("/a/b.txt", Util.getPathEllipsis("/a/b.txt"));
+        assertEquals("a/", Util.getPathEllipsis("a/"));
+        assertEquals("very-long-direc\u22ef/f.txt", Util.getPathEllipsis("very-long-directory-name/f.txt"));
+        // Long names keep their extension; a dotfile is cut as a whole.
+        String longName = "n".repeat(40);
+        assertEquals("n".repeat(30) + "\u22ef.jpeg", Util.getPathEllipsis(longName + ".jpeg"));
+        assertEquals("." + "h".repeat(29) + "\u22ef", Util.getPathEllipsis("." + "h".repeat(40)));
+    }
 }

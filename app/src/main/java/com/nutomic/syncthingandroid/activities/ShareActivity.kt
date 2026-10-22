@@ -105,7 +105,7 @@ class ShareActivity : SyncthingActivity() {
         val picked = result.data?.getStringExtra(FolderPickerActivity.EXTRA_RESULT_DIRECTORY)
         if (result.resultCode == RESULT_OK && picked != null) {
             // Only the part under the folder is shown and stored.
-            val subDirectory = picked.replace(Util.formatPath(folder.path), "")
+            val subDirectory = picked.replace(Util.formatPath(folder.path.orEmpty()), "")
             sharedPreferences.edit { putString(PREF_FOLDER_SAVED_SUBDIRECTORY + folder.id, subDirectory) }
             subDirectoryVersion++
         }
