@@ -80,6 +80,7 @@
     <string name="photo_shoot_intro_missing_permissions">We require storage and camera permission to continue.</string>
     <string name="grant_storage_permission">Grant storage permission</string>
     <string name="grant_camera_permission">Grant camera permission</string>
+    <string name="camera_unavailable">The camera cannot be opened.</string>
     <string name="photo_shoot_intro_permission_desc">Syncthing Camera requires your consent to shoot pictures and store them on your device. This feature is optional. To use it, grant permissions and tap \"Continue\". We will setup a Syncthing Camera folder for you which you can share with other Syncthing devices later.</string>
     <string name="photo_shoot_take_picture_success">Successfully saved picture to the Syncthing Camera folder.</string>
     <string name="photo_shoot_take_picture_failure">Failed to take a picture or you\'ve cancelled.</string>

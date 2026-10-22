@@ -587,6 +587,7 @@
     <string name="location_permission_desc">Syncthing peut être configuré pour fonctionner sur une sélection de réseaux Wi-Fi. Android nécessite que l\'application ait accès à la localisation pour pouvoir lire le nom du réseau Wi-Fi actif. Si vous voulez activer cette fonctionnalité, appuyez sur le bouton ci-dessus. Vous pouvez sauter cette étape. Voir notre politique de confidentialité pour en savoir plus.</string>
     <string name="grant_permission">Accorder la permission</string>
     <string name="grant_camera_permission">Accorder la permission d\'accès à l\'appareil photo</string>
+    <string name="camera_unavailable">Impossible d\'ouvrir l\'appareil photo.</string>
     <string name="permission_granted">Permission accordée</string>
     <string name="permission_denied_open_settings">Permission refusée. Accordez-la dans les réglages de l\'appli pour continuer.</string>
     <string name="photo_shoot_intro_welcome_title">Bienvenue dans Syncthing Appareil photo</string>
