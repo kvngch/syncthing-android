@@ -53,6 +53,7 @@ import com.nutomic.syncthingandroid.service.SyncthingServiceBinder;
 import com.nutomic.syncthingandroid.service.TestData;
 import com.nutomic.syncthingandroid.util.Compression;
 import com.nutomic.syncthingandroid.util.ConfigRouter;
+import com.nutomic.syncthingandroid.util.ConfigXml.OpenConfigException;
 import com.nutomic.syncthingandroid.util.TextWatcherAdapter;
 import com.nutomic.syncthingandroid.util.Util;
 
@@ -307,7 +308,16 @@ public class DeviceActivity extends SyncthingActivity {
                 String passedId = getIntent().getStringExtra(EXTRA_DEVICE_ID);
                 Log.d(TAG, "Initializing edit mode: deviceID=" + passedId);
                 // getApi() is unavailable (onCreate > onPostCreate > onServiceConnected)
-                List<Device> devices = mConfig.getDevices(null, false);
+                List<Device> devices;
+                try {
+                    devices = mConfig.getDevices(null, false);
+                } catch (OpenConfigException e) {
+                    Log.e(TAG, "Failed to read the config", e);
+                    Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show();
+                    setResult(Activity.RESULT_CANCELED);
+                    finish();
+                    return;
+                }
                 mDevice = null;
                 for (Device currentDevice : devices) {
                     if (currentDevice.deviceID.equals(passedId)) {

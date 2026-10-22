@@ -31,6 +31,7 @@ import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,6 +51,7 @@ import com.nutomic.syncthingandroid.service.RestApi;
 import com.nutomic.syncthingandroid.service.SyncthingService;
 import com.nutomic.syncthingandroid.service.SyncthingServiceBinder;
 import com.nutomic.syncthingandroid.util.ConfigRouter;
+import com.nutomic.syncthingandroid.util.ConfigXml.OpenConfigException;
 import com.nutomic.syncthingandroid.util.FileUtils;
 import com.nutomic.syncthingandroid.util.FileUtils.ExternalStorageDirType;
 import com.nutomic.syncthingandroid.util.TextWatcherAdapter;
@@ -337,7 +339,16 @@ public class FolderActivity extends SyncthingActivity {
                 String passedId = getIntent().getStringExtra(EXTRA_FOLDER_ID);
                 Log.d(TAG, "Initializing edit mode: folder.id=" + passedId);
                 // getApi() is unavailable (onCreate > onPostCreate > onServiceConnected)
-                List<Folder> folders = mConfig.getFolders(null);
+                List<Folder> folders;
+                try {
+                    folders = mConfig.getFolders(null);
+                } catch (OpenConfigException e) {
+                    Log.e(TAG, "Failed to read the config", e);
+                    Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show();
+                    setResult(Activity.RESULT_CANCELED);
+                    finish();
+                    return;
+                }
                 mFolder = null;
                 for (Folder currentFolder : folders) {
                     if (currentFolder.id.equals(passedId)) {
@@ -500,6 +511,10 @@ public class FolderActivity extends SyncthingActivity {
         for (Map.Entry<String, String> entry: mFolder.versioning.params.entrySet()){
             bundle.putString(entry.getKey(), entry.getValue());
         }
+        // The dialog edits the versions path as the legacy "versionsPath" param.
+        if (!TextUtils.isEmpty(mFolder.versioning.fsPath)) {
+            bundle.putString("versionsPath", mFolder.versioning.fsPath);
+        }
 
         if (TextUtils.isEmpty(mFolder.versioning.type)){
             bundle.putString("type", "none");
@@ -535,6 +550,15 @@ public class FolderActivity extends SyncthingActivity {
 
         outState.putBoolean(IS_SHOW_DISCARD_DIALOG, mDiscardDialog != null && mDiscardDialog.isShowing());
         Util.dismissDialogSafe(mDiscardDialog, this);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        // The ignore list text was restored with the view state just above. onReceiveFolderIgnoreList,
+        // which normally attaches this watcher, only runs on a fresh start: attach it here.
+        mEditIgnoreListContent.removeTextChangedListener(mIgnoreListContentTextWatcher);
+        mEditIgnoreListContent.addTextChangedListener(mIgnoreListContentTextWatcher);
     }
 
     /**
@@ -641,7 +665,6 @@ public class FolderActivity extends SyncthingActivity {
         }
         int itemId = item.getItemId();
         if (itemId == R.id.save) {
-            item.setEnabled(false);
             onSave();
             return true;
         } else if (itemId == R.id.remove) {
@@ -891,6 +914,21 @@ public class FolderActivity extends SyncthingActivity {
             Toast.makeText(this, R.string.folder_path_required, Toast.LENGTH_LONG).show();
             return;
         }
+        if (mIsCreateMode) {
+            List<Folder> existingFolders;
+            try {
+                existingFolders = mConfig.getFolders(getApi());
+            } catch (OpenConfigException e) {
+                Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show();
+                return;
+            }
+            for (Folder folder : existingFolders) {
+                if (folder.id.equals(mFolder.id)) {
+                    Toast.makeText(this, R.string.folder_id_exists, Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+        }
 
         setSavingState(true);
 
@@ -1052,6 +1090,17 @@ public class FolderActivity extends SyncthingActivity {
                 mFolder.versioning.params.put(key, arguments.getString(key));
             }
             mFolder.versioning.type = type;
+            // Syncthing only reads versioning.fsPath since config v35; versionsPath is migrated once.
+            String versionsPath = mFolder.versioning.params.remove("versionsPath");
+            if (versionsPath != null) {
+                mFolder.versioning.fsPath = versionsPath;
+            }
+            if (mFolder.versioning.fsPath == null) {
+                mFolder.versioning.fsPath = "";
+            }
+            if (TextUtils.isEmpty(mFolder.versioning.fsType)) {
+                mFolder.versioning.fsType = "basic";
+            }
         }
         updateVersioningDescription();
         mFolderNeedsToUpdate = true;
@@ -1168,9 +1217,10 @@ public class FolderActivity extends SyncthingActivity {
                         getString(R.string.trashcan_versioning_info, mFolder.versioning.params.get("cleanoutDays")));
                 break;
             case "staggered":
-                int maxAge = (int) TimeUnit.SECONDS.toDays(Long.valueOf(mFolder.versioning.params.get("maxAge")));
+                String maxAgeS = mFolder.versioning.params.get("maxAge");
+                int maxAge = TextUtils.isEmpty(maxAgeS) ? 0 : (int) TimeUnit.SECONDS.toDays(Long.parseLong(maxAgeS));
                 setVersioningDescription(getString(R.string.type_staggered),
-                        getString(R.string.staggered_versioning_info, maxAge, mFolder.versioning.params.get("versionsPath")));
+                        getString(R.string.staggered_versioning_info, maxAge, mFolder.versioning.fsPath));
                 break;
             case "external":
                 setVersioningDescription(getString(R.string.type_external),
