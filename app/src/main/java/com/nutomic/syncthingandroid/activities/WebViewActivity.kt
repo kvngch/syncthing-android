@@ -160,7 +160,8 @@ class WebViewActivity : ThemedAppCompatActivity() {
         settings.allowContentAccess = false
         webViewClient = this@WebViewActivity.webViewClient
         clearCache(true)
-        loadUrl(url)
+        // Inside apply, a bare url would be WebView.getUrl().
+        loadUrl(this@WebViewActivity.url)
     }
 
     private fun answerSslError(pending: PendingSslError, accept: Boolean, isTelevision: Boolean) {
