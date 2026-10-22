@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="introduction">מבוא</string>
     <string name="welcome_text">היישום Syncthing הוא יישום קוד פתוח לסנכרון קבצים. כדי לשתף נתונים עם התקנים אחרים, אתה צריך להוסיף את מזהה ההתקן הייחודי שלהם לרשימת ההתקנים. לאחר מכן תוכל לבחור אילו תיקיות לשתף עם אילו התקנים. \n \nנא לדווח על כל בעיה שנתקלת בה דרך GitHub.</string>
     <string name="storage_permission_title">הרשאת אחסון</string>
     <string name="storage_permission_desc">היישום Syncthing צריך לגשת לאחסון שלך כדי לבצע סנכרון קבצים.</string>
@@ -13,10 +12,8 @@
     <string name="folders">תיקיות</string>
     <string name="ssl_cert_invalid_text">נראה שלאתר שכתובתו %1$s יש תעודה לא חוקית עבור הצפנת SSL. להמשיך?</string>
     <string name="run_on_mobile_data_summary">פעל כאשר ההתקן מחובר דרך רשת הנתונים הניידים. אזהרה: זה עשוי לצרוך המון נתונים מתוכנית הנתונים של מפעיל הנייד שלך אם אתה מסנכרן כמויות גדולות של נתונים.</string>
-    <string name="toast_ignore_doze_permission_required">יישום זה עובד באופן אמין רק אם הוא פטור ממצב חיסכון בחשמל מסוג \"תנומה\".</string>
     <string name="location_permission_title">הרשאת מיקום</string>
     <string name="location_permission_desc_api_29">עצה עבור אנדרואיד 10+: \"כן, כל הזמן\"</string>
-    <string name="toast_notification_permission_required">היישום Syncthing דורש את הרשאת ההתראות כדי לשמור על השירות שלו חי ומחובר.</string>
     <string name="key_generation_title">יצירת מפתחות</string>
     <string name="key_generation_success">מפתחות מאובטחים להחלפת נתונים פרטיים נוצרו בהצלחה.</string>
     <string name="finish">סיום</string>
@@ -24,8 +21,6 @@
     <string name="permission_granted">הוענקה הרשאה</string>
     <string name="accept">קבל</string>
     <string name="ignore">התעלם</string>
-    <string name="page_x_of_y">עמוד %1$s מתוך %2$s</string>
-    <string name="main_menu">תפריט ראשי</string>
     <string name="photo_shoot_launcher_title">סנכרן מצלמה</string>
     <string name="photo_shoot_intro_welcome_title">ברוך הבא למצלמת Syncthing</string>
     <string name="photo_shoot_intro_missing_permissions">אנו דורשים הרשאות אחסון ומצלמה כדי להמשיך.</string>
@@ -34,11 +29,9 @@
     <string name="photo_shoot_take_picture_success">התמונה נשמרה בהצלחה בתיקייה של מצלמת Syncthing.</string>
     <string name="photo_shoot_take_picture_failure">צילום התמונה נכשל או שביטלת.</string>
     <string name="open_main_menu">פתח את התפריט הראשי</string>
-    <string name="close_main_menu">סגור את התפריט הראשי</string>
     <string name="dialog_exit_while_running_as_service_title">אשר כדי לצאת מהיישום</string>
     <string name="add_folder">הוסף תיקייה</string>
     <string name="share_device_id">שתף מזהה התקן</string>
-    <string name="send_device_id_to">שלח מזהה התקן אל</string>
     <string name="usage_reporting_dialog_title">לאפשר דיווח שימוש אנונימי?</string>
     <string name="usage_reporting_dialog_description">דוח השימוש המוצפן נשלח מדי יום. הוא משמש למעקב אחר פלטפורמות שכיחות, גדלי תיקיות וגרסאות יישום. אם מערך הנתונים המדווח ישתנה, תתבקש עם דו-שיח זה שוב. \n \nהסטטיסטיקות המצטברות זמינות לציבור בכתובת https://data.syncthing.net.</string>
     <string name="yes">כן</string>
@@ -54,13 +47,11 @@
     <string name="suggest_file_manager_app_dialog_title">לא נמצא יישום מנהל קבצים תואם</string>
     <string name="suggest_file_manager_app_dialog_text">אנו ממליצים לך להתקין יישום קוד פתוח לניהול קבצים בשם \'Material Files\'. האם תרצה לפתוח את עמוד חנות האפליקציות שלו?</string>
     <string name="devices_fragment_title">התקנים</string>
-    <string name="device_syncing">מסנכרן (%1$d%%)</string>
     <string name="device_syncing_percent_bytes">מסנכרן (%1$d%%, %2$s)</string>
     <string name="device_disconnected">מנותק</string>
     <string name="device_disconnected_not_synced">מנותק (%1$s בהמתנה)</string>
     <string name="device_paused">הושהה</string>
     <string name="device_state_unused">לא בשימוש</string>
-    <string name="device_state_unknown">לא ידוע</string>
     <string name="device_last_seen">נראה לאחרונה: %1$s</string>
     <string name="device_last_seen_never">לעולם לא</string>
     <string name="shared_folders_title_colon">"תיקיות: "</string>
@@ -74,8 +65,6 @@
     <string name="syncthing_running">היישום Syncthing פועל.</string>
     <string name="syncthing_not_running">היישום Syncthing אינו פועל.</string>
     <string name="syncthing_has_crashed">היישום Syncthing קרס.</string>
-    <string name="download_title_colon">"הורדה: "</string>
-    <string name="upload_title_colon">"העלאה: "</string>
     <string name="ram_usage">שימוש ב־RAM</string>
     <string name="announce_server">שרת הכרזה מוגדר</string>
     <string name="uptime">זמן פעולה</string>
@@ -101,7 +90,6 @@
     <string name="folder_path_readwrite">גרסת האנדרואיד שלך מעניקה ל־Syncthing גישת קריאה וכתיבה לתיקייה שנבחרה.</string>
     <string name="dialog_discard_changes">להשליך את השינויים שלך?</string>
     <string name="toast_invalid_folder_selected">מצטערים. לא ניתן להשתמש בתיקייה שנבחרה. נא לבחור תיקייה הממוקמת באחסון הפנימי או החיצוני.</string>
-    <string name="folder_type_switch_to_receive_encrypted_not_allowed">החלפת תיקיות קיימות ל\'קבלה מוצפנת\' אינה נתמכת.</string>
     <string name="ignore_patterns">דפוסי התעלמות</string>
     <string name="device_id">מזהה התקן</string>
     <string name="discovered_devices_title">התקנים שהתגלו - הקש כדי לבחור</string>
@@ -120,15 +108,12 @@
     <string name="untrusted_device_explanation">כל התיקיות המשותפות עם התקן זה חייבות להיות מוגנת באמצעות סיסמה, כך שכל הנתונים שנשלחו אינם קריאים ללא הסיסמה שניתנה.</string>
     <string name="delete_device">מחק התקן</string>
     <string name="add_device">הוסף התקן</string>
-    <string name="add">הוסף</string>
     <string name="edit_device">ערוך התקן</string>
     <string name="remove_device_confirm">האם אתה באמת רוצה להסיר את ההתקן הזה?</string>
     <string name="device_id_required">אסור שמזהה ההתקן יהיה ריק</string>
     <string name="device_id_invalid">מזהה ההתקן אינו מעוצב כראוי. נא לנסות שוב ולהזין את המזהה הנכון.</string>
-    <string name="device_name_required">אסור ששם ההתקן יהיה ריק</string>
     <string name="device_addresses_invalid">כתובות ההתקן אינן מעוצבות כראוי. נא לנסות שוב. תסתכל על המסמכים של Syncthing למידע נוסף.</string>
     <string name="scan_qr_code_description">סרוק קוד QR</string>
-    <string name="install_barcode_scanner_app_message">זה דורש יישום סורק ברקוד. האם ברצונך להתקין את היישום \'Binary Eye\' מתוך F-Droid?</string>
     <string name="folders_list_empty">לא הוגדרו תיקיות. הקש כדי להוסיף תיקייה חדשה.</string>
     <string name="no_recent_changes">אין שינויים אחרונים.</string>
     <string name="recent_changes_title">שינויים אחרונים</string>
@@ -141,7 +126,6 @@
     <string name="web_page_loading">טוען דף אינטרנט: \n%1$s …</string>
     <string name="open_in_browser">פתח בדפדפן</string>
     <string name="settings_title">הגדרות</string>
-    <string name="category_run_conditions">תנאי ריצה</string>
     <string name="category_user_interface">ממשק משתמש</string>
     <string name="preference_app_theme_title">ערכת נושא</string>
     <string name="preference_app_theme_follow_system">עקוב אחר המערכת</string>
@@ -171,7 +155,6 @@
     <string name="ignore_doze_permission_os_notice">ידוע כי טלוויזיות אנדרואיד לפעמים מסיימות את היישום כאשר הוא פועל ברקע. יש פתרון זמין באתר השיתופי שכתובתו \'%1$s/%2$s\'.</string>
     <string name="ignore_doze_permission_desc">אנדרואיד עשוי להפסיק את הסנכרון לאחר זמן מה. כדי למנוע זאת, כבה את מיטוב הסוללה. להתקנים מסוימים יש יישומי הריגת-משימות נוספים מותקנים מראש. עליך להוסיף את Syncthing לרשימת המותרים שלהם, גם כן.</string>
     <string name="notification_permission_desc">נדרש כדי להציג התראות לגבי חיבורי התקנים חדשים, בקשות לשיתוף תיקיות וכדי לשמור על השירות חי ומחובר.</string>
-    <string name="generic_error">שגיאה</string>
     <string name="generic_help">עזרה</string>
     <string name="reason">סיבה:</string>
     <string name="folder_id">מזהה תיקייה</string>
@@ -189,7 +172,6 @@
     <string name="deviceEncryptionPasswordHint">אם לא מהימן, הזן סיסמת הצפנה</string>
     <string name="default_syncthing_camera_folder_label">מצלמת Syncthing</string>
     <string name="activity_main_bottom_navigation_rescan_all">סרוק הכל מחדש</string>
-    <string name="exception_known_bug_notice">היישום נתקל בבאג ידוע שעדיין לא נפתר. ראה את %1$s/%2$s למידע נוסף. נא להשאיר לנו תיאור מדויק של מה שקרה לפני כן.</string>
     <string name="web_gui_creating_key">מייצר מפתחות מאובטחים. זה עשוי לקחת כמה דקות…</string>
     <string name="override_changes_question">זה יבטל את כל השינויים שנעשו בהתקנים אחרים המשתפים תיקייה זו. להמשיך?</string>
     <string name="device_up_to_date">מעודכן</string>
@@ -215,8 +197,6 @@
     <string name="wifi_ssid_whitelist_empty">לא צוינו רשתות Wi-Fi. לחץ כדי לציין רשתות.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_wifi">נא להדליק Wi-Fi כדי לבחור רשתות.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_location">נא להדליק מיקום כדי לבחור רשתות.</string>
-    <string name="sync_only_wifi_ssids_need_to_grant_location_permission">אתה צריך להעניק הרשאת מיקום כדי להשתמש בתכונה זו.</string>
-    <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_title">נדרשת הרשאה</string>
     <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_content">החל מאנדרואיד 8.1, נדרשת גישת מיקום כדי שיהיה ניתן לקרוא את השם של הרשת Wi-Fi. אתה יכול להשתמש בתכונה זו רק אם אתה מעניק את ההרשאה הזאת.</string>
     <string name="power_source_title">פעל כאשר ההתקן מופעל באמצעות</string>
     <string name="power_source_ac_and_battery_power">כוח זרם חילופין וסוללה.</string>
@@ -237,18 +217,6 @@
     <string name="behaviour_autostart_summary">התחל את היישום באופן אוטומטי בעת הפעלת מערכת ההפעלה.</string>
     <string name="expert_mode_title">מצב מומחה</string>
     <string name="expert_mode_summary">הפעלת אפשרות זו תציג אפשרויות תצורה מתקדמות. כדאי שתסתכל על המסמכים של Syncthing תחילה כדי לוודא שאתה יודע איך להשתמש בהן כראוי. הגדרות שגויות עשויות לגרום לריקון הסוללה, מיצוי משאבי מערכת או סנכרון חלקי.</string>
-    <string name="preference_language_title">שפה</string>
-    <string name="preference_language_summary">שנה את שפת היישום</string>
-    <string name="pref_language_default">שפה ברירת מחדל</string>
-    <string name="folder_type_send_receive">שליחה &amp; קבלה</string>
-    <string name="folder_type_send_only">שליחה בלבד</string>
-    <string name="folder_type_receive_only">קבלה בלבד</string>
-    <string name="pull_order_random">אקראי</string>
-    <string name="pull_order_alphabetic">אלפביתי</string>
-    <string name="pull_order_smallest_first">הקטן ביותר תחילה</string>
-    <string name="pull_order_largest_first">הגדול ביותר תחילה</string>
-    <string name="pull_order_oldest_first">הישן ביותר תחילה</string>
-    <string name="pull_order_newest_first">החדש ביותר תחילה</string>
     <string name="versioning_type_none">ללא</string>
     <string name="versioning_type_trashcan">פח אשפה</string>
     <string name="versioning_type_simple">פשוט</string>
@@ -306,8 +274,6 @@
     <string name="category_about">אודות</string>
     <string name="verbose_log_title">יומן מילולי</string>
     <string name="verbose_log_summary">הפעלת אפשרות זו תעזור ליצור יומני דיבג ברמה מאוד מפורטת.</string>
-    <string name="log_to_file_title">רשום לקובץ</string>
-    <string name="log_to_file_summary">הפלט של SyncthingNative ייכתב לקובץ.</string>
     <string name="open_log">פתיחת יומן</string>
     <string name="open_log_summary">פתח את חלון היומנים של Syncthing ואנדרואיד</string>
     <string name="report_issue_title">דווח על בעיה</string>
@@ -357,7 +323,6 @@
     <string name="sub_folder">תיקיית משנה</string>
     <string name="reason_force_start">היישום Syncthing פועל בגלל שאילצת אותו להתחיל ללא קשר לתנאי הריצה.</string>
     <string name="reason_force_stop">היישום Syncthing אינו פועל בגלל שאילצת אותו לעצור ללא קשר לתנאי הריצה.</string>
-    <string name="reason_not_within_time_frame">הפעלת את \'פעל לפי לוח זמנים\' והסנכרון האחרון היה לפני לא יותר משעה.</string>
     <string name="reason_not_within_time_frame_2">הפעלת את \'פעל לפי לוח זמנים\' והסנכרון האחרון היה לפני %s.</string>
     <string name="reason_not_within_time_frame_0_min">פחות מדקה</string>
     <plurals name="reason_not_within_time_frame_minutes">
@@ -387,7 +352,6 @@
     <string name="reason_run_condition_monitor_not_instantiated">לא נוצר מופע של RunConditionMonitor. נא להפעיל מחדש את היישום ולהגיש דוח באגים אם שגיאה זו אינה נעלמת לאחר ההפעלה מחדש.</string>
     <string name="custom_wifi_ssid_whitelist_empty">אין SSID של WiFi ברשימת המותרים. נא לציין כמה בהגדרות.</string>
     <string name="exit">יציאה</string>
-    <string name="syncthing_active">פועל</string>
     <string name="syncthing_active_details">פועל: %1$s</string>
     <string name="no_remote_devices_connected">אין התקנים מרוחקים מחוברים</string>
     <plurals name="syncthing_active_syncing_device_online">
@@ -407,16 +371,12 @@
     <string name="config_read_failed">קריאת תצורה נכשלה. שקול גיבוי של הנתונים שלך מתיקיות הסנכרון, ואז נקה את הנתונים של יישום זה מהגדרות אנדרואיד ופתח אותו שוב.</string>
     <string name="config_file_missing">קובץ תצורה חיוני לפעולה חסר</string>
     <string name="webui_tcp_port_unavailable">יציאת TCP %s של ממשק המשתמש ברשת עסוקה. מופע שני?</string>
-    <string name="default_android_camera_folder_label">מצלמת אנדרואיד</string>
-    <string name="default_folder_id">%1$s-photos</string>
     <string name="notification_crash_title">קרס (קוד יציאה %1$s)</string>
     <string name="notification_crash_text">לחץ עבור יומנים (%1$s)</string>
     <string name="notifications_persistent_channel">היישום Syncthing פעיל</string>
     <string name="notification_persistent_waiting_channel">מנטר תנאי ריצה</string>
     <string name="notifications_other_channel">התראות אחרות</string>
     <string name="notification_out_of_disk_space">כרטיס ה־SD מלא. קובץ %1$s</string>
-    <string name="restart_title">דרושה הפעלה מחדש</string>
-    <string name="restart_notification_text">לחץ כאן כדי להתחיל מחדש את Syncthing כעת</string>
     <string name="device_id_copied_to_clipboard">מזהה התקן הועתק ללוח</string>
     <string name="file_size_unit_B">B</string>
     <string name="file_size_unit_KiB">KB</string>
@@ -516,9 +476,7 @@
     <string name="folder_run_script_description">אפשרות מומחה להרצת סקריפטים לאחר שתיקייה משנה את מצב הסנכרון שלה. סקריפטים ב-\'.stfolder/*.sh\' יבוצעו, מיקומים אחרים אינם נתמכים מטעמי אבטחה.\nקריאת סקריפט לדוגמה: \'.stfolder/rename-files.sh sync_complete\'</string>
     <string name="clear_stversions_summary">קבצים מועברים לתיקיית .stversions כאשר הם מוחלפים או נמחקים על ידי Syncthing. ייתכן שתוכל למצוא ולשחזר קבצים שנמחקו בטעות שם, אבל גרסאות ישנות של הקבצים תופסות שטח אחסון בהתקן שלך.</string>
     <string name="preference_category_actions">פעולות</string>
-    <string name="pizza_url_title">» חתולים אוהבים פיצה « 😺🍕</string>
     <string name="syncthing_forum_summary">עבור אל פורום Syncthing וקבל תמיכה</string>
-    <string name="pizza_url_summary">באמצעות הקשה אחת בלבד, אתה יכול להותיר פרוסה חמה של אדיבות - בתוספת אנרגיות טובות כדי שהחתולים ימשיכו לגרגר בשמחה.</string>
     <string name="privacy_summary">פתח את מדיניות הפרטיות של Syncthing-אנדרואיד, אשר מכסה שימוש (אם בכלל) של נתונים אישיים, למשל מיקום.</string>
     <string name="privacy_title">מדיניות פרטיות</string>
     <string name="folder_run_script_caption">הרצת סקריפט</string>

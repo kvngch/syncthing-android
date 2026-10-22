@@ -77,4 +77,8 @@
     <issue id="PrivateResource" severity="ignore" />
     <!-- Ignore long vector paths -->
     <issue id="VectorPath" severity="ignore" />
+    <!-- The in-app browser proceeds only after the user accepted the certificate error of that host -->
+    <issue id="WebViewClientOnReceivedSslError">
+        <ignore path="src/main/java/com/nutomic/syncthingandroid/activities/WebViewActivity.kt" />
+    </issue>
 </lint>
