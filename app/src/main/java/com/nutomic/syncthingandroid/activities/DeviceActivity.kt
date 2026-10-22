@@ -32,7 +32,6 @@ import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
-import com.nutomic.syncthingandroid.util.Compression
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.Util
@@ -166,7 +165,6 @@ class DeviceActivity : SyncthingActivity() {
                 name = intent.getStringExtra(EXTRA_DEVICE_NAME).orEmpty()
                 deviceID = intent.getStringExtra(EXTRA_DEVICE_ID)
                 addresses = DYNAMIC_ADDRESS
-                compression = Compression.METADATA.getValue(this@DeviceActivity)
             }
         } else {
             val id = intent.getStringExtra(EXTRA_DEVICE_ID)
