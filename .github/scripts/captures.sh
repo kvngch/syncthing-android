@@ -81,31 +81,36 @@ sleep 5
 photo 01-dossiers
 touche "Devices" && sleep 3 && photo 02-appareils
 touche "Status" && sleep 3 && photo 03-statut
-touche "Folders" && sleep 2
+# Back to the main screen: the first back may only close the keyboard, and leaving an edit
+# screen asks "Discard your changes?".
+principal() {
+  for _ in 1 2 3 4 5 6; do
+    ecran_actif | grep -q MainActivity && return 0
+    touche "OK" >/dev/null && sleep 2 || retour
+  done
+  return 1
+}
 
+touche "Folders" && sleep 2
 if touche "Add Folder"; then
   sleep 4 && photo 04-nouveau-dossier
-  retour
-  touche "OK" >/dev/null && sleep 2
+  principal
 fi
 touche "Devices" && sleep 2
 if touche "Add Device"; then
   sleep 4 && photo 05-nouvel-appareil
-  retour
-  touche "OK" >/dev/null && sleep 2
+  principal
 fi
 
-# The navigation drawer, opened by its toolbar button or else by an edge swipe.
+# The navigation drawer, opened by its toolbar button from the main screen.
 tiroir() {
-  touche "Open Main Menu" >/dev/null || touche "Main Menu" >/dev/null \
-    || adb shell input swipe 5 1200 700 1200 300
-  sleep 3
+  principal && { touche "Open Main Menu" >/dev/null || touche "Main Menu" >/dev/null; } && sleep 3
 }
 tiroir && photo 06-tiroir
-touche "Settings" && sleep 4 && photo 07-reglages && retour
-tiroir && touche "Recent changes" && sleep 5 && photo 08-changements-recents && retour
+touche "Settings" && sleep 4 && photo 07-reglages
+tiroir && touche "Recent changes" && sleep 5 && photo 08-changements-recents
 tiroir && touche "Show device ID" && sleep 3 && photo 09-identifiant && retour
-tiroir && touche "Web GUI" && sleep 15 && photo 10-interface-web && retour
+tiroir && touche "Web GUI" && sleep 15 && photo 10-interface-web
 
 adb logcat -d -b crash > captures/plantages.txt
 adb logcat -d -t 600 '*:W' > captures/journal.txt
