@@ -57,6 +57,7 @@
     <string name="generic_help">Help</string>
     <string name="grant_permission">Grant permission</string>
     <string name="permission_granted">Permission granted</string>
+    <string name="permission_denied_open_settings">Permission denied. Grant it in the app settings to continue.</string>
     <string name="reason">Reason:</string>
 
     <string name="accept">Accept</string>

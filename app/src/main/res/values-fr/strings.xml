@@ -585,6 +585,7 @@
     <string name="grant_permission">Accorder la permission</string>
     <string name="grant_camera_permission">Accorder la permission d\'accès à l\'appareil photo</string>
     <string name="permission_granted">Permission accordée</string>
+    <string name="permission_denied_open_settings">Permission refusée. Accordez-la dans les réglages de l\'appli pour continuer.</string>
     <string name="photo_shoot_intro_welcome_title">Bienvenue dans Syncthing Appareil photo</string>
     <string name="reason">Raison :</string>
     <string name="toast_notification_permission_required">Syncthing a besoin de la permission de notifications pour garder le service actif et connecté.</string>

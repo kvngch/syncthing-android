@@ -1,12 +1,14 @@
 package com.nutomic.syncthingandroid.onboarding
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -16,6 +18,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
 import java.io.Serializable
@@ -34,9 +37,12 @@ import com.nutomic.syncthingandroid.util.LocalActivityScope
 import com.nutomic.syncthingandroid.util.PermissionUtil
 import com.nutomic.syncthingandroid.util.Util
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 data class OnboardingUiState(
     val pages: List<OnboardingPage> = emptyList(),
@@ -61,6 +67,16 @@ class OnboardingActivity : ThemedAppCompatActivity() {
 
         // Key used to persist the whole UI state across configuration changes (e.g. rotation).
         private const val STATE_UI_STATE = "onboarding_ui_state"
+
+        /**
+         * Key generation outlives the activity: generateConfig() blocks and cannot be cancelled,
+         * so a recreated activity (rotation) waits for the running generation instead of starting
+         * a second one on the same files. The result is an error message, or null on success.
+         */
+        private val keyGenerationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        private var keyGeneration: Deferred<String?>? = null
+
+        private fun isKeyGenerationRunning() = keyGeneration?.isActive == true
     }
 
     @Inject
@@ -78,6 +94,13 @@ class OnboardingActivity : ThemedAppCompatActivity() {
             advanceIfCurrentPage(OnboardingPage.NOTIFICATION_PERMISSION)
         } else {
             Log.i(TAG, "User denied POST_NOTIFICATIONS permission.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                openSettingsIfPermanentlyDenied(
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                )
+            }
         }
     }
 
@@ -91,6 +114,9 @@ class OnboardingActivity : ThemedAppCompatActivity() {
             advanceIfCurrentPage(OnboardingPage.LOCAL_NETWORK_PERMISSION)
         } else {
             Log.i(TAG, "User denied ACCESS_LOCAL_NETWORK permission.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN) {
+                openSettingsIfPermanentlyDenied(Manifest.permission.ACCESS_LOCAL_NETWORK, appDetailsSettingsIntent())
+            }
         }
     }
 
@@ -297,6 +323,9 @@ class OnboardingActivity : ThemedAppCompatActivity() {
             refreshPermissionState()
             if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
+                if (grantResults.isNotEmpty()) {
+                    openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
+                }
             } else {
                 Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
                 Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
@@ -435,6 +464,26 @@ class OnboardingActivity : ThemedAppCompatActivity() {
         }
     }
 
+    /**
+     * A required permission refused for good (no rationale left) leaves the grant button without
+     * any effect, and the page cannot be continued: send the user to the system settings instead.
+     * onResume advances the page once the permission is granted there.
+     */
+    private fun openSettingsIfPermanentlyDenied(permission: String, settingsIntent: Intent) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+            return
+        }
+        Toast.makeText(this, R.string.permission_denied_open_settings, Toast.LENGTH_LONG).show()
+        try {
+            startActivity(settingsIntent)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(appDetailsSettingsIntent())
+        }
+    }
+
+    private fun appDetailsSettingsIntent() =
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.fromParts("package", packageName, null))
+
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return
@@ -458,17 +507,20 @@ class OnboardingActivity : ThemedAppCompatActivity() {
             keyGenerationFailed = false,
             keyGenerationStatus = getString(R.string.web_gui_creating_key),
         )
-        lifecycleScope.launch {
-            val errorMessage = withContext(Dispatchers.IO) {
-                try {
-                    ConfigXml(this@OnboardingActivity).generateConfig()
-                    null
-                } catch (e: ExecutableNotFoundException) {
-                    getString(R.string.executable_not_found, e.message)
-                } catch (_: OpenConfigException) {
-                    getString(R.string.config_create_failed)
-                }
+        // Join a generation started by a previous instance of this activity, if still running.
+        val generation = keyGeneration?.takeIf { it.isActive } ?: keyGenerationScope.async {
+            val appContext = applicationContext
+            try {
+                ConfigXml(appContext).generateConfig()
+                null
+            } catch (e: ExecutableNotFoundException) {
+                appContext.getString(R.string.executable_not_found, e.message)
+            } catch (_: OpenConfigException) {
+                appContext.getString(R.string.config_create_failed)
             }
+        }.also { keyGeneration = it }
+        lifecycleScope.launch {
+            val errorMessage = generation.await()
 
             if (errorMessage != null) {
                 uiState = uiState.copy(
@@ -499,6 +551,10 @@ class OnboardingActivity : ThemedAppCompatActivity() {
     }
 
     private fun checkForParseableConfig(): Boolean {
+        // While keys are generated, config.xml may already exist but is still being written.
+        if (isKeyGenerationRunning()) {
+            return false
+        }
         val configExists = Constants.getConfigFile(this).exists()
         if (!configExists) {
             return false
@@ -506,7 +562,7 @@ class OnboardingActivity : ThemedAppCompatActivity() {
 
         try {
             val configParseTest = ConfigXml(this)
-            configParseTest.loadConfig()
+            configParseTest.loadConfigReadOnly()
             return true
         } catch (_: OpenConfigException) {
             Log.d(TAG, "Failed to parse existing config. Will show key generation slide ...")
