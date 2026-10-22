@@ -5,6 +5,7 @@ import android.webkit.WebView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -27,18 +28,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.nutomic.syncthingandroid.R
 
+/**
+ * A WebView under a top bar, covered while the page loads or after it failed to.
+ *
+ * @param error shown in place of the page, with [R.string.web_gui_load_failed] above it.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun WebGuiScreen(
+    title: String,
+    loadingText: String,
     loading: Boolean,
     error: String?,
     onNavigateBack: () -> Unit,
     webViewFactory: (Context) -> WebView,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.web_gui_title)) },
+                title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -47,6 +56,7 @@ internal fun WebGuiScreen(
                         )
                     }
                 },
+                actions = actions,
             )
         },
     ) { paddingValues ->
@@ -78,7 +88,7 @@ internal fun WebGuiScreen(
                             if (error == null) {
                                 CircularProgressIndicator()
                                 Text(
-                                    text = stringResource(R.string.web_gui_loading),
+                                    text = loadingText,
                                     modifier = Modifier.padding(top = 16.dp),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
