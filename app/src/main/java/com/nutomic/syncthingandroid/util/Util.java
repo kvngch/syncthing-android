@@ -1,14 +1,13 @@
 package com.nutomic.syncthingandroid.util;
 
 import android.app.Dialog;
-import android.app.UiModeManager;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.common.base.Charsets;
@@ -383,21 +382,6 @@ public class Util {
         return workOut;
     }
 
-    public static void testPathEllipsis() {
-        getPathEllipsis("");
-        getPathEllipsis("/");
-        getPathEllipsis("//");
-        getPathEllipsis("go2sync.dll");
-        getPathEllipsis("MY-LINK-/Cool 12345 Configuration Utility/sdk/bin/go2sync.dll");
-        getPathEllipsis("MY-LINK-Iam-bin-sum-another-and-make-long/Cool 12345 Configuration Utility/sdk/bin/go2sync.dll");
-        getPathEllipsis("MY-LINK-Iam-bin-sum-another-and-make-long-textfiles-are-cool.txt");
-        getPathEllipsis("MY-LINK-/Cool 12345 Configuration Utility/sdk/bin-Iam-bin-sum-another-and-make-long/go2sync-long-textfiles-are-cool.dll");
-        getPathEllipsis("MY-LINK-//Cool 12345 Configuration Utility/sdk/bin-Iam-bin-sum-another-and-make-long/go2sync-long-textfiles-are-cool.dll");
-        getPathEllipsis("MY-LINK-//Cool 12345 Configuration Utility/sdk/bin-Iam-bin-sum-another-and-make-long//go2sync-long-textfiles-are-cool.dll");
-        getPathEllipsis("MY-LINK-//Cool 12345 Configuration Utility/sdk/bin-Iam-bin-sum-another-and-make-long//go2sync-long-textfiles-are-cool");
-        getPathEllipsis("MY-LINK-//Cool 12345 Configuration Utility/sdk/bin-Iam-bin-sum-another-and-make-long//go2sync-long-textfiles-are-cool.correctlongeextensionswassolldas-denn-bitte");
-        getPathEllipsis("MY-LINK-Iam-bin-sum-another-and-make-long/Cool 12345 Configuration Utility/sdk/bin/go2sync.dllcorrectlongeextensionswassolldas-denn-bitte");
-    }
 
     public static boolean containsIgnoreCase(String src, String what) {
         final int length = what.length();
@@ -413,8 +397,25 @@ public class Util {
     }
 
     public static Boolean isRunningOnTV(Context context) {
-        UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
-        return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
+        // Same test as the Kotlin extension used by the Compose screens.
+        return ExtensionsKt.isTelevision(context.getResources().getConfiguration());
+    }
+
+    /**
+     * Asks whether to drop the unsaved changes of an edit screen; OK closes it without a result.
+     * Shared by FolderActivity and DeviceActivity.
+     */
+    public static Dialog showDiscardChangesDialog(AppCompatActivity activity) {
+        Dialog dialog = new AlertDialog.Builder(activity)
+                .setMessage(R.string.dialog_discard_changes)
+                .setPositiveButton(android.R.string.ok, (d, which) -> {
+                    activity.setResult(AppCompatActivity.RESULT_CANCELED);
+                    activity.finish();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        dialog.show();
+        return dialog;
     }
 
     /**

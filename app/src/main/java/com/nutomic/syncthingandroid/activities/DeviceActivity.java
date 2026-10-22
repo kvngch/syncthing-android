@@ -775,15 +775,7 @@ public class DeviceActivity extends SyncthingActivity {
     }
 
     private void showDiscardDialog(){
-        mDiscardDialog = new AlertDialog.Builder(this)
-                .setMessage(R.string.dialog_discard_changes)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                        setResult(AppCompatActivity.RESULT_CANCELED);
-                        finish();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .create();
-        mDiscardDialog.show();
+        mDiscardDialog = Util.showDiscardChangesDialog(this);
     }
 
     /**
@@ -867,9 +859,5 @@ public class DeviceActivity extends SyncthingActivity {
         mEditDeviceId.setText((String) view.getTag());
         mDiscoveredDevicesTitle.setVisibility(View.GONE);
         mDiscoveredDevicesContainer.setVisibility(View.GONE);
-    }
-
-    private static List<String> list(String... values) {
-        return Collections.unmodifiableList(Arrays.asList(values));
     }
 }

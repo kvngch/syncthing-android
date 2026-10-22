@@ -37,9 +37,7 @@ public class EnhancedEditText extends AppCompatEditText {
         if (!isEnabled()) {
             return false;
         }
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            super.performClick();
-        }
+        // super.onTouchEvent calls performClick on ACTION_UP: calling it here too clicked twice.
         return super.onTouchEvent(event);
     }
 
