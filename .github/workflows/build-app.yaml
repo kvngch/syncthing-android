@@ -59,6 +59,20 @@ jobs:
           key: emulator-system-image-35-google_apis-x86_64
 
       - name: Run on emulator
+        id: emulator
+        # SDK downloads on the runner fail now and then: one more try below.
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: bash .github/scripts/captures.sh apk
+
+      - name: Run on emulator, second try
+        if: steps.emulator.outcome == 'failure'
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35
