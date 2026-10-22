@@ -38,12 +38,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.edit
 import androidx.core.os.BundleCompat
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.PermissionUtil
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -56,7 +56,7 @@ import java.util.Locale
  */
 class PhotoShootActivity : ThemedAppCompatActivity() {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
     /**
      * The file the camera app writes to, until its result comes back.

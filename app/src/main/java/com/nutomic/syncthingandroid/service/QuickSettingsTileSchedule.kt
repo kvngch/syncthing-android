@@ -8,8 +8,8 @@ import android.os.IBinder
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
+import com.nutomic.syncthingandroid.util.defaultPreferences
 
 /**
  * Runs Syncthing for the duration of a scheduled window, now. Available when the time schedule
@@ -21,7 +21,7 @@ class QuickSettingsTileSchedule : TileService(), ServiceConnection, SyncthingSer
     private var syncthingService: SyncthingService? = null
 
     private val preferences: SharedPreferences
-        get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        get() = applicationContext.defaultPreferences
 
     // Held here: SharedPreferences only keeps a weak reference to its listeners.
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->

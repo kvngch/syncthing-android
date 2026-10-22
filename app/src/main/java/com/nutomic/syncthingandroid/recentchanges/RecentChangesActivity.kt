@@ -15,7 +15,6 @@ import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.SyncthingActivity
 import com.nutomic.syncthingandroid.model.Device
@@ -26,6 +25,7 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.service.SyncthingServiceBinder
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.FileUtils
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -57,7 +57,7 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        preferences = PreferenceManager.getDefaultSharedPreferences(this)
+        preferences = defaultPreferences
         showExactTimes = preferences.getBoolean(PREF_SHOW_EXACT_TIMES, false)
 
         setContent {

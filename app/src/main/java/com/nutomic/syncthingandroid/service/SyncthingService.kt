@@ -10,7 +10,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.http.PollWebGuiAvailableTask
@@ -20,6 +19,7 @@ import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.PermissionUtil
 import com.nutomic.syncthingandroid.util.Util
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -120,7 +120,7 @@ class SyncthingService : Service() {
 
     val notificationHandler: NotificationHandler by lazy { (application as SyncthingApp).notificationHandler }
 
-    private val preferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val preferences: SharedPreferences by lazy { defaultPreferences }
     private val configRouter by lazy { ConfigRouter(this) }
     private var verboseLog = false
 

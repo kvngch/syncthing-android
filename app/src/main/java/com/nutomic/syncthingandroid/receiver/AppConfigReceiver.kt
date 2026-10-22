@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RunConditionMonitor
+import com.nutomic.syncthingandroid.util.defaultPreferences
 
 /**
  * Broadcast-receiver to control and configure Syncthing remotely, once allowed in the settings.
@@ -23,7 +23,7 @@ class AppConfigReceiver : BroadcastReceiver() {
             return
         }
         val intentAction = action.substring(packageName.length)
-        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val preferences = context.defaultPreferences
         if (!preferences.getBoolean(Constants.PREF_BROADCAST_SERVICE_CONTROL, false)) {
             if (intentAction == ACTION_FOLLOW || intentAction == ACTION_START || intentAction == ACTION_STOP) {
                 Log.w(
@@ -57,7 +57,7 @@ class AppConfigReceiver : BroadcastReceiver() {
      * Stores the run mode and tells RunConditionMonitor, as the status tab does.
      */
     private fun setForceStartStop(context: Context, newState: Int) {
-        PreferenceManager.getDefaultSharedPreferences(context).edit {
+        context.defaultPreferences.edit {
             putInt(Constants.PREF_BTNSTATE_FORCE_START_STOP, newState)
         }
         RunConditionMonitor.requestUpdate()

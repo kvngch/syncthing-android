@@ -15,7 +15,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.device.DeviceIdDialog
 import com.nutomic.syncthingandroid.main.MainScreen
@@ -25,6 +24,7 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.PermissionUtil
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import kotlinx.coroutines.channels.Channel
 
 /**
@@ -32,7 +32,7 @@ import kotlinx.coroutines.channels.Channel
  */
 class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeListener {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
     private var boundService by mutableStateOf<SyncthingService?>(null)
     private var serviceState by mutableStateOf(SyncthingService.State.INIT)

@@ -14,13 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.activities.SyncthingActivity
 import com.nutomic.syncthingandroid.service.NotificationHandler
 import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.LocalActivityScope
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.zhanghai.compose.preference.Preferences
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -30,7 +30,7 @@ val LocalServiceUpdateTick = staticCompositionLocalOf { 0 }
 
 class SettingsActivity : SyncthingActivity() {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
     lateinit var prefFlow: MutableStateFlow<Preferences>
     private val notificationHandler: NotificationHandler by lazy { (application as SyncthingApp).notificationHandler }
 

@@ -27,7 +27,6 @@ dependencies {
     implementation(libs.lingala.zip4j)
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
-    implementation(libs.preference.ktx)
     implementation(libs.zhanghai.compose.preference)
     implementation(libs.zxing.core)
     testImplementation(libs.junit)
