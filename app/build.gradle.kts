@@ -29,7 +29,6 @@ dependencies {
     implementation(libs.jbcrypt)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.lingala.zip4j)
-    implementation(libs.localbroadcastmanager)
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
     implementation(libs.preference.ktx)

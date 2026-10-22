@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Folder
@@ -326,10 +325,7 @@ class ShareActivity : SyncthingActivity() {
             Toast.makeText(this@ShareActivity, message, Toast.LENGTH_LONG).show()
             if (sharedPreferences.getBoolean(Constants.PREF_RUN_ON_TIME_SCHEDULE, false)) {
                 // Syncthing waits for its next time window: open one now.
-                LocalBroadcastManager.getInstance(this@ShareActivity).sendBroadcast(
-                    Intent(RunConditionMonitor.ACTION_SYNC_TRIGGER_FIRED)
-                        .putExtra(RunConditionMonitor.EXTRA_BEGIN_ACTIVE_TIME_WINDOW, true)
-                )
+                RunConditionMonitor.fireSyncTrigger(true)
             }
             finish()
         }

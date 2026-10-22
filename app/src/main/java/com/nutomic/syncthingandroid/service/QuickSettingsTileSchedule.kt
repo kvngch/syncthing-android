@@ -8,7 +8,6 @@ import android.os.IBinder
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 
@@ -64,10 +63,7 @@ class QuickSettingsTileSchedule : TileService(), ServiceConnection, SyncthingSer
         if (qsTile?.state == Tile.STATE_UNAVAILABLE) {
             return
         }
-        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(
-            Intent(RunConditionMonitor.ACTION_SYNC_TRIGGER_FIRED)
-                .putExtra(RunConditionMonitor.EXTRA_BEGIN_ACTIVE_TIME_WINDOW, true)
-        )
+        RunConditionMonitor.fireSyncTrigger(true)
     }
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
