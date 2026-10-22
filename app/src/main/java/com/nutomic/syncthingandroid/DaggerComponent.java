@@ -7,7 +7,6 @@ import com.nutomic.syncthingandroid.activities.PhotoShootActivity;
 import com.nutomic.syncthingandroid.activities.ShareActivity;
 import com.nutomic.syncthingandroid.activities.SyncConditionsActivity;
 import com.nutomic.syncthingandroid.onboarding.OnboardingActivity;
-import com.nutomic.syncthingandroid.receiver.AppConfigReceiver;
 import com.nutomic.syncthingandroid.service.RunConditionMonitor;
 import com.nutomic.syncthingandroid.service.EventProcessor;
 import com.nutomic.syncthingandroid.service.RestApi;
@@ -22,7 +21,6 @@ import dagger.Component;
 @Singleton
 @Component(modules = {SyncthingModule.class})
 public interface DaggerComponent {
-    void inject(AppConfigReceiver appConfigReceiver);
     void inject(DeviceActivity activity);
     void inject(EventProcessor eventProcessor);
     void inject(FolderActivity activity);
