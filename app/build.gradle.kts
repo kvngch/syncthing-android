@@ -16,6 +16,9 @@ dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.android.material)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.compose)
+    implementation(libs.camera.lifecycle)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui)
@@ -37,7 +40,6 @@ dependencies {
     implementation(libs.stream)
     implementation(libs.volley)
     implementation(libs.zhanghai.compose.preference)
-    implementation(libs.zxing.android.embedded) { isTransitive = false }
     implementation(libs.zxing.core)
     ksp(libs.dagger.compiler)
     testImplementation(libs.junit)
