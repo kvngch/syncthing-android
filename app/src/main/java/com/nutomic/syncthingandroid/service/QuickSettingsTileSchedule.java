@@ -73,7 +73,9 @@ public class QuickSettingsTileSchedule extends TileService implements ServiceCon
 
             try {
                 Intent bindIntent = new Intent(mContext, SyncthingService.class);
-                mContext.bindService(bindIntent, this, Context.BIND_AUTO_CREATE);
+                // No BIND_AUTO_CREATE: opening the panel must not create the service. Without
+                // onStartCommand, it would have no RunConditionMonitor, and survive "Exit".
+                mContext.bindService(bindIntent, this, 0);
             } catch (Exception e) {
                 Log.w(TAG, "Failed to bind to SyncthingService", e);
             }

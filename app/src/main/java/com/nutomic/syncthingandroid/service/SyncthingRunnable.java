@@ -14,7 +14,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
 import com.nutomic.syncthingandroid.util.FileUtils;
@@ -53,6 +52,12 @@ public class SyncthingRunnable implements Runnable {
     private Boolean ENABLE_VERBOSE_LOG = false;
     private static final int LOG_FILE_MAX_LINES = 200000;
     private static final int LOG_FILE_BUFFER_SIZE = 1024 * 1024;
+    private static final long LOG_FILE_TRIM_BYTES = 16 * 1024 * 1024;
+
+    // syncthing.log, written by both reader threads. Guarded by mLogFileLock.
+    private final Object mLogFileLock = new Object();
+    private FileOutputStream mLogFileOutput = null;
+    private long mLogBytesSinceTrim = 0;
 
     private static final AtomicReference<Process> mSyncthing = new AtomicReference<>();
     private final Context mContext;
@@ -254,6 +259,7 @@ public class SyncthingRunnable implements Runnable {
             if (process != null) {
                 process.destroy();
             }
+            closeLogFile();
         }
 
         // Restart syncthing if it exited unexpectedly while running on a separate thread.
@@ -313,7 +319,7 @@ public class SyncthingRunnable implements Runnable {
                     }
                     */
                     // Always output SynchtingNative's output to "syncthing.log".
-                    Files.append(line + "\n", mSyncthingLogFile, Charsets.UTF_8);
+                    appendToLogFile(line);
                 }
             } catch (IOException e) {
                 Log.w(TAG, "Failed to read Syncthing's command line output", e);
@@ -328,6 +334,42 @@ public class SyncthingRunnable implements Runnable {
         });
         t.start();
         return t;
+    }
+
+    /**
+     * Appends one line to syncthing.log, from either reader thread, in a single write on a stream
+     * kept open (it was reopened for every line). The file was trimmed at each start only, and grew
+     * without bound meanwhile, e.g. with STTRACE: it is trimmed again every LOG_FILE_TRIM_BYTES.
+     */
+    private void appendToLogFile(String line) throws IOException {
+        synchronized (mLogFileLock) {
+            if (mLogFileOutput == null) {
+                mLogFileOutput = new FileOutputStream(mSyncthingLogFile, true);
+            }
+            byte[] bytes = (line + "\n").getBytes(Charsets.UTF_8);
+            mLogFileOutput.write(bytes);
+            mLogBytesSinceTrim += bytes.length;
+            if (mLogBytesSinceTrim > LOG_FILE_TRIM_BYTES) {
+                mLogFileOutput.close();
+                mLogFileOutput = null;
+                trimSyncthingLogFile();
+                mLogBytesSinceTrim = 0;
+            }
+        }
+    }
+
+    private void closeLogFile() {
+        synchronized (mLogFileLock) {
+            if (mLogFileOutput == null) {
+                return;
+            }
+            try {
+                mLogFileOutput.close();
+            } catch (IOException e) {
+                Log.w(TAG, "closeLogFile: Failed to close syncthing.log", e);
+            }
+            mLogFileOutput = null;
+        }
     }
 
     // If the nth last newline is found within this buffer, then the offset of that newline within

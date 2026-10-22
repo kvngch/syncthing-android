@@ -1,6 +1,7 @@
 package com.nutomic.syncthingandroid;
 
 import android.app.Application;
+import android.content.pm.ApplicationInfo;
 import android.os.StrictMode;
 
 import javax.inject.Inject;
@@ -18,12 +19,16 @@ public class SyncthingApp extends Application {
                 .build()
                 .inject(this);
 
-        // Set VM policy to avoid crash when sending folder URI to file manager.
-        StrictMode.VmPolicy vmPolicy = new StrictMode.VmPolicy.Builder()
-                .detectAll()
-                .penaltyLog()
-                .build();
-        StrictMode.setVmPolicy(vmPolicy);
+        /*
+         * Replacing the default VM policy lifts the crash Android sets on file:// URI exposure,
+         * which FileUtils.openFolder relies on to hand a folder to a file manager. Only debug
+         * builds detect and log every other violation.
+         */
+        StrictMode.VmPolicy.Builder vmPolicy = new StrictMode.VmPolicy.Builder();
+        if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            vmPolicy.detectAll().penaltyLog();
+        }
+        StrictMode.setVmPolicy(vmPolicy.build());
 
         /*
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P)

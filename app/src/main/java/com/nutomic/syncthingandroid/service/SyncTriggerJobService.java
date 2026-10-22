@@ -31,11 +31,14 @@ public class SyncTriggerJobService extends JobService {
         if (params.getExtras().getInt(EXTRA_BEGIN_ACTIVE_TIME_WINDOW, 0) == 1)
             intent.putExtra(EXTRA_BEGIN_ACTIVE_TIME_WINDOW, true);
         localBroadcastManager.sendBroadcast(intent);
-        return true;
+        // The work is done once the broadcast is sent: returning true without ever calling
+        // jobFinished() kept the wakelock until the system timeout.
+        return false;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        return true;
+        // Nothing left running to reschedule: the next window is scheduled by RunConditionMonitor.
+        return false;
     }
 }
