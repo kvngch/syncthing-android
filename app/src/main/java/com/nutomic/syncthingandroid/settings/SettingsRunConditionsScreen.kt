@@ -3,10 +3,13 @@ package com.nutomic.syncthingandroid.settings
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,15 +42,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation3.runtime.EntryProviderScope
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.google.accompanist.permissions.rememberPermissionState
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingService
@@ -310,13 +311,13 @@ fun SettingsRunConditionsScreen() {
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun WifiSsidPreference(
     enabled: Boolean,
     setPendingEvaluation: () -> Unit,
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val locationManager = context.applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     var specifiedSsids by rememberPreferenceState(Constants.PREF_WIFI_SSID_WHITELIST, setOf<String>())
@@ -343,31 +344,49 @@ private fun WifiSsidPreference(
             context.startService(intent)
         }
     }
-    val backgroundPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        rememberPermissionState(Manifest.permission.ACCESS_BACKGROUND_LOCATION, onPermissionResult)
-    } else {
-        null
-    }
     val ssidPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         Manifest.permission.ACCESS_FINE_LOCATION
     } else {
         Manifest.permission.ACCESS_COARSE_LOCATION
     }
-    val foregroundPermissionState = rememberMultiplePermissionsState(
-        listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun isGranted(permission: String) =
+        ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+
+    // Read again when the screen comes back: the permissions can change in the system settings.
+    var permissionsRead by remember { mutableIntStateOf(0) }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                permissionsRead++
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val isForegroundGranted = remember(permissionsRead) { isGranted(ssidPermission) }
+    val isBackgroundGranted = remember(permissionsRead) {
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || isGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    }
+    val isPermissionGranted = isForegroundGranted && isBackgroundGranted
+
+    val backgroundPermissionRequest = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        permissionsRead++
+        onPermissionResult(it)
+    }
+    val foregroundPermissionRequest = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
+        permissionsRead++
         if (results[ssidPermission] != true) {
             onPermissionResult(false)
-        } else if (backgroundPermissionState != null && !backgroundPermissionState.status.isGranted) {
-            backgroundPermissionState.launchPermissionRequest()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            !isGranted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        ) {
+            backgroundPermissionRequest.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         } else {
             onPermissionResult(true)
         }
     }
-
-    val isForegroundGranted = foregroundPermissionState.permissions
-        .first { it.permission == ssidPermission }.status.isGranted
-    val isPermissionGranted = isForegroundGranted && (backgroundPermissionState?.status?.isGranted ?: true)
     val isLocationEnabled = LocationManagerCompat.isLocationEnabled(locationManager)
 
     LaunchedEffect(isPermissionGranted) {
@@ -398,9 +417,12 @@ private fun WifiSsidPreference(
         summary = { Text(specifiedSsidSummary) },
         onClick = {
             if (!isForegroundGranted) {
-                foregroundPermissionState.launchMultiplePermissionRequest()
+                foregroundPermissionRequest.launch(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                )
             } else if (!isPermissionGranted) {
-                backgroundPermissionState?.launchPermissionRequest()
+                // Only from Android 10: below, the foreground permission is all there is.
+                backgroundPermissionRequest.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             } else if (!isLocationEnabled) {
                 Toast.makeText(
                     context,
