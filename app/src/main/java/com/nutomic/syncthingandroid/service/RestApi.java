@@ -1,5 +1,6 @@
 package com.nutomic.syncthingandroid.service;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -257,6 +258,8 @@ public class RestApi {
         }
     }
 
+    // commit(), not apply(): the original intervals must be on disk before the lowered ones are sent.
+    @SuppressLint("ApplySharedPref")
     private void triggerVersioningCleanupIfNecessary() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
