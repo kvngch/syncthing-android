@@ -72,7 +72,7 @@ object Constants {
     fun DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(objectPrefixAndId: String) = objectPrefixAndId + "_custom_sync_conditions"
 
     @JvmStatic
-    fun DYN_PREF_OBJECT_FOLDER_RUN_SCRIPT(folderId: String) = PREF_OBJECT_PREFIX_FOLDER + folderId + "_run_script"
+    fun DYN_PREF_OBJECT_FOLDER_RUN_SCRIPT(folderId: String?) = PREF_OBJECT_PREFIX_FOLDER + folderId + "_run_script"
 
     @JvmStatic
     fun DYN_PREF_OBJECT_SYNC_ON_WIFI(objectPrefixAndId: String) = objectPrefixAndId + "_" + PREF_RUN_ON_WIFI
