@@ -21,6 +21,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.util.JobUtils
+import java.lang.ref.WeakReference
 
 /**
  * Decides whether Syncthing should run, from the run conditions set by the user and the state of
@@ -133,7 +134,7 @@ class RunConditionMonitor(
             addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
         }
         ContextCompat.registerReceiver(context, systemReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
-        current = this
+        current = WeakReference(this)
 
         if (!Constants.isRunningOnEmulator()) {
             triggeredSyncSleepIntervalS = minutesPref(Constants.PREF_SLEEP_INTERVAL_MINUTES, 60) * 60
@@ -175,7 +176,7 @@ class RunConditionMonitor(
         logV("Shutting down")
         JobUtils.cancelAllScheduledJobs(context)
         ContentResolver.removeStatusChangeListener(syncStatusObserverHandle)
-        if (current === this) {
+        if (current?.get() === this) {
             current = null
         }
         context.unregisterReceiver(systemReceiver)
@@ -588,10 +589,10 @@ class RunConditionMonitor(
 
         /**
          * The monitor of the running service, which the screens, tiles, receivers and jobs of the
-         * app reach through the functions below.
+         * app reach through the functions below. Weak: the monitor holds the service.
          */
         @Volatile
-        private var current: RunConditionMonitor? = null
+        private var current: WeakReference<RunConditionMonitor>? = null
 
         /**
          * Re-evaluates the run conditions, e.g. after the run mode changed. Does nothing while the
@@ -614,9 +615,9 @@ class RunConditionMonitor(
          * Runs [action] on the main thread, where the monitor lives, unless it was shut down meanwhile.
          */
         private fun post(action: (RunConditionMonitor) -> Unit) {
-            val monitor = current ?: return
+            val monitor = current?.get() ?: return
             monitor.mainHandler.post {
-                if (current === monitor) {
+                if (current?.get() === monitor) {
                     action(monitor)
                 }
             }
