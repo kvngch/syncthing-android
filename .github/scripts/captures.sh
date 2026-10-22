@@ -59,13 +59,13 @@ ecran_actif() { adb shell dumpsys activity activities | grep -m1 -E 'topResumedA
 
 retour() { adb shell input keyevent KEYCODE_BACK; sleep 2; }
 
-# Onboarding: welcome, then key generation, "Continue" until the main screen is up.
+# Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up.
 adb shell monkey -p $PAQUET -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 sleep 10
 photo 00-onboarding
 for _ in $(seq 1 30); do
   ecran_actif | grep -q MainActivity && break
-  touche "Continue" >/dev/null
+  touche "Continue" >/dev/null || touche "Finish" >/dev/null
   sleep 5
 done
 ecran_actif | tee captures/ecran-principal.txt
@@ -97,7 +97,7 @@ fi
 
 # The navigation drawer, opened by its toolbar button or else by an edge swipe.
 tiroir() {
-  touche "Open navigation drawer" >/dev/null || touche "Navigate up" >/dev/null \
+  touche "Open Main Menu" >/dev/null || touche "Main Menu" >/dev/null \
     || adb shell input swipe 5 1200 700 1200 300
   sleep 3
 }
