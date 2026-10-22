@@ -134,7 +134,7 @@ public class Constants {
 
     /**
      * {@link RunConditionMonitor}
-     * {@link StatusFragment}
+     * Run mode selector of the main screen's status tab.
      */
     public static final String PREF_BTNSTATE_FORCE_START_STOP   = "btnStateForceStartStop";
 
