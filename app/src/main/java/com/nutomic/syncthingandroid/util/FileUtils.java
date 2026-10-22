@@ -51,6 +51,8 @@ public class FileUtils {
     }
 
     private static final String EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents";
+    private static final String DOWNLOADS_PROVIDER_AUTHORITY = "com.android.providers.downloads.documents";
+    private static final String RAW_DOCUMENT_ID_PREFIX = "raw:";
     private static final String DOWNLOADS_VOLUME_NAME = "downloads";
     private static final String PRIMARY_VOLUME_NAME = "primary";
     private static final String HOME_VOLUME_NAME = "home";
@@ -72,7 +74,7 @@ public class FileUtils {
     public static boolean directoryUriExists(final Context context, Uri documentUri) {
         Uri treeUri = convertFromDocumentUriToTreeUri(documentUri);
         String absPath = getAbsolutePathFromSAFUri(context, treeUri);
-        return new File(absPath).exists();
+        return absPath != null && new File(absPath).exists();
     }
     
     @Nullable
@@ -86,6 +88,23 @@ public class FileUtils {
     public static String getAbsolutePathFromTreeUri(final Context context, @Nullable final Uri treeUri) {
         if (treeUri == null) {
             Log.w(TAG, "getAbsolutePathFromTreeUri: called with treeUri == null");
+            return null;
+        }
+
+        /**
+         * Only the external storage provider has document ids of the form "[volume]:[path]".
+         * The Downloads provider gives "raw:[absolute path]" for a folder, or opaque ids such
+         * as "msd:123"; cloud providers have no local path at all.
+         */
+        String authority = treeUri.getAuthority();
+        if (DOWNLOADS_PROVIDER_AUTHORITY.equals(authority)) {
+            String treeDocumentId = DocumentsContract.getTreeDocumentId(treeUri);
+            if (treeDocumentId.startsWith(RAW_DOCUMENT_ID_PREFIX)) {
+                return cutTrailingSlash(treeDocumentId.substring(RAW_DOCUMENT_ID_PREFIX.length()));
+            }
+        }
+        if (!EXTERNAL_STORAGE_AUTHORITY.equals(authority)) {
+            Log.w(TAG, "getAbsolutePathFromTreeUri: No local path for provider " + authority);
             return null;
         }
 
@@ -321,7 +340,8 @@ public class FileUtils {
 
     private static String getVolumeIdFromTreeUri(final Uri treeUri) {
         final String docId = DocumentsContract.getTreeDocumentId(treeUri);
-        final String[] split = docId.split(":");
+        // Limit 2: a folder name may hold ":" too.
+        final String[] split = docId.split(":", 2);
         if (split.length > 0) {
             return split[0];
         } else {
@@ -331,7 +351,7 @@ public class FileUtils {
 
     private static String getDocumentPathFromTreeUri(final Uri treeUri) {
         final String docId = DocumentsContract.getTreeDocumentId(treeUri);
-        final String[] split = docId.split(":");
+        final String[] split = docId.split(":", 2);
         if ((split.length >= 2) && (split[1] != null)) return split[1];
         else return File.separator;
     }
