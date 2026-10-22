@@ -27,8 +27,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.SyncthingActivity
 import com.nutomic.syncthingandroid.service.Constants
@@ -390,7 +390,7 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
          * Returns boolean if successful.
          * Source: https://stackoverflow.com/a/26781539
          */
-        @SuppressLint("PrivateApi")
+        @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
         private fun setWebViewProxy(
             appContext: Context,
             host: String,
