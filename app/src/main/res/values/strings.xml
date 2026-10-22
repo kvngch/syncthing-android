@@ -84,6 +84,7 @@
     <string name="photo_shoot_intro_permission_desc">Syncthing Camera requires your consent to shoot pictures and store them on your device. This feature is optional. To use it, grant permissions and tap \"Continue\". We will setup a Syncthing Camera folder for you which you can share with other Syncthing devices later.</string>
     <string name="photo_shoot_take_picture_success">Successfully saved picture to the Syncthing Camera folder.</string>
     <string name="photo_shoot_take_picture_failure">Failed to take a picture or you\'ve cancelled.</string>
+    <string name="photo_shoot_no_camera_app">No camera app can take the picture.</string>
 
     <!-- Label of the folder created by the Syncthing Camera feature. -->
     <string name="default_syncthing_camera_folder_label">Syncthing Camera</string>

@@ -373,6 +373,7 @@
     <string name="share_device_id_chooser">Partager ID de l\'appareil avec</string>
     <string name="photo_shoot_take_picture_success">Photo enregistrée dans le partage \"Syncthing Appareil photo\".</string>
     <string name="photo_shoot_take_picture_failure">Échec de prise de photo ou opération annulée.</string>
+    <string name="photo_shoot_no_camera_app">Aucune appli photo ne peut prendre la photo.</string>
     <string name="close_main_menu">Fermer le menu principal</string>
     <string name="folder_rejected">L\'appareil \"%1$s\" souhaite synchroniser le partage \"%2$s\" avec le votre. Il sera créé s\'il n\'existe pas déjà</string>
     <string name="delete_unexpected_items">Supprimer les objets non conformes</string>
