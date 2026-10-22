@@ -610,8 +610,15 @@ public class SyncthingService extends Service {
         // Start the syncthing binary in a separate thread.
         Thread.UncaughtExceptionHandler syncthingRunnableThreadExceptionHandler = new Thread.UncaughtExceptionHandler() {
                 public void uncaughtException(Thread syncthingRunnableThread, Throwable ex) {
-                    Log.e(TAG, "mSyncthingRunnableThread: Uncaught exception [ExecutableNotFoundException]");
+                    Log.e(TAG, "mSyncthingRunnableThread: Uncaught exception", ex);
                     mNotificationHandler.showCrashedNotification(R.string.executable_not_found, Constants.FILENAME_SYNCTHING_BINARY);
+                    // The binary is not running: leave State.STARTING, in which shutdown() would defer forever.
+                    mHandler.post(() -> {
+                        if (mSyncthingRunnableThread == syncthingRunnableThread) {
+                            mCurrentState = State.ERROR;
+                            shutdown(State.DISABLED);
+                        }
+                    });
                 }
         };
         mSyncthingRunnableThread = new Thread(mSyncthingRunnable);
@@ -705,6 +712,11 @@ public class SyncthingService extends Service {
                 shutdown(newState);
             }, 1000);
             return;
+        }
+
+        if (mSyncthingRunnable != null) {
+            // The exit that follows is expected, the runnable must not report it back.
+            mSyncthingRunnable.setStopRequested();
         }
 
         synchronized (mStateLock) {

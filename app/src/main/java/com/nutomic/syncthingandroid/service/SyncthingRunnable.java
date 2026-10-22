@@ -60,6 +60,18 @@ public class SyncthingRunnable implements Runnable {
     private String[] mCommand;
     private final File mSyncthingLogFile;
 
+    /**
+     * True for the long-running "serve" process that SyncthingService starts in its own thread
+     * and watches. One-shot commands (generate, device-id, reset-database) run synchronously.
+     */
+    private final boolean mServed;
+
+    /**
+     * Set by SyncthingService before it stops the binary itself, so that the exit is not
+     * reported back to it as an unexpected one.
+     */
+    private volatile boolean mStopRequested = false;
+
     @Inject
     SharedPreferences mPreferences;
 
@@ -107,6 +119,11 @@ public class SyncthingRunnable implements Runnable {
             default:
                 throw new InvalidParameterException("Unknown command option");
         }
+        mServed = (command == Command.main || command == Command.resetdeltas);
+    }
+
+    public void setStopRequested() {
+        mStopRequested = true;
     }
 
     @Override
@@ -132,9 +149,12 @@ public class SyncthingRunnable implements Runnable {
         try {
             // Android 11 blocks local discovery if we did not acquire MulticastLock.
             WifiManager wifi = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            multicastLock = wifi.createMulticastLock("multicastLock");
-            multicastLock.setReferenceCounted(true);
-            multicastLock.acquire();
+            if (wifi != null) {
+                // Null on devices without Wi-Fi.
+                multicastLock = wifi.createMulticastLock("multicastLock");
+                multicastLock.setReferenceCounted(true);
+                multicastLock.acquire();
+            }
 
             /**
              * Setup and run a new syncthing instance
@@ -179,7 +199,13 @@ public class SyncthingRunnable implements Runnable {
             switch (exitCode) {
                 case 0:
                 case 137:
-                    Log.i(TAG, "Syncthing was shut down normally via API or SIGKILL. Exit code = " + exitCode);
+                    if (mStopRequested) {
+                        Log.i(TAG, "Syncthing was shut down normally via API or SIGKILL. Exit code = " + exitCode);
+                    } else {
+                        // Shut down from the web UI, or killed by Android (phantom process killer).
+                        Log.w(TAG, "Syncthing stopped without a request from the service. Exit code = " + exitCode);
+                        sendStopToService = true;
+                    }
                     break;
                 case 1:
                     Log.w(TAG, "exit reason = exitError. Another Syncthing instance may be already running.");
@@ -213,8 +239,13 @@ public class SyncthingRunnable implements Runnable {
                     mNotificationHandler.showCrashedNotification(R.string.notification_crash_title, Integer.toString(exitCode));
                     sendStopToService = true;
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             Log.e(TAG, "Failed to execute syncthing binary or read output", e);
+            mNotificationHandler.showCrashedNotification(R.string.notification_crash_title, "IOException");
+            sendStopToService = true;
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Interrupted while waiting for the syncthing binary", e);
+            Thread.currentThread().interrupt();
         } finally {
             if (multicastLock != null) {
                 multicastLock.release();
@@ -226,13 +257,14 @@ public class SyncthingRunnable implements Runnable {
         }
 
         // Restart syncthing if it exited unexpectedly while running on a separate thread.
-        if (!returnStdOut && restartSyncthingNative) {
+        if (mServed && restartSyncthingNative && !mStopRequested) {
             mContext.startService(new Intent(mContext, SyncthingService.class)
                     .setAction(SyncthingService.ACTION_RESTART));
         }
 
-        // Notify {@link SyncthingService} that service state State.ACTIVE is no longer valid.
-        if (!returnStdOut && sendStopToService) {
+        // Notify {@link SyncthingService} that State.STARTING or State.ACTIVE is no longer valid,
+        // unless it stopped the binary itself. One-shot commands are not watched by the service.
+        if (mServed && sendStopToService && !mStopRequested) {
             Intent intent = new Intent(mContext, SyncthingService.class);
             intent.setAction(SyncthingService.ACTION_STOP);
             intent.putExtra(EXTRA_STOP_AFTER_CRASHED_NATIVE, true);
@@ -250,6 +282,11 @@ public class SyncthingRunnable implements Runnable {
 
         for (String e : customEnvironment.split(" ")) {
             String[] e2 = e.split("=", 2);
+            if (e2.length != 2) {
+                // Preferences restored from a backup did not go through the settings screen validation.
+                Log.w(TAG, "Ignoring invalid environment variable [" + e + "]");
+                continue;
+            }
             LogV("Setting env var: [" + e2[0] + "]=[" + e2[1] + "]");
             environment.put(e2[0], e2[1]);
         }
