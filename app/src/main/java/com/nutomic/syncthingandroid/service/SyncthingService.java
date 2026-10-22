@@ -587,6 +587,12 @@ public class SyncthingService extends Service {
             return;
         }
 
+        /**
+         * Check if an old syncthing instance is still running. This happens after an in-place app
+         * upgrade. If so, end it, before checking the port: it would hold the webgui port.
+         */
+        Util.killProcess(Constants.FILENAME_SYNCTHING_BINARY);
+
         // Check if the SyncthingNative's configured webgui port is allocated by another app or process.
         Integer webGuiTcpPort = mConfig.getWebGuiBindPort();
         Boolean isWebUIPortListening = Util.isTcpPortListening(webGuiTcpPort);
@@ -611,12 +617,6 @@ public class SyncthingService extends Service {
             return;
         }
         mSyncthingRunnable = new SyncthingRunnable(this, srCommand);
-
-        /**
-         * Check if an old syncthing instance is still running.
-         * This happens after an in-place app upgrade. If so, end it.
-         */
-        Util.killProcess(Constants.FILENAME_SYNCTHING_BINARY);
 
         // Start the syncthing binary in a separate thread.
         Thread.UncaughtExceptionHandler syncthingRunnableThreadExceptionHandler = new Thread.UncaughtExceptionHandler() {

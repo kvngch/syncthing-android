@@ -26,17 +26,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.security.KeyStore;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.TrustManager;
@@ -267,34 +271,16 @@ public class Util {
 
     /**
      * Check if a TCP is listening on the local device on a specific port.
+     * netstat reads /proc/net, closed to apps since Android 10: try to bind the port instead,
+     * on all interfaces, which fails if anything already listens on it.
      */
     public static Boolean isTcpPortListening(Integer port) {
-        // t: tcp, l: listening, n: numeric
-        String output = runShellCommandGetOutput("netstat -t -l -n");
-        if (TextUtils.isEmpty(output)) {
-            Log.w(TAG, "isTcpPortListening: Failed to run netstat. Returning false.");
+        try (ServerSocket serverSocket = new ServerSocket()) {
+            serverSocket.bind(new InetSocketAddress(port));
             return false;
+        } catch (IOException e) {
+            return true;
         }
-        String[] results  = output.split("\n");
-        for (String line : results) {
-            if (TextUtils.isEmpty(output)) {
-                continue;
-            }
-            String[] words = line.split("\\s+");
-            if (words.length > 5) {
-                String protocol = words[0];
-                String localAddress = words[3];
-                String connState = words[5];
-                if (protocol.equals("tcp") || protocol.equals("tcp6")) {
-                    if (localAddress.endsWith(":" + Integer.toString(port)) &&
-                            connState.equalsIgnoreCase("LISTEN")) {
-                        // Port is listening.
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -445,15 +431,17 @@ public class Util {
     }
 
     /**
-     * Converts local time to ZonedDateTime.
+     * Returns the current time in UTC, e.g. "2021-02-11T22:11:29.356Z".
+     * Despite the name, the local clock time is not used: Syncthing expects UTC.
      */
     public static String getLocalZonedDateTime() {
-        // Example: "2021-02-11T22:11:29.356Z"
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return "2021-02-11T22:11:29.356Z";
+            // java.time needs API 26.
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format.format(new Date());
         }
-        return ZonedDateTime.ofLocal(LocalDateTime.now(), ZoneId.of("UTC"), ZoneOffset.UTC)
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
     
     /**
