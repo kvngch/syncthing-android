@@ -52,6 +52,12 @@ public class RunConditionMonitor {
         ".service.RunConditionMonitor.BEGIN_ACTIVE_TIME_WINDOW";
 
     private @Nullable Object mSyncStatusObserverHandle = null;
+
+    /**
+     * Delays the decision after a power change, without blocking the main thread.
+     */
+    private final Handler mPowerChangeHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mUpdateShouldRunDecisionRunnable = this::updateShouldRunDecision;
     private final SyncStatusObserver mSyncStatusObserver = new SyncStatusObserver() {
         @Override
         public void onStatusChanged(int which) {
@@ -233,6 +239,7 @@ public class RunConditionMonitor {
             mUpdateShouldRunDecisionReceiver = null;
         }
         mReceiverManager.unregisterAllReceivers(mContext);
+        mPowerChangeHandler.removeCallbacks(mUpdateShouldRunDecisionRunnable);
     }
 
     private class BatteryReceiver extends BroadcastReceiver {
@@ -240,8 +247,9 @@ public class RunConditionMonitor {
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_POWER_CONNECTED.equals(intent.getAction())
                     || Intent.ACTION_POWER_DISCONNECTED.equals(intent.getAction())) {
-                SystemClock.sleep(5000);
-                updateShouldRunDecision();
+                // Let the charging state settle. onReceive runs on the main thread: never sleep here.
+                mPowerChangeHandler.removeCallbacks(mUpdateShouldRunDecisionRunnable);
+                mPowerChangeHandler.postDelayed(mUpdateShouldRunDecisionRunnable, 5000);
             }
         }
     }
