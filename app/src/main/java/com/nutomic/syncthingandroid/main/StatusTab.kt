@@ -1,7 +1,6 @@
 package com.nutomic.syncthingandroid.main
 
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -36,7 +35,6 @@ import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Connection
 import com.nutomic.syncthingandroid.model.SystemStatus
@@ -198,9 +196,8 @@ private fun RunModeSelector(preferences: SharedPreferences) {
                 onClick = {
                     selected = index
                     preferences.edit { putInt(Constants.PREF_BTNSTATE_FORCE_START_STOP, index) }
-                    // Notify RunConditionMonitor that the button's state changed.
-                    LocalBroadcastManager.getInstance(context)
-                        .sendBroadcast(Intent(RunConditionMonitor.ACTION_UPDATE_SHOULDRUN_DECISION))
+                    // Tell RunConditionMonitor that the button's state changed.
+                    RunConditionMonitor.requestUpdate()
                 },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = labels.size),
                 modifier = Modifier.fillMaxHeight(),

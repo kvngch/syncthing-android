@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.edit
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RunConditionMonitor
@@ -61,8 +60,7 @@ class AppConfigReceiver : BroadcastReceiver() {
         PreferenceManager.getDefaultSharedPreferences(context).edit {
             putInt(Constants.PREF_BTNSTATE_FORCE_START_STOP, newState)
         }
-        LocalBroadcastManager.getInstance(context)
-            .sendBroadcast(Intent(RunConditionMonitor.ACTION_UPDATE_SHOULDRUN_DECISION))
+        RunConditionMonitor.requestUpdate()
     }
 
     private companion object {

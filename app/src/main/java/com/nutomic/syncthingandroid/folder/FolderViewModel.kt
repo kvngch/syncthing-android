@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid.folder
 
 import android.app.Activity
 import android.app.Application
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -12,7 +11,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.gson.Gson
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
@@ -147,10 +145,7 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
                 preCreateFolderStruct(form.folderUri, form.folder.path.orEmpty())
                 ConfigRouter(app).addFolder(api, form.folder)
             }
-            LocalBroadcastManager.getInstance(app).sendBroadcast(
-                Intent(RunConditionMonitor.ACTION_SYNC_TRIGGER_FIRED)
-                    .putExtra(RunConditionMonitor.EXTRA_BEGIN_ACTIVE_TIME_WINDOW, true)
-            )
+            RunConditionMonitor.fireSyncTrigger(true)
             _result.value = Activity.RESULT_OK
         }
     }
