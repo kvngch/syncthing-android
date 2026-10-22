@@ -171,6 +171,7 @@
     <string name="open_file_manager">Open file manager</string>
     <string name="open_file_with">Open file with</string>
     <string name="open_file_no_compatible_app">No app found to open the file.</string>
+    <string name="open_file_unavailable">This file cannot be opened.</string>
 
     <!-- Suggest File Manager App Dialog -->
     <string name="suggest_file_manager_app_dialog_title">No compatible file manager app found</string>
