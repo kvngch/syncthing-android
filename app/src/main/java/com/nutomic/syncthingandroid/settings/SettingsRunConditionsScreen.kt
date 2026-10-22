@@ -420,8 +420,8 @@ private fun WifiSsidPreference(
                 foregroundPermissionRequest.launch(
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
                 )
-            } else if (!isPermissionGranted) {
-                // Only from Android 10: below, the foreground permission is all there is.
+            } else if (!isPermissionGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Below Android 10, the foreground permission is all there is.
                 backgroundPermissionRequest.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             } else if (!isLocationEnabled) {
                 Toast.makeText(
