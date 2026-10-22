@@ -2,10 +2,12 @@ package com.nutomic.syncthingandroid.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +30,8 @@ public class VersioningDialogActivity extends ThemedAppCompatActivity {
 
     private static final List<String> mTypes = Arrays.asList("none", "trashcan", "simple", "staggered", "external");
 
+    private static final String TAG = "VersioningDialogActivity";
+
     private Bundle mArguments;
 
     private OnBackPressedCallback mBackPressedCallback = new OnBackPressedCallback(true) {
@@ -49,9 +53,21 @@ public class VersioningDialogActivity extends ThemedAppCompatActivity {
             mArguments = getIntent().getExtras();
         }
 
-        updateFragmentView(mTypes.indexOf(getIntent().getExtras().getString("type")));
+        // The current type is read from the restored arguments: after a rotation, the intent
+        // still holds the type the dialog was opened with.
+        String type = mArguments.getString("type");
+        int typeIndex = mTypes.indexOf(type);
+        if (typeIndex < 0) {
+            // A type this dialog cannot show, e.g. added by a newer Syncthing: showing it as
+            // another type would overwrite it when the dialog closes.
+            Log.w(TAG, "Unsupported versioning type: " + type);
+            Toast.makeText(this, R.string.versioning_type_unsupported, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        updateFragmentView(typeIndex);
         initiateFinishBtn();
-        initiateSpinner();
+        initiateSpinner(typeIndex);
 
         // Register OnBackPressedCallback
         getOnBackPressedDispatcher().addCallback(this, mBackPressedCallback);
@@ -71,13 +87,13 @@ public class VersioningDialogActivity extends ThemedAppCompatActivity {
         setResult(AppCompatActivity.RESULT_OK, intent);
     }
 
-    private void initiateSpinner() {
+    private void initiateSpinner(int typeIndex) {
         Spinner versioningTypeSpinner = findViewById(R.id.versioningTypeSpinner);
-        versioningTypeSpinner.setSelection(mTypes.indexOf(getIntent().getExtras().getString("type")));
+        versioningTypeSpinner.setSelection(typeIndex);
         versioningTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position != mTypes.indexOf(getIntent().getExtras().getString("type"))) {
+                if (position != mTypes.indexOf(mArguments.getString("type"))) {
                     updateVersioningType(position);
                     updateFragmentView(position);
                 }

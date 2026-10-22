@@ -586,6 +586,10 @@ public class MainActivity extends SyncthingActivity
         };
 
         restApi.getUsageReport(report -> {
+            if (isFinishing() || isDestroyed()) {
+                // The report came back after the activity ended: no window to show a dialog in.
+                return;
+            }
             @SuppressLint("InflateParams")
             View v = LayoutInflater.from(MainActivity.this)
                     .inflate(R.layout.dialog_usage_reporting, null);
