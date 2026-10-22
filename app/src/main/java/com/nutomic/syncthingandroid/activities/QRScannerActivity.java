@@ -44,8 +44,8 @@ public class QRScannerActivity extends ThemedAppCompatActivity implements Barcod
             pauseScanner();
             finish();
         });
-
-        checkPermissionAndStartScanner();
+        // The camera permission is asked in onResume only: a second request while the first
+        // dialog is up comes back at once with empty results, which looked like a refusal.
     }
 
     @Override
@@ -63,11 +63,12 @@ public class QRScannerActivity extends ThemedAppCompatActivity implements Barcod
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == RC_HANDLE_CAMERA_PERM) {
-            if (grantResults.length !=0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startScanner();
-            } else {
+            if (grantResults.length == 0) {
+                // Interrupted request, onResume asks again.
+            } else if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 finish();
             }
+            // Granted: onResume follows the permission dialog and starts the scanner.
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -87,6 +88,9 @@ public class QRScannerActivity extends ThemedAppCompatActivity implements Barcod
     }
 
     private void checkPermissionAndStartScanner() {
+        if (isFinishing()) {
+            return;
+        }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             String[] permissions = {Manifest.permission.CAMERA};
             ActivityCompat.requestPermissions(this, permissions, RC_HANDLE_CAMERA_PERM);
