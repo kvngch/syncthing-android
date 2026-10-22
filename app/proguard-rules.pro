@@ -6,9 +6,7 @@
 # Gson model classes
 -keep class com.nutomic.syncthingandroid.model.** { *; }
 
-# Preserve generic type signatures used by Guava TypeToken
+# Generic type signatures of the TypeToken subclasses Gson reads, e.g. in RestApi.
 -keepattributes Signature,InnerClasses,EnclosingMethod
-
-# Keep TypeToken and anonymous subclasses, including generic superclass signatures
--keep class com.google.common.reflect.TypeToken { *; }
--keep class * extends com.google.common.reflect.TypeToken { *; }
+-keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
+-keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
