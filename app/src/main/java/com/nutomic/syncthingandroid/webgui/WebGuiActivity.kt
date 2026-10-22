@@ -16,6 +16,7 @@ import android.os.Parcelable
 import android.util.ArrayMap
 import android.util.Base64
 import android.util.Log
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.SslErrorHandler
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -48,6 +49,7 @@ import java.security.GeneralSecurityException
 import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
 /**
@@ -106,6 +108,15 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
         override fun onPageFinished(view: WebView, url: String) {
             webGuiLoading = false
+        }
+
+        // Without this override, a renderer killed by the system takes the whole process down,
+        // SyncthingService included. Leave the screen instead; onDestroy destroys the WebView.
+        @RequiresApi(Build.VERSION_CODES.O)
+        override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+            Log.w(TAG, "WebView renderer gone, crashed=${detail.didCrash()}")
+            finish()
+            return true
         }
     }
 
@@ -200,7 +211,8 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
     private fun loadConfiguration(): ConfigXml = ConfigXml(this).apply {
         try {
-            loadConfig()
+            // Syncthing runs: read only, updateIfNeeded must not rewrite config.xml behind it.
+            loadConfigReadOnly()
         } catch (e: ConfigXml.OpenConfigException) {
             throw RuntimeException(e.message, e)
         }
@@ -312,6 +324,16 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
     }
 
     private fun handleSslError(handler: SslErrorHandler, error: SslError) {
+        // Only the local instance may get past a certificate error, never another host or port,
+        // e.g. a sub-resource with a certificate valid for some other name.
+        val errorUri = error.url.toUri()
+        val errorPort = if (errorUri.port != -1) errorUri.port else Constants.DEFAULT_WEBGUI_TCP_PORT
+        if (errorUri.host != webGuiUrl.host || errorPort != webGuiUrl.port) {
+            Log.w(TAG, "Refusing a certificate error for ${errorUri.host}:$errorPort")
+            handler.cancel()
+            return
+        }
+
         // The WebView only ever connects to the local Syncthing instance over loopback. When the
         // certificate chain is trusted by the OS (see the loopback domain-config in
         // network_security_config.xml) but the hostname does not match — e.g. a user-supplied
@@ -325,9 +347,11 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
         // outranks SSL_IDMISMATCH, so an untrusted chain reports SSL_UNTRUSTED here (not
         // SSL_IDMISMATCH) and is rejected. The explicit expired / not-yet-valid guards then exclude
         // the remaining date errors that can coexist with a mismatch.
+        // WebView reports a bad date as SSL_DATE_INVALID rather than SSL_EXPIRED or SSL_NOTYETVALID.
         if (error.primaryError == SslError.SSL_IDMISMATCH &&
             !error.hasError(SslError.SSL_EXPIRED) &&
-            !error.hasError(SslError.SSL_NOTYETVALID)
+            !error.hasError(SslError.SSL_NOTYETVALID) &&
+            !error.hasError(SslError.SSL_DATE_INVALID)
         ) {
             handler.proceed()
             return
@@ -344,10 +368,6 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
             }
             certificate.verify(ca.publicKey)
             handler.proceed()
-        } catch (e: ReflectiveOperationException) {
-            // Thrown while reflecting the certificate out of SslCertificate.
-            Log.w(TAG, e)
-            handler.cancel()
         } catch (e: GeneralSecurityException) {
             // Thrown by X509Certificate.verify() when the cert is not signed by our CA.
             Log.w(TAG, e)
@@ -355,11 +375,16 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
         }
     }
 
-    @SuppressLint("PrivateApi")
+    /**
+     * Public since API 29. Below, SslCertificate.saveState keeps the DER bytes under "x509-certificate",
+     * which spares reflecting on a hidden field that non-SDK interface restrictions may block.
+     */
     private fun extractCertificate(sslCertificate: SslCertificate): X509Certificate? {
-        val certificateField = sslCertificate.javaClass.getDeclaredField("mX509Certificate")
-        certificateField.isAccessible = true
-        return certificateField.get(sslCertificate) as X509Certificate?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return sslCertificate.x509Certificate
+        }
+        val der = SslCertificate.saveState(sslCertificate).getByteArray("x509-certificate") ?: return null
+        return CertificateFactory.getInstance("X.509").generateCertificate(der.inputStream()) as X509Certificate
     }
 
     companion object {

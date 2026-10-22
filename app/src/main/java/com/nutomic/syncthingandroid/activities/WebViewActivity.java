@@ -1,6 +1,7 @@
 package com.nutomic.syncthingandroid.activities;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,8 +15,10 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 
 import com.nutomic.syncthingandroid.R;
@@ -32,7 +35,16 @@ public class WebViewActivity extends SyncthingActivity {
     private static final String TAG = "WebViewActivity";
 
     private AlertDialog mSecurityNoticeDialog;
-    private Boolean sslNoticeUserDecision = false;
+
+    /**
+     * Host whose certificate error the user accepted; errors for any other host ask again.
+     */
+    @Nullable private String mSslAcceptedHost = null;
+
+    /**
+     * Request waiting for the security notice to be answered.
+     */
+    @Nullable private SslErrorHandler mPendingSslHandler = null;
 
     private WebView mWebView;
     private View mLoadingView;
@@ -58,16 +70,19 @@ public class WebViewActivity extends SyncthingActivity {
 
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-            if (sslNoticeUserDecision) {
+            final String host = Uri.parse(error.getUrl()).getHost();
+            if (host != null && host.equals(mSslAcceptedHost)) {
                 handler.proceed();
                 return;
             }
+            mPendingSslHandler = handler;
             final DialogInterface.OnClickListener listener = (dialog, which) -> {
+                mPendingSslHandler = null;
                 try {
                     switch (which) {
                         case DialogInterface.BUTTON_POSITIVE:
                             handler.proceed();
-                            sslNoticeUserDecision = true;
+                            mSslAcceptedHost = host;
                             break;
                         case DialogInterface.BUTTON_NEGATIVE:
                             handler.cancel();
@@ -86,6 +101,11 @@ public class WebViewActivity extends SyncthingActivity {
                 .setMessage(getString(R.string.ssl_cert_invalid_text, webPageUrl))
                 .setPositiveButton(R.string.cont, listener)
                 .setNegativeButton(R.string.cancel_title, listener)
+                // Back or a tap outside: the request must not stay suspended.
+                .setOnCancelListener(dialog -> {
+                    mPendingSslHandler = null;
+                    handler.cancel();
+                })
                 .show();
         }
 
@@ -109,6 +129,7 @@ public class WebViewActivity extends SyncthingActivity {
         if (!getIntent().hasExtra(EXTRA_WEB_URL)) {
             Log.e(TAG, "EXTRA_WEB_URL not set.");
             finish();
+            return;
         }
         webPageUrl = getIntent().getStringExtra(EXTRA_WEB_URL);
 
@@ -134,6 +155,11 @@ public class WebViewActivity extends SyncthingActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        if (mPendingSslHandler != null) {
+            // Dismissing the notice below would leave the request suspended.
+            mPendingSslHandler.cancel();
+            mPendingSslHandler = null;
+        }
         Util.dismissDialogSafe(mSecurityNoticeDialog, this);
     }
 
@@ -156,7 +182,12 @@ public class WebViewActivity extends SyncthingActivity {
             finish();
             return true;
         } else if (itemId == R.id.openBrowser) {// This can only be triggered on a non-TV device.
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(webPageUrl)));
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(webPageUrl)));
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, R.string.no_app_to_open_link, Toast.LENGTH_SHORT).show();
+                return true;
+            }
             finish();
             return true;
         }
