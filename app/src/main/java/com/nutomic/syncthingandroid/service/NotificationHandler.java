@@ -21,7 +21,6 @@ import com.nutomic.syncthingandroid.activities.MainActivity;
 import com.nutomic.syncthingandroid.onboarding.OnboardingActivity;
 import com.nutomic.syncthingandroid.service.SyncthingService.State;
 
-import javax.inject.Inject;
 
 public class NotificationHandler {
 
@@ -52,48 +51,37 @@ public class NotificationHandler {
         mPreferences = preferences;
         mNotificationManager = (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mPersistentChannel = new NotificationChannel(
-                    CHANNEL_PERSISTENT, mContext.getString(R.string.notifications_persistent_channel),
-                    NotificationManager.IMPORTANCE_MIN);
-            mPersistentChannel.enableLights(false);
-            mPersistentChannel.enableVibration(false);
-            mPersistentChannel.setSound(null, null);
-            mPersistentChannel.setShowBadge(false);
-            mPersistentChannel.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
-            mNotificationManager.createNotificationChannel(mPersistentChannel);
+        mPersistentChannel = new NotificationChannel(
+                CHANNEL_PERSISTENT, mContext.getString(R.string.notifications_persistent_channel),
+                NotificationManager.IMPORTANCE_MIN);
+        mPersistentChannel.enableLights(false);
+        mPersistentChannel.enableVibration(false);
+        mPersistentChannel.setSound(null, null);
+        mPersistentChannel.setShowBadge(false);
+        mPersistentChannel.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
+        mNotificationManager.createNotificationChannel(mPersistentChannel);
 
-            mPersistentChannelWaiting = new NotificationChannel(
-                    CHANNEL_PERSISTENT_WAITING, mContext.getString(R.string.notification_persistent_waiting_channel),
-                    NotificationManager.IMPORTANCE_MIN);
-            mPersistentChannelWaiting.enableLights(false);
-            mPersistentChannelWaiting.enableVibration(false);
-            mPersistentChannelWaiting.setSound(null, null);
-            mPersistentChannelWaiting.setShowBadge(false);
-            mPersistentChannelWaiting.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
-            mNotificationManager.createNotificationChannel(mPersistentChannelWaiting);
+        mPersistentChannelWaiting = new NotificationChannel(
+                CHANNEL_PERSISTENT_WAITING, mContext.getString(R.string.notification_persistent_waiting_channel),
+                NotificationManager.IMPORTANCE_MIN);
+        mPersistentChannelWaiting.enableLights(false);
+        mPersistentChannelWaiting.enableVibration(false);
+        mPersistentChannelWaiting.setSound(null, null);
+        mPersistentChannelWaiting.setShowBadge(false);
+        mPersistentChannelWaiting.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
+        mNotificationManager.createNotificationChannel(mPersistentChannelWaiting);
 
-            mInfoChannel = new NotificationChannel(
-                    CHANNEL_INFO, mContext.getString(R.string.notifications_other_channel),
-                    NotificationManager.IMPORTANCE_LOW);
-            mInfoChannel.enableVibration(false);
-            mInfoChannel.setSound(null, null);
-            mInfoChannel.setShowBadge(true);
-            mNotificationManager.createNotificationChannel(mInfoChannel);
-        } else {
-            mPersistentChannel = null;
-            mPersistentChannelWaiting = null;
-            mInfoChannel = null;
-        }
+        mInfoChannel = new NotificationChannel(
+                CHANNEL_INFO, mContext.getString(R.string.notifications_other_channel),
+                NotificationManager.IMPORTANCE_LOW);
+        mInfoChannel.enableVibration(false);
+        mInfoChannel.setSound(null, null);
+        mInfoChannel.setShowBadge(true);
+        mNotificationManager.createNotificationChannel(mInfoChannel);
     }
 
     private NotificationCompat.Builder getNotificationBuilder(NotificationChannel channel) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return new NotificationCompat.Builder(mContext, channel.getId());
-        } else {
-            //noinspection deprecation
-            return new NotificationCompat.Builder(mContext);
-        }
+        return new NotificationCompat.Builder(mContext, channel.getId());
     }
 
     /**
@@ -108,33 +96,18 @@ public class NotificationHandler {
                                                     Boolean persistNotificationDetails,
                                                     int onlineDeviceCount,
                                                     int totalSyncCompletion) {
-        boolean startServiceOnBoot = mPreferences.getBoolean(Constants.PREF_START_SERVICE_ON_BOOT, false);
         State currentServiceState = service.getCurrentState();
         boolean syncthingRunning = currentServiceState == SyncthingService.State.ACTIVE ||
                     currentServiceState == SyncthingService.State.STARTING;
-        boolean startForegroundService = false;
-        if (!appShutdownInProgress) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                /**
-                 * Android 7 and lower:
-                 * The app may run in background and monitor run conditions even if it is not
-                 * running as a foreground service. For that reason, we can use a normal
-                 * notification if syncthing is DISABLED.
-                 */
-                startForegroundService = startServiceOnBoot || syncthingRunning;
-            } else {
-                /**
-                 * Android 8+:
-                 * Always use startForeground.
-                 * This makes sure the app is not killed, and we don't miss run condition events.
-                 * On Android 8+, this behaviour is mandatory to receive broadcasts.
-                 * https://stackoverflow.com/a/44505719/1837158
-                 * Foreground priority requires a notification so this ensures that we either have a
-                 * "default" or "low_priority" notification, but not "none".
-                 */
-                 startForegroundService = true;
-            }
-        }
+        /**
+         * Always use startForeground while the app runs.
+         * This makes sure the app is not killed, and we don't miss run condition events.
+         * On Android 8+, this behaviour is mandatory to receive broadcasts.
+         * https://stackoverflow.com/a/44505719/1837158
+         * Foreground priority requires a notification so this ensures that we either have a
+         * "default" or "low_priority" notification, but not "none".
+         */
+        boolean startForegroundService = !appShutdownInProgress;
 
         // Check if we have to stopForeground.
         if (startForegroundService != lastStartForegroundService) {

@@ -34,9 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -253,7 +251,7 @@ public class ConfigXml {
     }
 
     public URL getWebGuiUrl() {
-        String urlProtocol = Constants.osSupportsTLS12() ? "https" : "http";
+        String urlProtocol = "https";
         try {
             return new URL(urlProtocol + "://" + getGuiElement().getElementsByTagName("address").item(0).getTextContent());
         } catch (MalformedURLException e) {
@@ -325,8 +323,8 @@ public class ConfigXml {
             throw new OpenConfigException();
         }
 
-        // Platform-specific: Force REST API and Web UI access to use TLS 1.2 or not.
-        Boolean forceHttps = Constants.osSupportsTLS12();
+        // Force REST API and Web UI access to use TLS.
+        Boolean forceHttps = true;
         if (!gui.hasAttribute("tls") ||
                 Boolean.parseBoolean(gui.getAttribute("tls")) != forceHttps) {
             gui.setAttribute("tls", Boolean.toString(forceHttps));

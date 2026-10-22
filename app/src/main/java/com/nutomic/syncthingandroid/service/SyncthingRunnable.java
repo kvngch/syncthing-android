@@ -9,7 +9,6 @@ import android.net.Network;
 import android.net.RouteInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.MulticastLock;
-import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -17,7 +16,6 @@ import com.google.common.base.Charsets;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
 import com.nutomic.syncthingandroid.util.FileUtils;
-import com.nutomic.syncthingandroid.util.Util;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -493,14 +491,6 @@ public class SyncthingRunnable implements Runnable {
                 targetEnv.put("https_proxy", httpProxyAddress);
             }
         }
-
-        // Optimize memory usage for older devices.
-        int gogc = 100;         // GO default
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            gogc = 75;
-        }
-        LogV("Setting env var: [GOGC]=[" + Integer.toString(gogc) + "]");
-        targetEnv.put("GOGC", Integer.toString(gogc));
 
         putCustomEnvironmentVariables(targetEnv, mPreferences);
         return targetEnv;

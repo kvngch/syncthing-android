@@ -3,14 +3,10 @@ package com.nutomic.syncthingandroid.receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.util.Log;
 
 import com.nutomic.syncthingandroid.service.AppPrefs;
-import com.nutomic.syncthingandroid.service.Constants;
 import com.nutomic.syncthingandroid.service.SyncthingService;
 
-import java.lang.SecurityException;
 
 public class BootReceiver extends BroadcastReceiver {
 
@@ -42,12 +38,6 @@ public class BootReceiver extends BroadcastReceiver {
      * https://stackoverflow.com/a/44505719/1837158
      */
     public static void startServiceCompat(Context context) {
-        Intent intent = new Intent(context, SyncthingService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        }
-        else {
-            context.startService(intent);
-        }
+        context.startForegroundService(new Intent(context, SyncthingService.class));
     }
 }

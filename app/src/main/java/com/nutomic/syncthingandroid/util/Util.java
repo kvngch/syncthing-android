@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid.util;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
@@ -28,7 +27,6 @@ import java.security.KeyStore;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.ZonedDateTime;
@@ -36,10 +34,8 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.TrustManager;
@@ -437,10 +433,6 @@ public class Util {
      */
     public static String formatDateTime(String dateTime) {
         // Convert dateTime to readable localized string.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return dateTime;
-        }
-
         ZonedDateTime parsedDateTime = ZonedDateTime.parse(dateTime);
         ZonedDateTime zonedDateTime = parsedDateTime.withZoneSameInstant(ZoneId.systemDefault());
         DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault());
@@ -449,10 +441,6 @@ public class Util {
 
     public static String formatTime(String dateTime) {
         // Convert dateTime to readable localized string.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return dateTime;
-        }
-
         ZonedDateTime parsedDateTime = ZonedDateTime.parse(dateTime);
         ZonedDateTime zonedDateTime = parsedDateTime.withZoneSameInstant(ZoneId.systemDefault());
         DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault());
@@ -464,12 +452,6 @@ public class Util {
      * Despite the name, the local clock time is not used: Syncthing expects UTC.
      */
     public static String getLocalZonedDateTime() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            // java.time needs API 26.
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-            format.setTimeZone(TimeZone.getTimeZone("UTC"));
-            return format.format(new Date());
-        }
         return ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
     

@@ -7,12 +7,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.os.Build;
 import android.os.IBinder;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 import android.util.Log;
-import androidx.annotation.RequiresApi;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 import com.nutomic.syncthingandroid.R;
@@ -20,7 +18,6 @@ import com.nutomic.syncthingandroid.R;
 import static com.nutomic.syncthingandroid.service.RunConditionMonitor.ACTION_SYNC_TRIGGER_FIRED;
 import static com.nutomic.syncthingandroid.service.RunConditionMonitor.EXTRA_BEGIN_ACTIVE_TIME_WINDOW;
 
-@RequiresApi(api = Build.VERSION_CODES.N)
 public class QuickSettingsTileSchedule extends TileService implements ServiceConnection, SyncthingService.OnServiceStateChangeListener {
 
     private static final String TAG = "QuickSettingsTileSchedule";

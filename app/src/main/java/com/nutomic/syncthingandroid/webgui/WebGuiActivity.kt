@@ -49,7 +49,6 @@ import java.security.GeneralSecurityException
 import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 
 /**
@@ -112,7 +111,6 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
 
         // Without this override, a renderer killed by the system takes the whole process down,
         // SyncthingService included. Leave the screen instead; onDestroy destroys the WebView.
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
             Log.w(TAG, "WebView renderer gone, crashed=${detail.didCrash()}")
             finish()
@@ -257,12 +255,7 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
     }
 
     private fun startSyncthingService() {
-        val serviceIntent = Intent(this, SyncthingService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent)
-        } else {
-            startService(serviceIntent)
-        }
+        startForegroundService(Intent(this, SyncthingService::class.java))
     }
 
     private fun registerServiceListener(service: SyncthingService) {
@@ -397,7 +390,7 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
          * Returns boolean if successful.
          * Source: https://stackoverflow.com/a/26781539
          */
-        @SuppressLint("PrivateApi")
+        @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
         private fun setWebViewProxy(
             appContext: Context,
             host: String,
