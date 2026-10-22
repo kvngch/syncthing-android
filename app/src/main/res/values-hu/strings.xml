@@ -7,7 +7,6 @@
     <string name="welcome_title">Üdvözöl az androidos Syncthing.</string>
     <!-- Welcome wizard -->
     <!-- Slide "Introduction" -->
-    <string name="introduction">Bevezető</string>
     <string name="welcome_text">A Syncthing egy nyílt forráskódú fájlszinkronizáló alkalmazás. Az adatok más eszközökkel való megosztásához hozzá kell adnia azok egyedi eszközazonosítóját az eszközlistához. Ezután kiválaszthatja, hogy melyik mappát melyik eszközzel kívánja megosztani. \n \nKérjük, hogy a GitHubon keresztül jelezzen minden felmerülő problémát.</string>
     <!-- Slide "Storage Permission" -->
     <string name="storage_permission_title">Tárolási engedély</string>
@@ -17,7 +16,6 @@
     <string name="ignore_doze_permission_title">Akkumulátor optimalizáció</string>
     <string name="ignore_doze_permission_os_notice">Az Android TV-ről ismert, hogy időnként befejezi az alkalmazást, amikor az a háttérben fut. A megoldás elérhető a wikiben \'%1$s/%2$s\' címen.</string>
     <string name="ignore_doze_permission_desc">Az Android egy idő után leállíthatja a szinkronizálást. Ennek megakadályozására kapcsolja ki az akkumulátor optimalizálását. Egyes készülékeken további leállító alkalmazások vannak előtelepítve. Az ő fehérlistájukra is érdemes felvenni a Syncthinget.</string>
-    <string name="toast_ignore_doze_permission_required">Ez az alkalmazás csak akkor működik megbízhatóan, ha mentesül a \"szundi\" energiatakarékos üzemmód alól.</string>
     <string name="dialog_disable_battery_optimizations_not_supported">Az eszközöd nem támogatja az akkumulátor optimalizálás letiltását</string>
     <!-- Slide "Location Permission" -->
     <string name="location_permission_title">Helyszín engedélyezése</string>
@@ -31,15 +29,12 @@
     <string name="cont">Folytatás</string>
     <string name="finish">Befejezés</string>
     <string name="generic_example">Példa</string>
-    <string name="generic_error">Hiba</string>
     <string name="generic_help">Súgó</string>
     <string name="grant_permission">Engedély megadása</string>
     <string name="permission_granted">Engedély megadva</string>
     <string name="reason">Indoklás:</string>
     <string name="accept">Elfogad</string>
     <string name="ignore">Figyelmen kívül hagy</string>
-    <string name="page_x_of_y">%2$s / %1$soldal</string>
-    <string name="main_menu">Főmenü</string>
     <string name="refresh">Frissítés</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Szinkronizálás. Kamera</string>
@@ -60,9 +55,7 @@
     <string name="activity_main_bottom_navigation_rescan_all">Minden újraolvasása</string>
     <!-- Main menu button -->
     <string name="open_main_menu">Főmenü megnyitása</string>
-    <string name="close_main_menu">Főmenü bezárása</string>
     <!-- Exception dialog message -->
-    <string name="exception_known_bug_notice">Egy ismert, még nem megoldott hibával találkoztunk. További információért lásd %1$s/%2$s. Kérjük, előzetesen hagyjon pontos leírást a történtekről.</string>
     <!-- Title of the exit app when running as a service confirmation dialog -->
     <string name="dialog_exit_while_running_as_service_title">Megerősítés az alkalmazás kilépéséhez</string>
     <string name="dialog_exit_while_running_as_service_message">Az alkalmazást úgy állította be, hogy automatikusan elinduljon a rendszerindításkor. Ezért figyeli a futtatási feltételeket, és szinkronizál a háttérben, ha a feltételek megfelelnek. Ebből csak akkor kell manuálisan kilépnie, ha súlyos problémákba ütközik. Ellenkező esetben tiltsa le a \'Start automatically on boot \' (Automatikus indítás indításkor) opciót a beállításokban. Szeretne most kilépni, amíg a készülék újraindul?</string>
@@ -71,7 +64,6 @@
     <!-- Title of the "share device id" menu action -->
     <string name="share_device_id">Eszközazonosító megosztása</string>
     <!-- Shown in the chooser dialog when sharing a Device ID -->
-    <string name="send_device_id_to">Eszközazonosító megosztása</string>
     <string name="usage_reporting_dialog_title">Engedélyezed a névtelen használati statisztikák küldését?</string>
     <string name="usage_reporting_dialog_description">A titkosított használati statisztikákat naponta küldjük el. Ennek segítségével követjük a platformokat, mappaméreteket és az alkalmazás verzióját. Ha a megosztott adat tartalma megváltozik, újra engedélyt fogunk kérni a megosztás előtt. Az összesített statisztika nyilvánosan elérhető a https://data.syncthing.net linken.</string>
     <string name="yes">Igen</string>
@@ -117,7 +109,6 @@
     <!-- Indicates that a folder is fully synced to the local device -->
     <string name="device_up_to_date">Friss</string>
     <!-- Indicates that the device is currently syncing. Parameter is sync percentage -->
-    <string name="device_syncing">Szinkronizálás (%1$d%%)</string>
     <string name="device_syncing_percent_bytes">Szinkronizálás (%1$d%%,%2$s)</string>
     <!-- Indicates that there is no connection to the device -->
     <string name="device_disconnected">Kapcsolat bontva</string>
@@ -127,7 +118,6 @@
     <!-- Indicates that devices does not share any folders -->
     <string name="device_state_unused">Nem használt</string>
     <!-- Indicates that the device connection is unknown -->
-    <string name="device_state_unknown">Ismeretlen</string>
     <!-- Last seen title -->
     <string name="device_last_seen">Utoljára megtekintve: %1$s</string>
     <string name="device_last_seen_never">Soha</string>
@@ -148,9 +138,7 @@
     <string name="syncthing_has_crashed">A Syncthing összeomlott.</string>
     <!-- DrawerFragment -->
     <!-- Same as download_title with a colon and space appended -->
-    <string name="download_title_colon">"Letöltve: "</string>
     <!-- Same as upload_title with a colon and space appended -->
-    <string name="upload_title_colon">"Feltöltve: "</string>
     <!-- Title for current RAM usage -->
     <string name="ram_usage">Memória használat</string>
     <!-- Title for announce server status -->
@@ -202,7 +190,6 @@
     <string name="folder_path_readwrite">Az Ön Android-verziója biztosítja a Syncthing számára az olvasási és írási hozzáférést a kiválasztott mappához.</string>
     <!-- Toast shown if the user selected an invalid location for a new syncthing folder -->
     <string name="toast_invalid_folder_selected">A kiválasztott mappa nem használható. Kérjük, válasszon belső vagy külső tárhelyen található mappát.</string>
-    <string name="folder_type_switch_to_receive_encrypted_not_allowed">A meglévő mappák átállítása \"Titkosított fogadásra\" nem lehetséges.</string>
     <string name="ignore_patterns">Kihagyási minták</string>
     <!-- DeviceActivity -->
     <!-- Setting title -->
@@ -238,7 +225,6 @@
     <string name="delete_device">Eszköz törlése</string>
     <string name="add_device">Eszköz hozzáadása</string>
     <!-- Menu item to confirm adding a device -->
-    <string name="add">Hozzáadás</string>
     <!-- Title for DeviceSettingsFragment in edit mode -->
     <string name="edit_device">Eszköz szerkesztése</string>
     <!-- Dialog shown when attempting to remove a device -->
@@ -248,13 +234,11 @@
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_invalid">Az eszköz azonosítója (ID) nincs megfelelően formázva. Kérjük, próbálja meg újra, és adja meg a helyes azonosítót.</string>
     <!-- Toast shown when trying to create a device with an empty name -->
-    <string name="device_name_required">Az eszköz neve nem lehet üres</string>
     <!-- Toast shown when trying to create a device with invalid addresses -->
     <string name="device_addresses_invalid">Az eszközcímek nem megfelelően vannak formázva. Kérjük, próbálja meg újra. További információért nézze meg a Syncthing dokumentációt.</string>
     <!-- Content description for device ID qr code icon -->
     <string name="scan_qr_code_description">QR kód olvasása</string>
     <!-- Dialog message if no compatible barcode scanner app is installed -->
-    <string name="install_barcode_scanner_app_message">Ehhez vonalkódolvasó alkalmazásra van szükség. Szeretné telepíteni a \'Binary Eye\' alkalmazást az F-Droidról?</string>
     <!-- Shown if no folders are configured -->
     <string name="folders_list_empty">Nincsenek mappák konfigurálva. Koppintson a gombra új mappa hozzáadásához.</string>
     <!-- RecentChangesActivity -->
@@ -279,7 +263,6 @@
     <string name="open_in_browser">Megnyitás böngészőben</string>
     <!-- SettingsFragment -->
     <string name="settings_title">Beállítások</string>
-    <string name="category_run_conditions">Futás feltételei</string>
     <string name="category_user_interface">Felhasználói felület</string>
     <string name="preference_app_theme_title">Téma</string>
     <string name="preference_app_theme_follow_system">Rendszer követése</string>
@@ -308,8 +291,6 @@
     <string name="wifi_ssid_whitelist_empty">Nincsenek Wi-Fi hálózatok megadva. Kattintson a hálózat megadásához.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_wifi">Hálózat választásához kapcsold be a WiFit.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_location">A hálózatok kiválasztásához kapcsolja be a helymeghatározást.</string>
-    <string name="sync_only_wifi_ssids_need_to_grant_location_permission">A funkció használatához engedélyezni kell a hozzáférést a földrajzi helyhez</string>
-    <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_title">Hozzáférés szükséges</string>
     <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_content">Az Android 8.1-el kezdve helyzeti hozzáférés szükséges a WiFi hálózat nevének olvasásához. Ezt a funkciót csak akkor használhatod, ha megadod ezt a hozzáférést.</string>
     <string name="power_source_title">Futtatás, ha a készülék áramellátása</string>
     <string name="power_source_ac_and_battery_power">AC és akkumulátoros tápellátás.</string>
@@ -330,18 +311,6 @@
     <string name="behaviour_autostart_summary">Az alkalmazás automatikus elindítása az operációs rendszer indításakor.</string>
     <string name="expert_mode_title">Szakértői mód</string>
     <string name="expert_mode_summary">Ha engedélyezi ezt az opciót, akkor megjelennek a speciális konfigurációs lehetőségek. Először érdemes átnézni a Syncthing dokumentációt, hogy megbizonyosodjon arról, hogyan kell ezeket helyesen használni. A helytelen beállítások az akkumulátor lemerülését, a rendszer erőforrásainak elfogyását vagy hiányos szinkronizálást okozhatnak.</string>
-    <string name="preference_language_title">Nyelv</string>
-    <string name="preference_language_summary">Alkalmazás nyelvének megváltoztatása</string>
-    <string name="pref_language_default">Alapértelmezett nyelv</string>
-    <string name="folder_type_send_receive">Küldés és fogadás</string>
-    <string name="folder_type_send_only">Csak küldés</string>
-    <string name="folder_type_receive_only">Csak fogadás</string>
-    <string name="pull_order_random">Véletlenszerű</string>
-    <string name="pull_order_alphabetic">Betűrendes</string>
-    <string name="pull_order_smallest_first">Legkisebb elsőnek</string>
-    <string name="pull_order_largest_first">A legnagyobb elsőként</string>
-    <string name="pull_order_oldest_first">Legrégebbi elsőnek</string>
-    <string name="pull_order_newest_first">Legújabb elsőnek</string>
     <string name="versioning_type_none">Kikapcsolva</string>
     <string name="versioning_type_trashcan">Lomtár</string>
     <string name="versioning_type_simple">Egyszerű</string>
@@ -421,8 +390,6 @@
     <string name="category_about">Névjegy</string>
     <string name="verbose_log_title">Bővebb napló</string>
     <string name="verbose_log_summary">Az opció engedélyezése segít a hibakeresési naplók nagyon részletes szintű létrehozásában.</string>
-    <string name="log_to_file_title">Naplózás fájlba</string>
-    <string name="log_to_file_summary">A SyncthingNative kimenete kiíródik a fájlba.</string>
     <!-- Settings item that opens the log activity -->
     <string name="open_log">Napló megnyitása</string>
     <!-- Summary for the log activity -->
@@ -509,7 +476,6 @@
     <string name="reason_force_start">A Syncthing azért fut, mert a futtatási feltételektől függetlenül kényszerítette az indításra.</string>
     <string name="reason_force_stop">A Syncthing nem fut, mert a futási feltételektől függetlenül leállásra kényszerítette.</string>
     <!-- Explanations why syncthing is running or not running -->
-    <string name="reason_not_within_time_frame">Bekapcsolta a \"Futtatás időbeosztás szerint\" opciót, és az utolsó szinkronizálás legfeljebb egy órája történt.</string>
     <string name="reason_not_within_time_frame_2">Bekapcsolta a \'Futtatás időbeosztás szerint\' opciót, és az utolsó szinkronizálás ennyivel %s korábban volt.</string>
     <string name="reason_not_within_time_frame_0_min">kevesebb mint egy perce</string>
     <plurals name="reason_not_within_time_frame_minutes">
@@ -545,7 +511,6 @@
     <!-- Text for the exit button on the drawer -->
     <string name="exit">Kilépés</string>
     <!-- Title of the notification shown while syncthing is running and enabled -->
-    <string name="syncthing_active">A Syncthing fut</string>
     <string name="syncthing_active_details">A szinkronizálás fut:%1$s</string>
     <string name="no_remote_devices_connected">Nincs távoli eszköz csatlakoztatva</string>
     <plurals name="device_online_up_to_date">
@@ -567,9 +532,7 @@
     <!-- Toast shown if a listening tcp port is unavailable -->
     <string name="webui_tcp_port_unavailable">WebUI tcp %s port foglalt. Második próbálkozás?</string>
     <!-- Label of the default folder created of first start (camera folder). -->
-    <string name="default_android_camera_folder_label">Android kamera</string>
     <!-- ID of the default folder created on first start (camera folder). Must only contain 'a-z0-9_-'. Parameter is the device name-->
-    <string name="default_folder_id">%1$s-kepek</string>
     <string name="notification_crash_title">A Syncthing összeomlott %1$s</string>
     <string name="notification_crash_text">Kattintson a naplókhoz (%1$s)</string>
     <string name="notifications_persistent_channel">Syncthing aktív</string>
@@ -579,11 +542,9 @@
     <string name="notification_out_of_disk_space">Az SD-kártya megtelt. Fájl %1$s</string>
     <!-- RestApi -->
     <!-- Title of the notification shown when a restart is needed -->
-    <string name="restart_title">Újraindítás szükséges</string>
     <!-- Text for positive button in restart dialog -->
     <!-- Text for the dismiss button of the restart Activity -->
     <!-- Text of the notification shown when a restart is needed -->
-    <string name="restart_notification_text">Koppints a Syncthing újraindításához</string>
     <!-- Shown when a device ID is copied to the clipboard -->
     <string name="device_id_copied_to_clipboard">Az eszközazonosító a vágólapra másolva</string>
     <!-- Strings representing units for file sizes, from smallest to largest -->

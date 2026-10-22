@@ -7,7 +7,6 @@
     <string name="welcome_title">Willkommen bei Syncthing für Android</string>
     <!-- Welcome wizard -->
     <!-- Slide "Introduction" -->
-    <string name="introduction">Einführung</string>
     <string name="welcome_text">Syncthing ist eine quelloffene Software zur Dateisynchronisierung. Um Daten mit anderen Geräten zu teilen, müssen Sie deren eindeutige Geräte-IDs zur Geräteliste hinzufügen. Danach können Sie festlegen, welche Ordner mit welchen Geräten geteilt werden. \n \nBitte melden Sie auftretende Probleme via GitHub.</string>
     <!-- Slide "Storage Permission" -->
     <string name="storage_permission_title">Speicher-Berechtigung</string>
@@ -17,7 +16,6 @@
     <string name="ignore_doze_permission_title">Akku-Optimierung</string>
     <string name="ignore_doze_permission_os_notice">Es ist bekannt, dass Android TVs die App gelegentlich beenden, wenn sie im Hintergrund ausgeführt wird. Eine Lösung ist im Wiki unter „%1$s/%2$s“ verfügbar.</string>
     <string name="ignore_doze_permission_desc">Android kann die Synchronisation nach einiger Zeit stoppen. Um dies zu verhindern, muss die Akku-Optimierung deaktiviert werden. Einige Geräte haben Apps vorinstalliert, welche Hintergrundaktivitäten unterbinden. Syncthing sollte deshalb auf deren Ausnahmeliste hinzugefügt werden.</string>
-    <string name="toast_ignore_doze_permission_required">Diese App funktioniert nur dann zuverlässig, wenn sie vom „Doze“ Energiesparmodus ausgenommen wird.</string>
     <string name="dialog_disable_battery_optimizations_not_supported">Dieses Gerät unterstützt das Deaktivieren der Batterielaufzeit-Optimierung nicht</string>
     <!-- Slide "Location Permission" -->
     <string name="location_permission_title">Standortberechtigung</string>
@@ -31,15 +29,12 @@
     <string name="cont">Weiter</string>
     <string name="finish">Fertig</string>
     <string name="generic_example">Beispiel</string>
-    <string name="generic_error">Fehler</string>
     <string name="generic_help">Hilfe</string>
     <string name="grant_permission">Zugriff gewähren</string>
     <string name="permission_granted">Zugriff gewährt</string>
     <string name="reason">Grund:</string>
     <string name="accept">Annehmen</string>
     <string name="ignore">Ignorieren</string>
-    <string name="page_x_of_y">Seite %1$s von %2$s</string>
-    <string name="main_menu">Hauptmenü</string>
     <string name="refresh">Aktualisieren</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Sync. Kamera</string>
@@ -60,9 +55,7 @@
     <string name="activity_main_bottom_navigation_rescan_all">Alle neu scannen</string>
     <!-- Main menu button -->
     <string name="open_main_menu">Hauptmenü öffnen</string>
-    <string name="close_main_menu">Hauptmenü schließen</string>
     <!-- Exception dialog message -->
-    <string name="exception_known_bug_notice">Ein bekannter Fehler, der noch nicht behoben wurde, ist aufgetreten. Mehr Details dazu unter %1$s/%2$s. Wir bitten um eine genaue Beschreibung dessen was zuvor .</string>
     <!-- Title of the exit app when running as a service confirmation dialog -->
     <string name="dialog_exit_while_running_as_service_title">Beenden der App bestätigen</string>
     <string name="dialog_exit_while_running_as_service_message">Zur Erinnerung: Syncthing wurde eingerichtet, automatisch beim Hochfahren zu starten. Deshalb überwacht es die Ausführungsbedingungen und synchronisiert, wenn die Bedingungen zutreffen. Es sollte nur manuell beendet werden, falls man größere Probleme feststellt. Andernfalls „Automatisch beim Hochfahren starten“ in den Einstellungen ausschalten. Soll es jetzt beendet werden, bis das Gerät neu gestartet wurde?</string>
@@ -71,7 +64,6 @@
     <!-- Title of the "share device id" menu action -->
     <string name="share_device_id">Geräte-ID teilen</string>
     <!-- Shown in the chooser dialog when sharing a Device ID -->
-    <string name="send_device_id_to">Geräte-ID senden an</string>
     <string name="usage_reporting_dialog_title">Anonymen Nutzungsbericht erlauben?</string>
     <string name="usage_reporting_dialog_description">Der verschlüsselte Nutzungsbericht wird täglich versendet. Er dient der Statistik über genutzte Plattformen, Verzeichnisgrößen und Syncthing-Versionen. Wenn sich der übermittelte Datenumfang ändert, wird erneut um Erlaubnis gefragt. \n \nDie zusammengeführten Statistiken sind unter https://data.syncthing.net zu finden.</string>
     <string name="yes">Ja</string>
@@ -117,7 +109,6 @@
     <!-- Indicates that a folder is fully synced to the local device -->
     <string name="device_up_to_date">Aktuell</string>
     <!-- Indicates that the device is currently syncing. Parameter is sync percentage -->
-    <string name="device_syncing">Synchronisieren (%1$d­ %%)</string>
     <string name="device_syncing_percent_bytes">Synchronisieren (%1$d %%, %2$s)</string>
     <!-- Indicates that there is no connection to the device -->
     <string name="device_disconnected">Getrennt</string>
@@ -127,7 +118,6 @@
     <!-- Indicates that devices does not share any folders -->
     <string name="device_state_unused">Ungenutzt</string>
     <!-- Indicates that the device connection is unknown -->
-    <string name="device_state_unknown">Unbekannt</string>
     <!-- Last seen title -->
     <string name="device_last_seen">Zuletzt online: %1$s</string>
     <string name="device_last_seen_never">Nie</string>
@@ -148,9 +138,7 @@
     <string name="syncthing_has_crashed">Syncthing ist abgestürzt.</string>
     <!-- DrawerFragment -->
     <!-- Same as download_title with a colon and space appended -->
-    <string name="download_title_colon">"Herunterladen: "</string>
     <!-- Same as upload_title with a colon and space appended -->
-    <string name="upload_title_colon">"Hochladen: "</string>
     <!-- Title for current RAM usage -->
     <string name="ram_usage">RAM-Auslastung</string>
     <!-- Title for announce server status -->
@@ -202,7 +190,6 @@
     <string name="folder_path_readwrite">Diese Android-Version erlaubt Syncthing Lese- und Schreibzugriff auf den ausgewählten Ordner.</string>
     <!-- Toast shown if the user selected an invalid location for a new syncthing folder -->
     <string name="toast_invalid_folder_selected">Entschuldigung. Der ausgewählte Ordner kann nicht verwendet werden. Bitte einen Ordner auf dem internen oder externen Speicher auswählen.</string>
-    <string name="folder_type_switch_to_receive_encrypted_not_allowed">Bestehende Ordner auf „Verschlüsselt empfangen“ umschalten wird nicht unterstützt.</string>
     <string name="ignore_patterns">Ausschlussmuster</string>
     <!-- DeviceActivity -->
     <!-- Setting title -->
@@ -238,7 +225,6 @@
     <string name="delete_device">Gerät löschen</string>
     <string name="add_device">Gerät hinzufügen</string>
     <!-- Menu item to confirm adding a device -->
-    <string name="add">Hinzufügen</string>
     <!-- Title for DeviceSettingsFragment in edit mode -->
     <string name="edit_device">Gerät bearbeiten</string>
     <!-- Dialog shown when attempting to remove a device -->
@@ -248,13 +234,11 @@
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_invalid">Die Geräte-ID ist nicht im richtigen Format. Bitte erneut versuchen und die richtige ID eingeben.</string>
     <!-- Toast shown when trying to create a device with an empty name -->
-    <string name="device_name_required">Der Gerätename darf nicht leer sein</string>
     <!-- Toast shown when trying to create a device with invalid addresses -->
     <string name="device_addresses_invalid">Die Geräteadressen sind nicht im richtigen Format. Bitte erneut versuchen. Für weitere Hilfe in die Syncthing-Doku schauen.</string>
     <!-- Content description for device ID qr code icon -->
     <string name="scan_qr_code_description">QR-Code scannen</string>
     <!-- Dialog message if no compatible barcode scanner app is installed -->
-    <string name="install_barcode_scanner_app_message">Dies erfordert eine Barcodescanner-App. Soll die App „Binary Eye“ von F-Droid installiert werden?</string>
     <!-- Shown if no folders are configured -->
     <string name="folders_list_empty">Keine Ordner konfiguriert. Tippen, um einen neuen Ordner hinzuzufügen.</string>
     <!-- RecentChangesActivity -->
@@ -279,7 +263,6 @@
     <string name="open_in_browser">In Browser öffnen</string>
     <!-- SettingsFragment -->
     <string name="settings_title">Einstellungen</string>
-    <string name="category_run_conditions">Ausführungsbedingungen</string>
     <string name="category_user_interface">Benutzeroberfläche</string>
     <string name="preference_app_theme_title">Thema</string>
     <string name="preference_app_theme_follow_system">Dem System folgen</string>
@@ -308,8 +291,6 @@
     <string name="wifi_ssid_whitelist_empty">Keine WLAN-Netzwerke ausgewählt. Klicken, um Netzwerke zu wählen.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_wifi">Bitte WLAN aktivieren, um Netzwerke auszuwählen.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_location">Bitte den Standort einschalten, um Netzwerke auszuwählen.</string>
-    <string name="sync_only_wifi_ssids_need_to_grant_location_permission">Bitte die Standortberechtigung gewähren, um diese Funktion nutzen zu können.</string>
-    <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_title">Berechtigung benötigt</string>
     <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_content">Ab Android 8.1 ist der Standortzugriff erforderlich, um WLAN-Namen ermitteln zu können. Daher kann diese Funktion nur genutzt werden, wenn diese Berechtigung erteilt wird.</string>
     <string name="power_source_title">Starten, wenn Gerät betrieben wird über</string>
     <string name="power_source_ac_and_battery_power">Ladegerät und Akku</string>
@@ -330,18 +311,6 @@
     <string name="behaviour_autostart_summary">App automatisch beim Hochfahren starten.</string>
     <string name="expert_mode_title">Expertenmodus</string>
     <string name="expert_mode_summary">Durch Aktivieren dieser Option werden erweiterte Konfigurationsoptionen angezeigt. Um deren richtige Verwendung sicherzustellen, zuerst einen Blick in die Syncthing-Dokumentation werfen. Falsche Einstellungen können zu hohem Batterieverbrauch, Erschöpfen der Systemressourcen oder unvollständiger Synchronisation führen.</string>
-    <string name="preference_language_title">Sprache</string>
-    <string name="preference_language_summary">Anwendungssprache ändern</string>
-    <string name="pref_language_default">Standardsprache</string>
-    <string name="folder_type_send_receive">Senden und Empfangen</string>
-    <string name="folder_type_send_only">Nur Senden</string>
-    <string name="folder_type_receive_only">Nur Empfangen</string>
-    <string name="pull_order_random">Zufall</string>
-    <string name="pull_order_alphabetic">Alphabetisch</string>
-    <string name="pull_order_smallest_first">Kleinstes zuerst</string>
-    <string name="pull_order_largest_first">Größtes zuerst</string>
-    <string name="pull_order_oldest_first">Älteste zuerst</string>
-    <string name="pull_order_newest_first">Neueste zuerst</string>
     <string name="versioning_type_none">Keine</string>
     <string name="versioning_type_trashcan">Papierkorb</string>
     <string name="versioning_type_simple">Einfach</string>
@@ -421,8 +390,6 @@
     <string name="category_about">Über</string>
     <string name="verbose_log_title">Ausführliches Protokoll</string>
     <string name="verbose_log_summary">Aktivieren dieser Option wird sehr detaillierte Protokolle zur Fehlersuche liefern.</string>
-    <string name="log_to_file_title">Logdatei schreiben</string>
-    <string name="log_to_file_summary">Die Ausgabe von SyncthingNative wird in eine Datei geschrieben.</string>
     <!-- Settings item that opens the log activity -->
     <string name="open_log">Protokoll öffnen</string>
     <!-- Summary for the log activity -->
@@ -509,7 +476,6 @@
     <string name="reason_force_start">Syncthing läuft, weil Sie den Start unabhängig von den Ausführungsbedingungen erzwungen haben.</string>
     <string name="reason_force_stop">Syncthing schläft, weil der Stopp unabhängig von den Ausführungsbedingungen erzwungen wurde.</string>
     <!-- Explanations why syncthing is running or not running -->
-    <string name="reason_not_within_time_frame">Es ist „Gemäß Zeitplan synchronisieren“ aktiviert und die letzte Synchronisierung ist nicht länger als eine Stunde her.</string>
     <string name="reason_not_within_time_frame_2">Es ist „Gemäß Zeitplan synchronisieren“ aktiviert und die letzte Synchronisierung war vor %s.</string>
     <string name="reason_not_within_time_frame_0_min">weniger als einer Minute</string>
     <plurals name="reason_not_within_time_frame_minutes">
@@ -545,7 +511,6 @@
     <!-- Text for the exit button on the drawer -->
     <string name="exit">Beenden</string>
     <!-- Title of the notification shown while syncthing is running and enabled -->
-    <string name="syncthing_active">Läuft</string>
     <string name="syncthing_active_details">Läuft: %1$s</string>
     <string name="no_remote_devices_connected">Keine entfernten Geräte verbunden</string>
     <plurals name="device_online_up_to_date">
@@ -567,9 +532,7 @@
     <!-- Toast shown if a listening tcp port is unavailable -->
     <string name="webui_tcp_port_unavailable">WebGUI TCP-Port %s belegt. Zweite Instanz?</string>
     <!-- Label of the default folder created of first start (camera folder). -->
-    <string name="default_android_camera_folder_label">Android Kamera</string>
     <!-- ID of the default folder created on first start (camera folder). Must only contain 'a-z0-9_-'. Parameter is the device name-->
-    <string name="default_folder_id">%1$s-Bilder</string>
     <string name="notification_crash_title">Abgestürzt (Exitcode %1$s)</string>
     <string name="notification_crash_text">Klick für Protokolle (%1$s)</string>
     <string name="notifications_persistent_channel">Syncthing läuft</string>
@@ -579,11 +542,9 @@
     <string name="notification_out_of_disk_space">SD-Karte ist voll. Datei %1$s</string>
     <!-- RestApi -->
     <!-- Title of the notification shown when a restart is needed -->
-    <string name="restart_title">Neustart erforderlich</string>
     <!-- Text for positive button in restart dialog -->
     <!-- Text for the dismiss button of the restart Activity -->
     <!-- Text of the notification shown when a restart is needed -->
-    <string name="restart_notification_text">Hier klicken, um Syncthing neu zu starten</string>
     <!-- Shown when a device ID is copied to the clipboard -->
     <string name="device_id_copied_to_clipboard">Geräte-ID in die Zwischenablage kopiert</string>
     <!-- Strings representing units for file sizes, from smallest to largest -->
@@ -698,7 +659,6 @@
     <string name="notification_permission_desc">Erforderlich, um Benachrichtigungen über neue Geräteverbindungs- und Ordnerfreigabeanfragen anzuzeigen sowie den Dienst aktiv und verbunden zu halten.</string>
     <string name="qs_schedule_label_minutes" tools:ignore="PluralsCandidate">Für %1$d Minuten ausführen</string>
     <string name="notification_permission_title">Benachrichtigungsrecht</string>
-    <string name="toast_notification_permission_required">Syncthing benötigt das Benachrichtigungsrecht, um seinen Dienst aufrecht und verbunden zu halten.</string>
     <string name="sleep_interval_minutes_title">Dauer des Synchronisationspausenintervalls</string>
     <string name="start_into_web_gui_title">Direkt die Weboberfläche öffnen</string>
     <string name="start_into_web_gui_summary">Beim Start der App die Weboberfläche anstelle des Hauptfensters öffnen</string>
@@ -714,8 +674,6 @@
     <string name="clear_stversions_summary">Dateien werden in das Verzeichnis .stversions verschoben, wenn sie von Syncthing ersetzt oder gelöscht werden. Versehentlich gelöschte Dateien lassen sich wahrscheinlich dort finden und wiederherstellen, allerdings belegen veraltete Versionen der Dateien Speicherplatz auf diesem Gerät.</string>
     <string name="folder_run_script_caption">Skript ausführen</string>
     <string name="folder_run_script_description">Expertenoption zur Ausführung von Skripten, nachdem ein Ordner seinen Synchronisierungsstatus geändert hat. Skripte unter „.stfolder/*.sh“ werden ausgeführt, andere Speicherorte werden aus Sicherheitsgründen nicht unterstützt.\nBeispiel für einen Skriptaufruf: „.stfolder/rename-files.sh sync_complete“</string>
-    <string name="pizza_url_summary">Schenken Sie eine gehörige Portion Freundlichkeit und besonders gute Stimmung obendrein mit nur einem Fingertipp – damit die Katzen auch weiterhin glücklich schnurren.</string>
-    <string name="pizza_url_title">» Katzen lieben Pizza « 😺🍕</string>
     <plurals name="conflicts">
         <item quantity="one">%1$d Konflikt</item>
         <item quantity="other">%1$d Konflikte</item>
@@ -743,5 +701,4 @@
     <string name="category_general">Allgemein</string>
     <string name="category_schedule">Planen</string>
     <string name="category_battery">Akku</string>
-    <string name="device_id_qr_code">Geräte ID QR Code</string>
 </resources>

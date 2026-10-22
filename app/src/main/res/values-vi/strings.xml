@@ -7,7 +7,6 @@
     <string name="welcome_title">Chào mừng đến với Syncthing cho Android</string>
     <!-- Welcome wizard -->
     <!-- Slide "Introduction" -->
-    <string name="introduction">Giới thiệu</string>
     <string name="welcome_text">Syncthing là một ứng dụng đồng bộ hoá tệp mã nguồn mở. \n \nĐể chia sẻ dữ liệu với các thiết bị khác, bạn cần phải thêm các ID thiết bị độc nhất của chúng vào danh sách thiết bị. Sau đó bạn có thể chọn các thư mục mà bạn muốn chia sẻ với các thiết bị. \n \nVui lòng báo cáo những vấn đề bạn gặp qua GitHub.</string>
     <!-- Slide "Storage Permission" -->
     <string name="storage_permission_title">Quyền Bộ nhớ</string>
@@ -17,7 +16,6 @@
     <string name="ignore_doze_permission_title">Tối ưu hóa pin</string>
     <string name="ignore_doze_permission_os_notice">Các TV chạy Android được biết là đôi khi chúng dừng ứng dụng khi nó đang chạy trong nền. Có một giải pháp trên wiki tại \'%1$s/%2$s\'.</string>
     <string name="ignore_doze_permission_desc">Android có thể sẽ dừng việc đồng bộ hoá sau một khoảng thòi gian. Để ngăn chặn việc này, hãy tắt tối ưu hoá pin. Một số thiết bị có thêm cả các ứng dụng dừng tiến trình được cài sẵn. Bạn cũng nên thêm Syncthing vào danh sách loại trừ của chúng.</string>
-    <string name="toast_ignore_doze_permission_required">Ứng dụng này chỉ hoạt động một cách đáng tin cậy nếu nó được loại trừ khỏi chế độ tiết kiệm pin.</string>
     <string name="dialog_disable_battery_optimizations_not_supported">Thiết bị của bạn không hỗ trợ tắt tối ưu hoá pin</string>
     <!-- Slide "Location Permission" -->
     <string name="location_permission_title">Quyền Vị trí</string>
@@ -31,15 +29,12 @@
     <string name="cont">Tiếp tục</string>
     <string name="finish">Hoàn tất</string>
     <string name="generic_example">Ví dụ</string>
-    <string name="generic_error">Lỗi</string>
     <string name="generic_help">Trợ giúp</string>
     <string name="grant_permission">Cấp quyền</string>
     <string name="permission_granted">Quyền đã được cấp</string>
     <string name="reason">Lý do:</string>
     <string name="accept">Chấp nhận</string>
     <string name="ignore">Bỏ qua</string>
-    <string name="page_x_of_y">Trang %1$s trong số %2$s</string>
-    <string name="main_menu">Menu chính</string>
     <string name="refresh">Làm mới</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Máy ảnh Sync.</string>
@@ -60,9 +55,7 @@
     <string name="activity_main_bottom_navigation_rescan_all">Quét lại tất cả</string>
     <!-- Main menu button -->
     <string name="open_main_menu">Mở menu chính</string>
-    <string name="close_main_menu">Đóng menu chính</string>
     <!-- Exception dialog message -->
-    <string name="exception_known_bug_notice">Một lỗi đã biết mà chưa được sửa đã xảy ra. Hãy xem %1$s/%2$s để biết thêm thông tin. Vui lòng mô tả chính xác cho chúng tôi những gì đã xảy ra trước đó.</string>
     <!-- Title of the exit app when running as a service confirmation dialog -->
     <string name="dialog_exit_while_running_as_service_title">Xác nhận thoát ứng dụng</string>
     <string name="dialog_exit_while_running_as_service_message">Vì sự cân nhắc của bạn: Bạn đã thiết lập ứng dụng tự động khởi động khi khởi động thiết bị. Do đó nó giám sát các điều kiện chạy và đồng bộ tại bất kỳ lúc nào trong nền khi các điều kiện trùng khớp. Bạn chỉ nên thoát thủ công nếu bạn gặp vấn đề nghiêm trọng. Nếu không, hãy tắt \'Tự động khởi động khi khởi động thiết bị\' trong cài đặt. Bạn có muốn thoát ngay cho đến khi thiết bị khởi động lại không?</string>
@@ -71,7 +64,6 @@
     <!-- Title of the "share device id" menu action -->
     <string name="share_device_id">Chia sẻ ID thiết bị</string>
     <!-- Shown in the chooser dialog when sharing a Device ID -->
-    <string name="send_device_id_to">Gửi ID thiết bị đến</string>
     <string name="usage_reporting_dialog_title">Cho phép báo cáo sử dụng ẩn danh?</string>
     <string name="usage_reporting_dialog_description">Báo cáo s.dụng đã mã hoá sẽ được gửi đi hằng ngày. Nó được dùng để theo dõi các HĐH thông dụng, kích cỡ th.mục và ph.bản ứng dụng. Nếu bộ d.liệu báo cáo có th.đổi gì, bạn sẽ được nhắc lại bằng h.thoại này. \n \nThống kê t.hợp được đăng công khai tại https://data.syncthing.net.</string>
     <string name="yes">Có</string>
@@ -116,7 +108,6 @@
     <!-- Indicates that a folder is fully synced to the local device -->
     <string name="device_up_to_date">Đã đồng bộ</string>
     <!-- Indicates that the device is currently syncing. Parameter is sync percentage -->
-    <string name="device_syncing">Đang đ.bộ (%1$d%%)</string>
     <string name="device_syncing_percent_bytes">Đang đồng bộ (%1$d%%, %2$s)</string>
     <!-- Indicates that there is no connection to the device -->
     <string name="device_disconnected">Đã ngắt k.nối</string>
@@ -125,7 +116,6 @@
     <!-- Indicates that devices does not share any folders -->
     <string name="device_state_unused">Không được sử dụng</string>
     <!-- Indicates that the device connection is unknown -->
-    <string name="device_state_unknown">Không rõ</string>
     <!-- Last seen title -->
     <string name="device_last_seen">Lần cuối thấy: %1$s</string>
     <string name="device_last_seen_never">Không bao giờ</string>
@@ -146,9 +136,7 @@
     <string name="syncthing_has_crashed">Syncthing đã dừng đột ngột.</string>
     <!-- DrawerFragment -->
     <!-- Same as download_title with a colon and space appended -->
-    <string name="download_title_colon">"Tải xuống: "</string>
     <!-- Same as upload_title with a colon and space appended -->
-    <string name="upload_title_colon">"Tải lên: "</string>
     <!-- Title for current RAM usage -->
     <string name="ram_usage">Mức s.dụng RAM</string>
     <!-- Title for announce server status -->
@@ -200,7 +188,6 @@
     <string name="folder_path_readwrite">Phiên bản Android của bạn cấp quyền truy cập đọc và ghi vào thư mục đã chọn cho Syncthing.</string>
     <!-- Toast shown if the user selected an invalid location for a new syncthing folder -->
     <string name="toast_invalid_folder_selected">Xin lỗi. Thư mục được chọn không thể được sử dụng. Vui lòng chọn thư mục được đặt trong bộ nhớ trong hoặc ngoài.</string>
-    <string name="folder_type_switch_to_receive_encrypted_not_allowed">Việc chuyển các thư mục hiện có sang \'Nhận dữ liệu mã hoá\' không được hỗ trợ.</string>
     <string name="ignore_patterns">Mẫu bỏ qua</string>
     <!-- DeviceActivity -->
     <!-- Setting title -->
@@ -236,7 +223,6 @@
     <string name="delete_device">Xoá thiết bị</string>
     <string name="add_device">Thêm thiết bị</string>
     <!-- Menu item to confirm adding a device -->
-    <string name="add">Thêm</string>
     <!-- Title for DeviceSettingsFragment in edit mode -->
     <string name="edit_device">Chỉnh sửa th.bị</string>
     <!-- Dialog shown when attempting to remove a device -->
@@ -246,13 +232,11 @@
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_invalid">ID thiết bị không được định dạng đúng. Vui lòng thử lại và nhập ID đúng.</string>
     <!-- Toast shown when trying to create a device with an empty name -->
-    <string name="device_name_required">Không được để trống tên thiết bị</string>
     <!-- Toast shown when trying to create a device with invalid addresses -->
     <string name="device_addresses_invalid">Địa chỉ thiết bị không được định dạng đúng. Vui lòng thử lại. Hãy đọc tài liệu của Syncthing để biết thêm thông tin.</string>
     <!-- Content description for device ID qr code icon -->
     <string name="scan_qr_code_description">Quét mã QR</string>
     <!-- Dialog message if no compatible barcode scanner app is installed -->
-    <string name="install_barcode_scanner_app_message">Việc này yêu cầu phải có ứng dụng quét mã vạch. Bạn có muốn cài đặt ứng dụng \'Binary Eye\' từ F-Droid không?</string>
     <!-- Shown if no folders are configured -->
     <string name="folders_list_empty">Không có thư mục nào được thiết lập. Nhấn để thêm thư mục mới.</string>
     <!-- RecentChangesActivity -->
@@ -277,7 +261,6 @@
     <string name="open_in_browser">Mở trong trình duyệt</string>
     <!-- SettingsFragment -->
     <string name="settings_title">Cài đặt</string>
-    <string name="category_run_conditions">Điều kiện chạy</string>
     <string name="category_user_interface">Giao diện người dùng</string>
     <string name="preference_app_theme_title">Chủ đề</string>
     <string name="preference_app_theme_follow_system">Theo hệ thống</string>
@@ -305,8 +288,6 @@
     <string name="run_on_whitelisted_wifi_networks">Mạng Wi-Fi đã chọn: %1$s</string>
     <string name="wifi_ssid_whitelist_empty">Không có mạng Wi-Fi nào được chỉ định. Nhấn để chỉ định mạng.</string>
     <string name="sync_only_wifi_ssids_wifi_turn_on_wifi">Hãy bật WiFi để lựa chọn mạng.</string>
-    <string name="sync_only_wifi_ssids_need_to_grant_location_permission">Bạn cần phải cấp quyền VỊ TRÍ để sử dụng tính năng này.</string>
-    <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_title">Yêu cầu quyền</string>
     <string name="sync_only_wifi_ssids_location_permission_rejected_dialog_content">Bắt đầu từ Android 8.1, quyền truy cập vị trí là bắt buộc để có thể đọc tên mạng Wi-Fi. Bạn chỉ có thể sử dụng tính năng này nếu bạn cấp quyền.</string>
     <string name="power_source_title">Chạy khi thiết bị chạy bằng</string>
     <string name="power_source_ac_and_battery_power">AC và pin.</string>
@@ -327,18 +308,6 @@
     <string name="behaviour_autostart_summary">Tự động khởi động ứng dụng khi khởi động hệ điều hành.</string>
     <string name="expert_mode_title">Chế độ chuyên gia</string>
     <string name="expert_mode_summary">Việc bật tùy chọn này sẽ hiện các tùy chọn thiết lập nâng cao. Bạn nên đọc Tài liệu Syncthing trước để chắc chắn là bạn biết cách sử dụng chúng đúng cách. Các cài đặt không đúng có thể sẽ gây ra hao pin, hết tài nguyên hệ thống hoặc đồng bộ hóa không hoàn thiện.</string>
-    <string name="preference_language_title">Ngôn ngữ</string>
-    <string name="preference_language_summary">Đổi ngôn ngữ ứng dụng</string>
-    <string name="pref_language_default">Ngôn ngữ mặc định</string>
-    <string name="folder_type_send_receive">Gửi &amp; Nhận</string>
-    <string name="folder_type_send_only">Chỉ gửi</string>
-    <string name="folder_type_receive_only">Chỉ nhận</string>
-    <string name="pull_order_random">Ngẫu nhiên</string>
-    <string name="pull_order_alphabetic">Bảng chữ cái</string>
-    <string name="pull_order_smallest_first">Nhỏ nhất trước</string>
-    <string name="pull_order_largest_first">Lớn nhất trước</string>
-    <string name="pull_order_oldest_first">Cũ nhất trước</string>
-    <string name="pull_order_newest_first">Mới nhất trước</string>
     <string name="versioning_type_none">Không có</string>
     <string name="versioning_type_trashcan">Thùng rác</string>
     <string name="versioning_type_simple">Đơn giản</string>
@@ -501,7 +470,6 @@
     <string name="reason_force_start">Syncthing đang chạy vì bạn đã buộc nó khởi động mà không tính đến điều kiện chạy.</string>
     <string name="reason_force_stop">Syncthing đang không chạy vì bạn đã buộc nó dừng mà không tính đến điều kiện chạy.</string>
     <!-- Explanations why syncthing is running or not running -->
-    <string name="reason_not_within_time_frame">Bạn đã bật \'Chạy theo lịch trình thời gian\' và lần đồng bộ trước cách đây không quá một tiếng.</string>
     <string name="reason_not_within_time_frame_2">Bạn đã bật \'Chạy theo lịch trình thời gian\' và lần đồng bộ trước cách đây %s.</string>
     <string name="reason_not_within_time_frame_0_min">ít hơn một phút</string>
     <plurals name="reason_not_within_time_frame_minutes">
@@ -536,7 +504,6 @@
     <!-- Text for the exit button on the drawer -->
     <string name="exit">Thoát</string>
     <!-- Title of the notification shown while syncthing is running and enabled -->
-    <string name="syncthing_active">Syncthing đang chạy</string>
     <string name="syncthing_active_details">Syncthing đang chạy: %1$s</string>
     <string name="no_remote_devices_connected">Không có thiết bị trên mạng nào được kết nối</string>
     <plurals name="device_online_up_to_date">
@@ -556,9 +523,7 @@
     <!-- Toast shown if a listening tcp port is unavailable -->
     <string name="webui_tcp_port_unavailable">Cổng TCP %s của giao diện web đang bận. Bản sao thứ hai?</string>
     <!-- Label of the default folder created of first start (camera folder). -->
-    <string name="default_android_camera_folder_label">Máy ảnh Android</string>
     <!-- ID of the default folder created on first start (camera folder). Must only contain 'a-z0-9_-'. Parameter is the device name-->
-    <string name="default_folder_id">%1$s-ảnh</string>
     <string name="notification_crash_title">Syncthing đã dừng đột ngột (mã thoát %1$s)</string>
     <string name="notification_crash_text">Nhấn để xem nhật ký (%1$s)</string>
     <string name="notifications_persistent_channel">Syncthing đang hoạt động</string>
@@ -568,11 +533,9 @@
     <string name="notification_out_of_disk_space">Thẻ SD đã đầy. Tệp %1$s</string>
     <!-- RestApi -->
     <!-- Title of the notification shown when a restart is needed -->
-    <string name="restart_title">Cần kh.động lại</string>
     <!-- Text for positive button in restart dialog -->
     <!-- Text for the dismiss button of the restart Activity -->
     <!-- Text of the notification shown when a restart is needed -->
-    <string name="restart_notification_text">Nhấp để kh.động lại Syncthing ngay</string>
     <!-- Shown when a device ID is copied to the clipboard -->
     <string name="device_id_copied_to_clipboard">Đã chép ID thiết bị vào clipboard</string>
     <!-- Strings representing units for file sizes, from smallest to largest -->

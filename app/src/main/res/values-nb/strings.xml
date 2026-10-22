@@ -5,13 +5,11 @@
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
     <string name="welcome_title">Velkommen til Syncthing for Android</string>
-    <string name="generic_error">Feil</string>
     <!-- Title of the "add folder" menu action -->
     <string name="add_folder">Legg til Mappe</string>
     <!-- Title of the "share device id" menu action -->
     <string name="share_device_id">Del Enhets-ID</string>
     <!-- Shown in the chooser dialog when sharing a Device ID -->
-    <string name="send_device_id_to">Send Enhets-ID til</string>
     <string name="usage_reporting_dialog_title">Tillat anonym rapportering av bruk?</string>
     <string name="usage_reporting_dialog_description">Den krypterte rapporten over bruk sendes daglig. Den brukes til å spore felles plattformer, mappestørrelser og versjoner av appen. Hvis datasettet endres vil du bli vist denne dialogen på nytt. \n \nDen aggregerte statistikken er offentlig tilgjengelig på https://data.syncthing.net.</string>
     <string name="yes">Ja</string>
@@ -32,20 +30,16 @@
     <!-- Indicates that a folder is fully synced to the local device -->
     <string name="device_up_to_date">Oppdatert</string>
     <!-- Indicates that the device is currently syncing. Parameter is sync percentage -->
-    <string name="device_syncing">Synkroniserer (%1$d%%)</string>
     <!-- Indicates that there is no connection to the device -->
     <string name="device_disconnected">Frakoblet</string>
     <!-- Indicates that the device connection is unknown -->
-    <string name="device_state_unknown">Ukjent</string>
     <!-- Title for current download rate -->
     <string name="download_title">Nedlasting</string>
     <!-- Title for current upload rate -->
     <string name="upload_title">Opplasting</string>
     <!-- DrawerFragment -->
     <!-- Same as download_title with a colon and space appended -->
-    <string name="download_title_colon">"Nedlasting: "</string>
     <!-- Same as upload_title with a colon and space appended -->
-    <string name="upload_title_colon">"Opplasting: "</string>
     <!-- Title for current RAM usage -->
     <string name="ram_usage">RAM-forbruk</string>
     <!-- Title for announce server status -->
@@ -98,7 +92,6 @@
     <string name="delete_device">Slett Enhet</string>
     <string name="add_device">Legg Til Enhet</string>
     <!-- Menu item to confirm adding a device -->
-    <string name="add">Legg til</string>
     <!-- Title for DeviceSettingsFragment in edit mode -->
     <string name="edit_device">Rediger Enhet</string>
     <!-- Dialog shown when attempting to remove a device -->
@@ -169,16 +162,12 @@
     <!-- Text for the exit button on the drawer -->
     <string name="exit">Avslutt</string>
     <!-- Title of the notification shown while syncthing is running and enabled -->
-    <string name="syncthing_active">Syncthing kjører</string>
     <!-- ID of the default folder created on first start (camera folder). Must only contain 'a-z0-9_-'. Parameter is the device name-->
-    <string name="default_folder_id">%1$s-foto</string>
     <!-- RestApi -->
     <!-- Title of the notification shown when a restart is needed -->
-    <string name="restart_title">Omstart Nødvendig</string>
     <!-- Text for positive button in restart dialog -->
     <!-- Text for the dismiss button of the restart Activity -->
     <!-- Text of the notification shown when a restart is needed -->
-    <string name="restart_notification_text">Trykk her for å omstarte Syncthing nå</string>
     <!-- Shown when a device ID is copied to the clipboard -->
     <string name="device_id_copied_to_clipboard">Enhets-ID kopiert til utklippstavle</string>
     <!-- Strings representing units for file sizes, from smallest to largest -->
@@ -212,7 +201,6 @@
     <string name="grant_camera_permission">Gi tilgang til kamera</string>
     <string name="activity_main_bottom_navigation_rescan_all">Skann alt på nytt</string>
     <string name="open_main_menu">Åpne hovedmeny</string>
-    <string name="close_main_menu">Lukk hovedmeny</string>
     <string name="dialog_exit_while_running_as_service_title">Bekreft å avslutte appen</string>
     <string name="override_changes">Overstyre endringer</string>
     <string name="delete_unexpected_items">Slette uventede elementer</string>
@@ -232,14 +220,12 @@
     <string name="syncthing_not_running">Syncthing kjører ikke.</string>
     <string name="syncthing_has_crashed">Syncthing har krasjet.</string>
     <string name="pause_device">Sett enhet på pause</string>
-    <string name="category_run_conditions">Kjør betingelser</string>
     <string name="devices_list_empty">Ingen enheter er konfigurert. Trykk for å legge til en ny enhet.</string>
     <string name="grant_permission">Gi tilgang</string>
     <string name="permission_granted">Tilgang gitt</string>
     <string name="reason">Årsak:</string>
     <string name="accept">Godta</string>
     <string name="ignore">Ignorer</string>
-    <string name="main_menu">Hovedmeny</string>
     <string name="refresh">Oppdater</string>
     <string name="revert_local_changes">Reverser lokale endringer</string>
     <string name="device_rejected">Enhet \"%1$s\" ønsker å koble seg til</string>
@@ -255,7 +241,6 @@
     <string name="folder_path_readwrite">Din Android-versjon gir Syncthing lese- og skrivetilgang til den valgte mappen.</string>
     <string name="ignore_patterns">Ignorer mønstre</string>
     <string name="share_device_id_chooser">Del enhets ID med</string>
-    <string name="introduction">Introduksjon</string>
     <string name="storage_permission_title">Lagringstillatelse</string>
     <string name="storage_permission_desc">Syncthing må få tilgang til lagringsplassen din for å gjøre filsynkronisering.</string>
     <string name="dialog_all_files_access_not_supported">Din enhet støtter ikke tilgang til alle filer</string>
@@ -276,14 +261,10 @@
     <string name="photo_shoot_take_picture_failure">Kunne ikke ta et bilde, eller du har avbrutt.</string>
     <string name="default_syncthing_camera_folder_label">Syncthing kamera</string>
     <string name="photo_shoot_launcher_title">Synk. kamera</string>
-    <string name="page_x_of_y">Side %1$s av %2$s</string>
     <string name="override_changes_question">Dette vil angre alle endringer som er gjort på de andre enhetene som deler denne mappen. Fortsette?</string>
     <string name="folder_fileWatcher">Overvåk for endringer</string>
     <string name="toast_invalid_folder_selected">Beklager. Den valgte mappen kan ikke brukes. Vennligst velg en mappe som ligger på intern- eller ekstern lagring.</string>
     <string name="no_sub_folder_is_selected">Ingen undermappe er valgt</string>
-    <string name="preference_language_title">Språk</string>
-    <string name="preference_language_summary">Endre app språk</string>
-    <string name="pref_language_default">Standard språk</string>
     <string name="use_proxy">Koble på via en proxy</string>
     <string name="share_activity_title">Lagre til Syncthing</string>
     <string name="save_title">Lagre</string>
@@ -297,7 +278,6 @@
     <string name="do_not_use_proxy">Ingen proxy konfigurert.</string>
     <string name="run_on_wifi_title">Kjør på wifi</string>
     <string name="run_on_whitelisted_wifi_title">Kjør på spesifikke wifi nettverk</string>
-    <string name="pull_order_alphabetic">Alfabetisk</string>
     <string name="versioning_type_external">Ekstern</string>
     <string name="use_tor_title">Bruke Tor</string>
     <string name="socks_proxy_address_title">SOCKS5 proxy</string>
@@ -340,14 +320,6 @@
     <string name="run_on_mobile_data_title">Kjør på mobildata</string>
     <string name="pull_order_type_newestFirst">Nyeste først</string>
     <string name="power_source_battery_power">Batteri strøm.</string>
-    <string name="pull_order_smallest_first">Minste først</string>
-    <string name="folder_type_send_receive">Sende &amp; motta</string>
-    <string name="folder_type_send_only">Kun send</string>
-    <string name="folder_type_receive_only">Kun motta</string>
-    <string name="pull_order_largest_first">Største først</string>
-    <string name="pull_order_random">Tilfeldig</string>
-    <string name="pull_order_newest_first">Nyeste først</string>
-    <string name="pull_order_oldest_first">Eldste først</string>
     <string name="versioning_type_none">Ingen</string>
     <string name="versioning_type_simple">Enkel</string>
     <string name="keep_versions_description">Antall gamle versjoner å beholde, pr fil.</string>
