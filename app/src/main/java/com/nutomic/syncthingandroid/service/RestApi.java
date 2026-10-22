@@ -90,12 +90,15 @@ public class RestApi {
 
     /**
      * Intents we sent to to other apps that subscribed to us.
+     * Suffix of the action: the full name is prefixed with the application id, see
+     * wiki/developers/Integrate-your-app-with-Syncthing-receive-folder-sync-status.md.
      */
     private static final String ACTION_NOTIFY_FOLDER_SYNC_COMPLETE =
             ".ACTION_NOTIFY_FOLDER_SYNC_COMPLETE";
 
     /**
      * Permission for apps receiving our broadcast intents.
+     * Suffix of the permission declared in AndroidManifest.xml as ${applicationId}.permission...
      */
      private static final String PERMISSION_RECEIVE_SYNC_STATUS =
             ".permission.RECEIVE_SYNC_STATUS";
@@ -1135,7 +1138,8 @@ public class RestApi {
         // intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         for (String packageId : packageIdList) {
             intent.setPackage(packageId);
-            ((SyncthingApp) mContext.getApplicationContext()).sendBroadcast(intent, PERMISSION_RECEIVE_SYNC_STATUS);
+            ((SyncthingApp) mContext.getApplicationContext()).sendBroadcast(intent,
+                    mContext.getPackageName() + PERMISSION_RECEIVE_SYNC_STATUS);
         }
     }
 
@@ -1143,7 +1147,7 @@ public class RestApi {
                                                     final Folder folder, 
                                                     final String folderState) {
         Intent intent = new Intent();
-        intent.setAction(ACTION_NOTIFY_FOLDER_SYNC_COMPLETE);
+        intent.setAction(mContext.getPackageName() + ACTION_NOTIFY_FOLDER_SYNC_COMPLETE);
         intent.putExtra("deviceId", deviceId);
         intent.putExtra("folderId", folder.id);
         intent.putExtra("folderLabel", folder.label);
