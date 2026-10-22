@@ -46,7 +46,14 @@ public class AppConfigReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         ((SyncthingApp) context.getApplicationContext()).component().inject(this);
-        String intentAction = intent.getAction().replaceFirst(context.getPackageName(), "");
+        // Exported receiver: any app can send anything, including an intent without action.
+        String action = intent.getAction();
+        String packageName = context.getPackageName();
+        if (action == null || !action.startsWith(packageName)) {
+            Log.w(TAG, "Ignored intent with action \"" + action + "\"");
+            return;
+        }
+        String intentAction = action.substring(packageName.length());
         if (!getPrefBroadcastServiceControl(context)) {
             switch (intentAction) {
                 case ACTION_FOLLOW:
