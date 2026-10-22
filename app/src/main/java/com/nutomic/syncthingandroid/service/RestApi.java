@@ -79,7 +79,6 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-import static com.nutomic.syncthingandroid.service.Constants.ENABLE_TEST_DATA;
 import static com.nutomic.syncthingandroid.util.Util.getLocalZonedDateTime;
 
 /**
@@ -770,15 +769,6 @@ public class RestApi {
     }
 
     public final Folder getFolderByID(String folderID) {
-        if (ENABLE_TEST_DATA && folderID.equals("abcd-efgh")) {
-            final Folder folder = new Folder();
-            folder.id = "abcd-efgh";
-            folder.label = "label_abcd-efgh";
-            folder.path = "/storage/emulated/0/testdata";
-            folder.type = Constants.FOLDER_TYPE_SEND_RECEIVE;
-            return folder;
-        }
-
         final List<Folder> folders = getFolders();
         for (Folder folder : folders) {
             if (folder.id.equals(folderID)) {
@@ -1007,12 +997,6 @@ public class RestApi {
             Map<String, DiscoveredDevice> discoveredDevices = parseOrNull(result, new TypeToken<Map<String, DiscoveredDevice>>(){}.getType(), "getDiscoveredDevices");
             if (discoveredDevices == null) {
                 return;
-            }
-            if (ENABLE_TEST_DATA) {
-                DiscoveredDevice fakeDiscoveredDevice = new DiscoveredDevice();
-                fakeDiscoveredDevice.addresses = new String[]{"tcp4://192.168.178.10:40004"};
-                discoveredDevices.put(TestData.DEVICE_A_ID, fakeDiscoveredDevice);
-                discoveredDevices.put(TestData.DEVICE_B_ID, fakeDiscoveredDevice);
             }
             listener.onResult(discoveredDevices);
         }, error -> {});
