@@ -25,6 +25,13 @@ class DeviceTest {
     }
 
     @Test
+    fun deviceIdWithoutCheckCharactersNeedsTheBase32Alphabet() {
+        assertTrue(idIsValid("P56IOI7MZJNU2IQGDREYDM2MGTMGL3BXNPQ6W5BTBBZ4TJXZWICQ"))
+        // "9" is outside the alphabet, and is not one of the digits read as a letter.
+        assertFalse(idIsValid("P56IOI7MZJNU2IQGDREYDM2MGTMGL3BXNPQ6W5BTBBZ4TJXZWIC9"))
+    }
+
+    @Test
     fun addressesAcceptedFormerSelfTest() {
         listOf(
             "dynamic",

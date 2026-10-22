@@ -1,6 +1,5 @@
 package com.nutomic.syncthingandroid.util
 
-import com.google.common.io.BaseEncoding
 import java.io.ByteArrayInputStream
 import java.security.KeyFactory
 import java.security.MessageDigest
@@ -13,6 +12,7 @@ import java.security.cert.CertificateNotYetValidException
 import java.security.cert.X509Certificate
 import java.security.spec.PKCS8EncodedKeySpec
 import java.text.DateFormat
+import java.util.Base64
 import javax.net.ssl.X509TrustManager
 
 /**
@@ -367,9 +367,8 @@ object CertificateValidator {
         }
 
     /**
-     * Uses Guava rather than `android.util.Base64` deliberately: it keeps this class free of Android
-     * APIs so it can be unit-tested on the JVM without Robolectric. `java.util.Base64` is not an
-     * option — it needs API 26 and `min-sdk` is 23.
+     * Uses `java.util.Base64` rather than `android.util.Base64` deliberately: it keeps this class free
+     * of Android APIs so it can be unit-tested on the JVM without Robolectric.
      */
     private fun pemToDer(pem: ByteArray, kind: String): ByteArray {
         val text = String(pem, Charsets.US_ASCII)
@@ -379,7 +378,7 @@ object CertificateValidator {
         val e = text.indexOf(end)
         require(b >= 0 && e > b) { "PEM block not found" }
         val body = text.substring(b + begin.length, e).replace("\\s".toRegex(), "")
-        return BaseEncoding.base64().decode(body)
+        return Base64.getDecoder().decode(body)
     }
 
     private fun looksLikeCertificate(bytes: ByteArray): Boolean =

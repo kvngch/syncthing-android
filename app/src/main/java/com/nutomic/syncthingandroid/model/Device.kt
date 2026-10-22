@@ -1,6 +1,5 @@
 package com.nutomic.syncthingandroid.model
 
-import com.google.common.io.BaseEncoding
 import com.nutomic.syncthingandroid.util.Luhn
 import java.util.Locale
 
@@ -63,7 +62,8 @@ class Device {
             52 -> Unit
             else -> return false
         }
-        return BaseEncoding.base32().canDecode("$id====")
+        // 52 characters of the base 32 alphabet.
+        return id.all { it in 'A'..'Z' || it in '2'..'7' }
     }
 
     /**

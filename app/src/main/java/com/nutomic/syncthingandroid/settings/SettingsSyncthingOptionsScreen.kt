@@ -27,7 +27,6 @@ import androidx.compose.ui.semantics.isSensitiveData
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
 import androidx.navigation3.runtime.EntryProviderScope
-import com.google.common.base.Splitter
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
@@ -596,7 +595,7 @@ private val RestApi.preferences: Preferences
  * GUI password changed.
  */
 private fun RestApi.applyChangedPreferences(old: Preferences, new: Preferences): Boolean {
-    val splitter = Splitter.on(",").trimResults().omitEmptyStrings()
+    fun splitList(value: String) = value.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     val oldMap = old.asMap()
     val valueMap = new.asMap()
     val changed = valueMap.filter { (key, value) -> oldMap[key] != value }
@@ -613,7 +612,7 @@ private fun RestApi.applyChangedPreferences(old: Preferences, new: Preferences):
     for ((key, mapValue) in changed) {
         when (key) {
             Keys.LISTEN_ADDRESSES -> {
-                val addresses = splitter.splitToList(mapValue as String)
+                val addresses = splitList(mapValue as String)
                 options.listenAddresses = addresses.toTypedArray()
             }
             Keys.INCOMING_RATE_LIMIT -> {
@@ -635,7 +634,7 @@ private fun RestApi.applyChangedPreferences(old: Preferences, new: Preferences):
                 options.relaysEnabled = mapValue as Boolean
             }
             Keys.GLOBAL_SERVERS -> {
-                val servers = splitter.splitToList(mapValue as String)
+                val servers = splitList(mapValue as String)
                 options.globalAnnounceServers = servers.toTypedArray()
             }
             Keys.CRASH_REPORTING -> {
