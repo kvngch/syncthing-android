@@ -335,7 +335,7 @@ public class RemoteCompletion {
      * Returns the first characters of the device ID for logging purposes.
      */
     public String getShortenedDeviceId(String deviceId) {
-        return (TextUtils.isEmpty(deviceId) ? "" : deviceId.substring(0, 7));
+        return (TextUtils.isEmpty(deviceId) ? "" : deviceId.substring(0, Math.min(7, deviceId.length())));
     }
 
     /**

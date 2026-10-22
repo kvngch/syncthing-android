@@ -13,7 +13,7 @@ public class RemoteIgnoredDevice {
      */
     public String getDisplayName() {
         return (TextUtils.isEmpty(name))
-                ? deviceID.substring(0, 7)
+                ? deviceID.substring(0, Math.min(7, deviceID.length()))
                 : name;
     }
 }

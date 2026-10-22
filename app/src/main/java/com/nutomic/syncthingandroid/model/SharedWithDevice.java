@@ -14,6 +14,6 @@ public class SharedWithDevice {
      * Returns the device name, or the first characters of the ID if the name is empty.
      */
     public String getDisplayName() {
-        return (TextUtils.isEmpty(deviceID) ? "" : deviceID.substring(0, 7));
+        return (TextUtils.isEmpty(deviceID) ? "" : deviceID.substring(0, Math.min(7, deviceID.length())));
     }
 }

@@ -23,10 +23,16 @@ public class PostRequest extends ApiRequest {
     public PostRequest(Context context, URL url, String path, String apiKey,
         	           @Nullable Map<String, String> params, @Nullable String postBody,
                        OnSuccessListener listener) {
+        this(context, url, path, apiKey, params, postBody, listener, null);
+    }
+
+    public PostRequest(Context context, URL url, String path, String apiKey,
+                       @Nullable Map<String, String> params, @Nullable String postBody,
+                       OnSuccessListener listener, @Nullable OnErrorListener errorListener) {
         super(context, url, path, apiKey);
         Map<String, String> safeParams = Optional.fromNullable(params).or(Collections.emptyMap());
         Uri uri = buildUri(safeParams);
-        connect(Request.Method.POST, uri, postBody, listener, null);
+        connect(Request.Method.POST, uri, postBody, listener, errorListener);
     }
 
 }

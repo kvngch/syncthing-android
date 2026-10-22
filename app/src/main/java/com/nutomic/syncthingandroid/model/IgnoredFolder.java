@@ -12,7 +12,7 @@ public class IgnoredFolder {
      */
     public String getDisplayLabel() {
         return (TextUtils.isEmpty(label))
-                ? id.substring(0, 7)
+                ? id.substring(0, Math.min(7, id.length()))
                 : label;
     }
 }
