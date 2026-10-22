@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid
 
 import android.app.Application
 import android.os.StrictMode
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.NotificationHandler
 
@@ -11,7 +10,7 @@ class SyncthingApp : Application() {
     /**
      * Shared by the service, its helpers and the settings, created on first use.
      */
-    val notificationHandler by lazy { NotificationHandler(this, PreferenceManager.getDefaultSharedPreferences(this)) }
+    val notificationHandler by lazy { NotificationHandler(this) }
 
     override fun onCreate() {
         super.onCreate()
