@@ -1137,8 +1137,8 @@ public class SyncthingService extends Service {
         final File keyBak = backupFile(keyFile);
 
         try {
-            writeBytesAtomic(certFile, certPem);
-            writeBytesAtomic(keyFile, keyPem);
+            FileUtils.writeBytesAtomic(certFile, certPem);
+            FileUtils.writeBytesAtomic(keyFile, keyPem);
             restrictToOwner(keyFile);
         } catch (IOException e) {
             Log.e(TAG, "doReplaceHttpsCertificate: Failed to write new cert/key", e);
@@ -1330,19 +1330,6 @@ public class SyncthingService extends Service {
     private void deleteQuietly(@Nullable File file) {
         if (file != null && file.exists() && !file.delete()) {
             Log.w(TAG, "deleteQuietly: Failed to delete " + file.getName());
-        }
-    }
-
-    private void writeBytesAtomic(File target, byte[] data) throws IOException {
-        File tmp = new File(target.getParentFile(), target.getName() + ".tmp");
-        try (FileOutputStream fos = new FileOutputStream(tmp)) {
-            fos.write(data);
-            fos.flush();
-            fos.getFD().sync();
-        }
-        if (!tmp.renameTo(target)) {
-            deleteQuietly(tmp);
-            throw new IOException("Failed to rename " + tmp.getName() + " to " + target.getName());
         }
     }
 

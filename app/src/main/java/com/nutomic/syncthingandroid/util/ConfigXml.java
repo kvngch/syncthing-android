@@ -25,10 +25,8 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -1267,12 +1265,7 @@ public class ConfigXml {
         }
 
         Log.i(TAG, "Saving config file");
-        File mConfigTempFile = Constants.getConfigTempFile(mContext);
         try {
-            // Write XML header.
-            FileOutputStream fileOutputStream = new FileOutputStream(mConfigTempFile);
-            fileOutputStream.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>".getBytes(StandardCharsets.UTF_8));
-
             // Prepare Object-to-XML transform.
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
@@ -1282,27 +1275,17 @@ public class ConfigXml {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 
-            // Output XML body.
+            // XML header, then body. The whole file is built in memory before touching the disk.
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            StreamResult streamResult = new StreamResult(new OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8));
-            transformer.transform(new DOMSource(mConfig), streamResult);
-            byte[] outputBytes = byteArrayOutputStream.toByteArray();
-            fileOutputStream.write(outputBytes);
-            fileOutputStream.close();
-        } catch (TransformerException e) {
-            Log.w(TAG, "Failed to transform object to xml and save temporary config file", e);
-            return;
-        } catch (FileNotFoundException e) {
-            Log.w(TAG, "Failed to save temporary config file, FileNotFoundException", e);
-        } catch (UnsupportedEncodingException e) {
-            Log.w(TAG, "Failed to save temporary config file, UnsupportedEncodingException", e);
-        } catch (IOException e) {
-            Log.w(TAG, "Failed to save temporary config file, IOException", e);
-        }
-        try {
-            mConfigTempFile.renameTo(mConfigFile);
-        } catch (Exception e) {
-            Log.w(TAG, "Failed to rename temporary config file to original file");
+            byteArrayOutputStream.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>".getBytes(StandardCharsets.UTF_8));
+            OutputStreamWriter writer = new OutputStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8);
+            transformer.transform(new DOMSource(mConfig), new StreamResult(writer));
+            writer.flush();
+
+            // Replaces config.xml only if the temporary file was fully written.
+            FileUtils.writeBytesAtomic(mConfigFile, byteArrayOutputStream.toByteArray());
+        } catch (TransformerException | IOException e) {
+            Log.w(TAG, "Failed to save config file, config.xml left untouched", e);
         }
     }
 
