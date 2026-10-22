@@ -17,13 +17,13 @@ import androidx.core.content.FileProvider;
 
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.service.Constants;
+import com.nutomic.syncthingandroid.util.LogMask;
 import com.nutomic.syncthingandroid.util.Util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -39,6 +39,12 @@ public class LogActivity extends SyncthingActivity {
     private final static String TAG = "LogActivity";
 
     private static final int ANDROID_LOG_FILE_MAX_LINES = 2000;
+
+    /**
+     * The Syncthing log grows until the next start of the binary: only its end is shown.
+     */
+    private static final int SYNCTHING_LOG_VIEW_MAX_LINES = 2000;
+    private static final int SYNCTHING_LOG_VIEW_MAX_BYTES = 512 * 1024;
 
     /**
      * Show Android Log by default.
@@ -61,12 +67,12 @@ public class LogActivity extends SyncthingActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_log);
-        setTitle(R.string.android_log_title);
 
         if (savedInstanceState != null) {
             mShowSyncthingLog = savedInstanceState.getBoolean("showSyncthingLog");
             invalidateOptionsMenu();
         }
+        setTitle(mShowSyncthingLog ? R.string.syncthing_log_title : R.string.android_log_title);
 
         mLog = findViewById(R.id.log);
         mScrollView = findViewById(R.id.scroller);
@@ -106,37 +112,41 @@ public class LogActivity extends SyncthingActivity {
             fetchAndViewLog();
             return true;
         } else if (itemId == R.id.menu_share_log_file) {
-            if (mShowSyncthingLog) {
-                File syncthingLog = Constants.getSyncthingLogFile(this);
-                shareLogFile(syncthingLog);
-            } else {
-                File androidLog = Constants.getAndroidLogFile(this);
-                shareLogFile(androidLog);
-            }
+            shareLogFile(mShowSyncthingLog ? Constants.getSyncthingLogFile(this) : Constants.getAndroidLogFile(this));
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private boolean shareLogFile(final File logFile) {
+    private void shareLogFile(final File logFile) {
         if (!logFile.exists()) {
             Toast.makeText(this, getString(R.string.share_log_file_missing), Toast.LENGTH_SHORT).show();
-            return false;
+            return;
         }
 
-        Uri contentUri = FileProvider.getUriForFile(
-            this,
-            getPackageName() + ".provider",
-            logFile
-        );
-
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_log_file)));
-        return true;
+        // Shared logs often end up in public issues: share a copy with peer addresses and
+        // full device IDs masked. The copy is written off the main thread, the log can be large.
+        final File maskedLog = new File(getCacheDir(), logFile.getName());
+        new Thread(() -> {
+            try {
+                LogMask.maskFile(logFile, maskedLog);
+            } catch (IOException e) {
+                Log.e(TAG, "shareLogFile: Failed to write '" + maskedLog + "'", e);
+                runOnUiThread(() -> Toast.makeText(this, getString(R.string.share_log_file_missing), Toast.LENGTH_SHORT).show());
+                return;
+            }
+            runOnUiThread(() -> {
+                if (isFinishing()) {
+                    return;
+                }
+                Uri contentUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", maskedLog);
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_log_file)));
+            });
+        }).start();
     }
 
     private void fetchAndViewLog() {
@@ -162,12 +172,13 @@ public class LogActivity extends SyncthingActivity {
                 return null;
             }
 
-            // Get Android log.
-            logActivity.androidLogContent = getAndroidLog();
-            writeLogFile(Constants.getAndroidLogFile(logActivity), logActivity.androidLogContent);
-
-            // Get SyncthingNative log.
-            logActivity.syncthingLogContent = readLogFile(Constants.getSyncthingLogFile(logActivity));
+            // Only fetch the log on display. The Android log is also written to a file for sharing.
+            if (logActivity.mShowSyncthingLog) {
+                logActivity.syncthingLogContent = readLogFileTail(Constants.getSyncthingLogFile(logActivity));
+            } else {
+                logActivity.androidLogContent = getAndroidLog();
+                writeLogFile(Constants.getAndroidLogFile(logActivity), logActivity.androidLogContent);
+            }
             return null;
         }
 
@@ -321,35 +332,32 @@ public class LogActivity extends SyncthingActivity {
     }
 
     /**
-     * Read or write log file.
+     * Reads the last SYNCTHING_LOG_VIEW_MAX_LINES lines of a log file, from at most its last
+     * SYNCTHING_LOG_VIEW_MAX_BYTES, without loading the whole file.
      */
-    private static String readLogFile(final File file) {
-        String content = "";
-        FileInputStream fileInputStream = null;
-        try {
-            if (file.exists()) {
-                fileInputStream = new FileInputStream(file);
-                InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
-                byte[] data = new byte[(int) file.length()];
-                fileInputStream.read(data);
-                content = new String(data, StandardCharsets.UTF_8);
-            } else {
-                // File not found.
-                Log.e(TAG, "readLogFile: File missing '" + file.toString() + "'");
-            }
-        } catch (IOException e) {
-            Log.e(TAG, "readLogFile: Failed to read '" + file.toString() + "' #1", e);
-        } finally {
-            try {
-                if (fileInputStream != null) {
-                    fileInputStream.close();
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "readLogFile: Failed to read '" + file.toString() + "' #2", e);
-            }
+    private static String readLogFileTail(final File file) {
+        if (!file.exists()) {
+            Log.e(TAG, "readLogFileTail: File missing '" + file + "'");
+            return "";
         }
-        return content;
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            long start = Math.max(0, raf.length() - SYNCTHING_LOG_VIEW_MAX_BYTES);
+            byte[] data = new byte[(int) (raf.length() - start)];
+            raf.seek(start);
+            raf.readFully(data);
+            String[] lines = new String(data, StandardCharsets.UTF_8).split("\n", -1);
+            // The first line was cut by the seek, unless we read from the start.
+            int from = Math.max(start > 0 ? 1 : 0, lines.length - SYNCTHING_LOG_VIEW_MAX_LINES);
+            return TextUtils.join("\n", Arrays.copyOfRange(lines, from, lines.length));
+        } catch (IOException e) {
+            Log.e(TAG, "readLogFileTail: Failed to read '" + file + "'", e);
+            return "";
+        }
     }
+
+    /**
+     * Write log file.
+     */
 
     private static void writeLogFile(final File file, String logContent) {
         FileOutputStream fileOutputStream = null;

@@ -146,12 +146,8 @@
         </activity>
         <activity
             android:name=".activities.LogActivity"
-            android:exported="true"
+            android:exported="false"
             android:parentActivityName=".settings.SettingsActivity">
-            <intent-filter>
-                <action android:name=".activities.LogActivity" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".settings.SettingsActivity" />
