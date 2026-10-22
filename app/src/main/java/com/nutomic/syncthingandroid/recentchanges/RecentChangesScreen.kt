@@ -52,6 +52,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -71,6 +72,7 @@ import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.util.isTelevision
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -143,6 +145,14 @@ internal fun RecentChangesScreen(
             }
         },
     ) { paddingValues ->
+        // Relative times ("2 minutes ago") follow this clock. A poll returning the same events
+        // does not recompose the list, so the clock ticks on its own.
+        val now by produceState(System.currentTimeMillis()) {
+            while (true) {
+                delay(30_000)
+                value = System.currentTimeMillis()
+            }
+        }
         val containerModifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
@@ -151,10 +161,13 @@ internal fun RecentChangesScreen(
                 EmptyState(Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(changes) { change ->
+                    // Keyed by event id: a new event at the top no longer shifts the rows, and the
+                    // focused one, under the user.
+                    items(changes, key = { it.eventId }) { change ->
                         RecentChangeItem(
                             change = change,
                             showExactTimes = showExactTimes,
+                            now = now,
                             onClick = { onItemClick(change) },
                         )
                     }
@@ -185,6 +198,7 @@ internal fun RecentChangesScreen(
 internal fun RecentChangeItem(
     change: RecentChange,
     showExactTimes: Boolean,
+    now: Long = System.currentTimeMillis(),
     onClick: () -> Unit = {},
 ) {
     // Deleted entries no longer exist on disk, so they are not actionable — but they must still be
@@ -205,7 +219,7 @@ internal fun RecentChangeItem(
     ListItem(
         overlineContent = { Text(change.folderPath) },
         headlineContent = { Text(change.filename) },
-        supportingContent = { ChangeMetadata(change, showExactTimes) },
+        supportingContent = { ChangeMetadata(change, showExactTimes, now) },
         leadingContent = {
             Icon(
                 imageVector = change.icon,
@@ -223,8 +237,8 @@ internal fun RecentChangeItem(
  * intrinsic width so it never truncates first.
  */
 @Composable
-private fun ChangeMetadata(change: RecentChange, showExactTimes: Boolean) {
-    val timeText = change.timeText(showExactTimes)
+private fun ChangeMetadata(change: RecentChange, showExactTimes: Boolean, now: Long) {
+    val timeText = change.timeText(showExactTimes, now)
     val timeLabel = stringResource(R.string.modification_time, timeText)
     val deviceLabel = stringResource(R.string.modified_by_device, change.modifiedByName)
     val hasDevice = change.modifiedByName.isNotBlank()
@@ -276,16 +290,14 @@ private val METADATA_ICON_SIZE = 14.dp
  * Falls back to the timestamp exactly as Syncthing reported it if it could not be parsed.
  */
 @Composable
-private fun RecentChange.timeText(showExactTimes: Boolean): String {
+private fun RecentChange.timeText(showExactTimes: Boolean, now: Long): String {
     val millis = timeMillis ?: return rawTime
     return if (showExactTimes) {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM).format(Date(millis))
     } else {
-        // Recomputed on every recomposition, which the foreground poll triggers every few seconds,
-        // so the label stays current without a dedicated ticker.
         DateUtils.getRelativeTimeSpanString(
             millis,
-            System.currentTimeMillis(),
+            now,
             DateUtils.SECOND_IN_MILLIS,
         ).toString()
     }

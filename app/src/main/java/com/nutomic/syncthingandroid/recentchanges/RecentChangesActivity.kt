@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid.recentchanges
 
 import android.content.ComponentName
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -13,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
-import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -258,6 +256,8 @@ enum class ChangeAction {
 /** Immutable UI model for a single row of [RecentChangesScreen]. */
 @Immutable
 data class RecentChange(
+    /** Syncthing event id: unique in one response, used as the list key. */
+    val eventId: Long,
     val filename: String,
     val folderPath: String,
     val modifiedByName: String,
@@ -285,6 +285,7 @@ private fun List<DiskEvent>.toRecentChanges(
     val timestampParser = SimpleDateFormat(RFC3339_PATTERN, Locale.US)
     return withoutUselessEvents().map { event ->
         RecentChange(
+            eventId = event.id,
             filename = fileNameOf(event.data.path),
             folderPath = "[${event.data.label}]${File.separator}${parentPathOf(event.data.path)}",
             modifiedByName = resolveDeviceName(event.data.modifiedBy, devices, localDeviceId, thisDeviceLabel),
@@ -334,26 +335,30 @@ private val OFFSET_WITH_COLON = Regex("([+-]\\d{2}):(\\d{2})$")
 internal fun List<DiskEvent>.withoutUselessEvents(): List<DiskEvent> {
     val valid = filter { it.data != null }
 
+    // Paths are relative to the root of each folder: the same path in two folders is two entries.
+    fun key(folderId: String?, path: String) = "${folderId.orEmpty()}\u0000$path"
+
     val lastDeletedAt = HashMap<String, Long>()
     val lastDirDeletedAt = HashMap<String, Long>()
     for (event in valid) {
         if (ChangeAction.of(event.data.action) != ChangeAction.DELETED) continue
-        lastDeletedAt.keepHighest(event.data.path, event.id)
+        lastDeletedAt.keepHighest(key(event.data.folderID, event.data.path), event.id)
         if (ChangeType.of(event.data.type) == ChangeType.DIR) {
-            lastDirDeletedAt.keepHighest(event.data.path, event.id)
+            lastDirDeletedAt.keepHighest(key(event.data.folderID, event.data.path), event.id)
         }
     }
     if (lastDeletedAt.isEmpty()) return valid
 
-    fun deletedAfter(map: Map<String, Long>, path: String, id: Long) = (map[path] ?: -1L) > id
+    fun deletedAfter(map: Map<String, Long>, key: String, id: Long) = (map[key] ?: -1L) > id
 
     return valid.filterNot { event ->
+        val folderId = event.data.folderID
         val path = event.data.path
         val supersededByDelete = ChangeAction.of(event.data.action) == ChangeAction.ADDED &&
-            deletedAfter(lastDeletedAt, path, event.id)
+            deletedAfter(lastDeletedAt, key(folderId, path), event.id)
 
         supersededByDelete ||
-            path.ancestorPaths().any { deletedAfter(lastDirDeletedAt, it, event.id) }
+            path.ancestorPaths().any { deletedAfter(lastDirDeletedAt, key(folderId, it), event.id) }
     }
 }
 
@@ -380,11 +385,7 @@ private fun String.ancestorPaths(): Sequence<String> = sequence {
 }
 
 /** Last path segment, e.g. "a/b/c.txt" -> "c.txt". */
-private fun fileNameOf(path: String): String {
-    // Encode "#" so Uri.parse handles it. See syncthing-android/651.
-    val uriParseInput = path.replace("#", Uri.encode("#"))
-    return uriParseInput.toUri().lastPathSegment.orEmpty()
-}
+private fun fileNameOf(path: String): String = path.substringAfterLast('/')
 
 /** Parent directory of a path, e.g. "a/b/c.txt" -> "a/b", "c.txt" -> "". */
 private fun parentPathOf(path: String): String = path.substringBeforeLast('/', missingDelimiterValue = "")
