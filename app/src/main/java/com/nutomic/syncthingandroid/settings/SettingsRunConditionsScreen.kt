@@ -44,7 +44,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation3.runtime.EntryProviderScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.accompanist.permissions.rememberPermissionState
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
@@ -323,13 +324,13 @@ private fun WifiSsidPreference(
 
     var showSelectionAlert by rememberSaveable { mutableStateOf(false) }
 
-    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        Manifest.permission.ACCESS_FINE_LOCATION
-    } else {
-        Manifest.permission.ACCESS_COARSE_LOCATION
-    }
-
-    val permissionState = rememberPermissionState(permission) { isGranted ->
+    /*
+     * Reading the SSID needs fine location on Android 10+ (coarse below), plus background location,
+     * as SyncthingService reads it while the app is in the background. Android 12+ ignores a fine
+     * location request made without coarse location, and Android 11+ asks for background location
+     * on its own, after the foreground grant.
+     */
+    val onPermissionResult: (Boolean) -> Unit = { isGranted ->
         if (!isGranted) {
             Toast.makeText(
                 context,
@@ -342,8 +343,31 @@ private fun WifiSsidPreference(
             context.startService(intent)
         }
     }
+    val backgroundPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        rememberPermissionState(Manifest.permission.ACCESS_BACKGROUND_LOCATION, onPermissionResult)
+    } else {
+        null
+    }
+    val ssidPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        Manifest.permission.ACCESS_FINE_LOCATION
+    } else {
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    }
+    val foregroundPermissionState = rememberMultiplePermissionsState(
+        listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    ) { results ->
+        if (results[ssidPermission] != true) {
+            onPermissionResult(false)
+        } else if (backgroundPermissionState != null && !backgroundPermissionState.status.isGranted) {
+            backgroundPermissionState.launchPermissionRequest()
+        } else {
+            onPermissionResult(true)
+        }
+    }
 
-    val isPermissionGranted = permissionState.status == PermissionStatus.Granted
+    val isForegroundGranted = foregroundPermissionState.permissions
+        .first { it.permission == ssidPermission }.status.isGranted
+    val isPermissionGranted = isForegroundGranted && (backgroundPermissionState?.status?.isGranted ?: true)
     val isLocationEnabled = LocationManagerCompat.isLocationEnabled(locationManager)
 
     LaunchedEffect(isPermissionGranted) {
@@ -373,10 +397,16 @@ private fun WifiSsidPreference(
         title = { Text(stringResource(R.string.specify_wifi_ssid_whitelist)) },
         summary = { Text(specifiedSsidSummary) },
         onClick = {
-            if (isPermissionGranted && isLocationEnabled) {
-                showSelectionAlert = true
+            if (!isForegroundGranted) {
+                foregroundPermissionState.launchMultiplePermissionRequest()
             } else if (!isPermissionGranted) {
-                permissionState.launchPermissionRequest()
+                backgroundPermissionState?.launchPermissionRequest()
+            } else if (!isLocationEnabled) {
+                Toast.makeText(
+                    context,
+                    R.string.sync_only_wifi_ssids_wifi_turn_on_location,
+                    Toast.LENGTH_LONG
+                ).show()
             } else if (knownSsids.isEmpty()) {
                 Toast.makeText(
                     context,
@@ -384,11 +414,7 @@ private fun WifiSsidPreference(
                     Toast.LENGTH_LONG
                 ).show()
             } else {
-                Toast.makeText(
-                    context,
-                    R.string.sync_only_wifi_ssids_wifi_turn_on_location,
-                    Toast.LENGTH_LONG
-                ).show()
+                showSelectionAlert = true
             }
         }
     )
