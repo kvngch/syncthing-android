@@ -377,6 +377,7 @@
     <string name="revert_local_changes_question">Ceci annulera les modification faites localement par d\'autres applications dans ce partage. Continuer ?</string>
     <string name="open_file_with">Ouvrir le fichier avec</string>
     <string name="open_file_no_compatible_app">Pas d\'application trouvée pour ouvrir ce fichier.</string>
+    <string name="open_file_unavailable">Impossible d\'ouvrir ce fichier.</string>
     <string name="suggest_file_manager_app_dialog_title">Pas d\'application Gestionnaire de fichiers compatible trouvée</string>
     <string name="suggest_file_manager_app_dialog_text">Nous recommandons l\'installation du Gestionnaire de fichiers open-source \'Material Files\'. Voulez-vous ouvrir sa page de magasin d\'applications ?</string>
     <string name="deviceEncryptionPasswordHint">Mot de passe de chiffrement si non fiable</string>

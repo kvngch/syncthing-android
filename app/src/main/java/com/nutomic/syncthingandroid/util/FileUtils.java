@@ -1089,9 +1089,20 @@ public class FileUtils {
      * Open file in compatible app.
      */
     public static void openFile(final Context context, String fullPathAndFilename) {
-        Uri fileUri = Uri.parse(fullPathAndFilename);
-        String fileExtension = MimeTypeMap.getFileExtensionFromUrl(fileUri.toString());
+        File file = new File(fullPathAndFilename);
+        if (!file.isFile()) {
+            // E.g. a recent change to a file deleted since.
+            Toast.makeText(context, R.string.open_file_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // MimeTypeMap.getFileExtensionFromUrl returns "" as soon as the name holds a space or an accent.
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        String fileExtension = (dotIndex >= 0) ? fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT) : "";
         String mimeType = FileUtils.getMimeTypeFromFileExtension(fileExtension);
+        if (mimeType.isEmpty()) {
+            mimeType = "*/*";
+        }
         Log.v(TAG, "openFile: Detected mime type \'" + mimeType + "\' for file \'" + fullPathAndFilename + "\'");
         Intent intent;
         switch(fileExtension) {
@@ -1104,14 +1115,23 @@ public class FileUtils {
             default:
                 intent = new Intent(Intent.ACTION_VIEW);
         }
-        fileUri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", new File(fullPathAndFilename));
+        Uri fileUri;
+        try {
+            fileUri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+        } catch (IllegalArgumentException e) {
+            // The file is outside the roots declared in res/xml/file_paths.xml.
+            Log.w(TAG, "openFile: No content URI for '" + fullPathAndFilename + "'", e);
+            Toast.makeText(context, R.string.open_file_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
         intent.setDataAndType(fileUri, mimeType);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException anfe) {
             Log.w(TAG, "openFile: ActivityNotFoundException. Falling back to app chooser...");
-            intent.setDataAndType(Uri.parse(fullPathAndFilename), "application/*");
+            // Keep the content URI and its read grant, only widen the type.
+            intent.setDataAndType(fileUri, "*/*");
             Intent chooserIntent = Intent.createChooser(intent, context.getString(R.string.open_file_with));
             try {
                 context.startActivity(chooserIntent);
