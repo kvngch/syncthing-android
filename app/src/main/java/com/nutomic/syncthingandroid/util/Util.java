@@ -140,7 +140,15 @@ public class Util {
     }
 
     /**
-     * Look for running processes and end them gracefully.
+     * Time a process gets to end after SIGINT before it gets SIGKILL. killProcess runs on the main
+     * thread from SyncthingService: the whole wait must stay under the 5 s after which Android
+     * raises an ANR on an unresponsive UI.
+     */
+    private static final long KILL_PROCESS_GRACE_MS = 3000;
+
+    /**
+     * Look for running processes and end them gracefully, or by force after KILL_PROCESS_GRACE_MS.
+     * Returns after about KILL_PROCESS_GRACE_MS + 1 s at most; it waited without limit before.
      */
     public static void killProcess(final String processName) {
         int exitCode;
@@ -157,13 +165,33 @@ public class Util {
             }
         }
 
-        /**
-         * Wait for process to end.
-         */
+        if (waitForProcessesToEnd(processName, KILL_PROCESS_GRACE_MS)) {
+            Log.d(TAG, "killProcess: No more instances of [" + processName + "] running");
+            return;
+        }
+        // Stuck on exit, e.g. on a storage that no longer answers. Syncthing's SQLite database
+        // stays consistent through a SIGKILL.
+        for (String processPID : getProcessPIDs(processName)) {
+            Log.w(TAG, "killProcess: [" + processName + "] still running, sending SIGKILL to " + processPID);
+            runShellCommand("kill -9 " + processPID + "\n");
+        }
+        if (!waitForProcessesToEnd(processName, 1000)) {
+            Log.e(TAG, "killProcess: [" + processName + "] still running after SIGKILL");
+        }
+    }
+
+    /**
+     * Returns true once no process named processName runs, false if timeoutMs elapsed first.
+     */
+    private static boolean waitForProcessesToEnd(String processName, long timeoutMs) {
+        long deadline = SystemClock.elapsedRealtime() + timeoutMs;
         while (!getProcessPIDs(processName).isEmpty()) {
+            if (SystemClock.elapsedRealtime() > deadline) {
+                return false;
+            }
             SystemClock.sleep(50);
         }
-        Log.d(TAG, "killProcess: No more instances of [" + processName + "] running");
+        return true;
     }
 
     /**

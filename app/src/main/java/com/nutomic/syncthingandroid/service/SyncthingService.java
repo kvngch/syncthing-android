@@ -761,7 +761,11 @@ public class SyncthingService extends Service {
             if (mSyncthingRunnableThread != null) {
                 LogV("Waiting for mSyncthingRunnableThread to finish after killProcess(Syncthing) ...");
                 try {
-                    mSyncthingRunnableThread.join();
+                    // Bounded: the process is gone after killProcess, its reader thread ends at once.
+                    mSyncthingRunnableThread.join(1000);
+                    if (mSyncthingRunnableThread.isAlive()) {
+                        Log.w(TAG, "mSyncthingRunnableThread still running after killProcess(Syncthing)");
+                    }
                 } catch (InterruptedException e) {
                     Log.w(TAG, "mSyncthingRunnableThread InterruptedException");
                 }
