@@ -376,6 +376,8 @@
     <string name="folder_rejected">L\'appareil \"%1$s\" souhaite synchroniser le partage \"%2$s\" avec le votre. Il sera créé s\'il n\'existe pas déjà</string>
     <string name="delete_unexpected_items">Supprimer les objets non conformes</string>
     <string name="revert_local_changes_question">Ceci annulera les modification faites localement par d\'autres applications dans ce partage. Continuer ?</string>
+    <string name="delete_unexpected_items_question">Ceci supprimera les éléments de ce dossier qui ne viennent pas des autres appareils. Continuer ?</string>
+    <string name="versioning_type_unsupported">Ce type de versioning ne se modifie que dans l\'interface web.</string>
     <string name="open_file_with">Ouvrir le fichier avec</string>
     <string name="open_file_no_compatible_app">Pas d\'application trouvée pour ouvrir ce fichier.</string>
     <string name="open_file_unavailable">Impossible d\'ouvrir ce fichier.</string>

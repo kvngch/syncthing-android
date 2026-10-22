@@ -335,9 +335,11 @@ public class FoldersAdapter extends ArrayAdapter<Folder> {
     }
 
     private void onClickRevert(View view, Folder folder) {
+        // Same action, two meanings: receive encrypted folders delete the unexpected items.
+        boolean receiveEncrypted = folder.type.equals(Constants.FOLDER_TYPE_RECEIVE_ENCRYPTED);
         AlertDialog.Builder confirmDialog = new AlertDialog.Builder(mContext)
-                .setTitle(R.string.revert_local_changes)
-                .setMessage(R.string.revert_local_changes_question)
+                .setTitle(receiveEncrypted ? R.string.delete_unexpected_items : R.string.revert_local_changes)
+                .setMessage(receiveEncrypted ? R.string.delete_unexpected_items_question : R.string.revert_local_changes_question)
                 .setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
                     // Send "Revert local changes" through our service to the REST API.
                     Intent intent = new Intent(mContext, SyncthingService.class)

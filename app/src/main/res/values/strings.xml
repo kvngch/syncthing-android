@@ -168,6 +168,8 @@
 
     <!-- Revert Local Changes Confirmation Dialog -->
     <string name="revert_local_changes_question">This will undo all changes made on this device within that folder. Proceed\?</string>
+    <string name="delete_unexpected_items_question">This will delete the items in this folder that did not come from the other devices. Proceed\?</string>
+    <string name="versioning_type_unsupported">This versioning type can only be changed in the web GUI.</string>
 
     <string name="open_file_manager">Open file manager</string>
     <string name="open_file_with">Open file with</string>

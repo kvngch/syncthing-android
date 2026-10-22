@@ -92,6 +92,11 @@ public class ShareActivity extends SyncthingActivity
         mSyncthingService = syncthingService;
     }
 
+    /**
+     * Folder ids in the spinner, to rebuild it only when they change.
+     */
+    private List<String> mFolderIdsShown = null;
+
     @Override
     public void onServiceStateChange(SyncthingService.State currentState) {
         List<Folder> folders = null;
@@ -102,6 +107,17 @@ public class ShareActivity extends SyncthingActivity
             finish();
             return;
         }
+
+        // This runs on every service state change: rebuilding the list would reset the folder the
+        // user picked meanwhile, and the sub directory shown with it. Only rebuild when it changed.
+        List<String> folderIds = new ArrayList<>();
+        for (Folder folder : folders) {
+            folderIds.add(folder.id);
+        }
+        if (folderIds.equals(mFolderIdsShown)) {
+            return;
+        }
+        mFolderIdsShown = folderIds;
 
         // Get the index of the previously selected folder.
         int folderIndex = 0;
@@ -177,6 +193,7 @@ public class ShareActivity extends SyncthingActivity
         if (extrasToCopy.isEmpty()) {
             Toast.makeText(this, getString(R.string.nothing_share), Toast.LENGTH_SHORT).show();
             finish();
+            return;
         }
 
         Map<Uri, String> files = new HashMap<>();
