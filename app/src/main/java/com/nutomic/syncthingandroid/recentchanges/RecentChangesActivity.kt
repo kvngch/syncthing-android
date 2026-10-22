@@ -86,9 +86,9 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
      * This polls on an interval rather than holding a long-poll open (which is how the web GUI stays
      * live). Two things make a subscription impractical here: `RestApi.getDiskEvents` has no `since`
      * parameter, so a loop would re-fetch the same buffered events and spin as fast as the server
-     * could answer; and Volley's `DefaultRetryPolicy` uses a 5s socket timeout, so it abandons and
-     * retries a blocked long-poll several times per call — the server explicitly notes such requests
-     * "should not be retried". Short `timeout=1` queries on a timer are far more predictable.
+     * could answer; and `ApiRequest` uses a 5s socket timeout, so it abandons and retries a blocked
+     * long-poll several times per call — the server explicitly notes such requests "should not be
+     * retried". Short `timeout=1` queries on a timer are far more predictable.
      *
      * `repeatOnLifecycle(STARTED)` stops polling when the screen is not visible.
      */
