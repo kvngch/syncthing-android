@@ -63,12 +63,7 @@ class Device {
             52 -> Unit
             else -> return false
         }
-        return try {
-            BaseEncoding.base32().decode("$id====")
-            true
-        } catch (e: IllegalArgumentException) {
-            false
-        }
+        return BaseEncoding.base32().canDecode("$id====")
     }
 
     /**
