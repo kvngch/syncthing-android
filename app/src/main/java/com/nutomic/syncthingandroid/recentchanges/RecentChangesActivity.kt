@@ -57,8 +57,6 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Same store the Dagger-provided SharedPreferences wraps, read directly so this screen does
-        // not need to be added to the injector for one boolean.
         preferences = PreferenceManager.getDefaultSharedPreferences(this)
         showExactTimes = preferences.getBoolean(PREF_SHOW_EXACT_TIMES, false)
 

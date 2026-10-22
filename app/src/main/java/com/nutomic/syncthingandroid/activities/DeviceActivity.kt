@@ -17,8 +17,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.device.DeviceForm
 import com.nutomic.syncthingandroid.device.DeviceScreen
 import com.nutomic.syncthingandroid.device.DeviceViewModel
@@ -35,7 +35,6 @@ import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.Util
-import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -44,8 +43,7 @@ import kotlinx.coroutines.withContext
  */
 class DeviceActivity : SyncthingActivity() {
 
-    @Inject
-    lateinit var sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
 
     private val viewModel: DeviceViewModel by viewModels()
     private lateinit var config: ConfigRouter
@@ -74,7 +72,6 @@ class DeviceActivity : SyncthingActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        (application as SyncthingApp).component().inject(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         config = ConfigRouter(this)
