@@ -3,6 +3,7 @@ package com.nutomic.syncthingandroid.http
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.nutomic.syncthingandroid.service.Constants
 import java.io.File
 import java.io.IOException
@@ -61,7 +62,7 @@ abstract class ApiRequest internal constructor(
     private val url: URL = forceLoopbackHost(url)
 
     internal fun buildUri(params: Map<String, String>): Uri {
-        val builder = Uri.parse(url.toString()).buildUpon().path(path)
+        val builder = url.toString().toUri().buildUpon().path(path)
         params.forEach { (key, value) -> builder.appendQueryParameter(key, value) }
         return builder.build()
     }
