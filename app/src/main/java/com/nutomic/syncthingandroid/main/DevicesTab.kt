@@ -119,7 +119,7 @@ internal fun DevicesTab(api: RestApi?, serviceState: SyncthingService.State, pre
         rows == null -> LoadingList()
         rows.isEmpty() -> EmptyList(R.string.no_devices_configured)
         else -> LazyColumn(Modifier.fillMaxSize()) {
-            items(rows, key = { it.device.deviceID }) { row ->
+            items(rows, key = { it.device.deviceID.orEmpty() }) { row ->
                 DeviceItem(row, api) {
                     context.startActivity(
                         Intent(context, DeviceActivity::class.java)

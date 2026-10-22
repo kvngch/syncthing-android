@@ -107,7 +107,7 @@ internal fun FoldersTab(api: RestApi?, serviceState: SyncthingService.State) {
         rows == null -> LoadingList()
         rows.isEmpty() -> EmptyList(R.string.folder_list_empty)
         else -> LazyColumn(Modifier.fillMaxSize()) {
-            items(rows, key = { it.folder.id }) { row ->
+            items(rows, key = { it.folder.id.orEmpty() }) { row ->
                 FolderItem(
                     row = row,
                     onClick = {
@@ -159,7 +159,7 @@ private fun FolderItem(row: FolderRow, onClick: () -> Unit, onAction: (FolderAct
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = if (folder.label.isNullOrEmpty()) folder.id else folder.label,
+                text = folder.toString(),
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -170,7 +170,7 @@ private fun FolderItem(row: FolderRow, onClick: () -> Unit, onAction: (FolderAct
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 )
             }
-            Text(shortPathForUi(context, folder.path), style = MaterialTheme.typography.bodySmall)
+            Text(shortPathForUi(context, folder.path.orEmpty()), style = MaterialTheme.typography.bodySmall)
 
             if (status != null && cached != null) {
                 FolderStatusDetails(folder, status, cached, onAction)

@@ -114,7 +114,7 @@ class DeviceActivity : SyncthingActivity() {
                             DeviceIdDialogFragment.show(
                                 supportFragmentManager,
                                 current.device.displayName.trim(),
-                                current.device.deviceID,
+                                current.device.deviceID.orEmpty(),
                                 false,
                             )
                         },
@@ -292,7 +292,7 @@ class DeviceActivity : SyncthingActivity() {
     }
 
     private fun applyShare(folder: Folder, device: Device, form: DeviceForm) {
-        val share = form.shares[folder.id]
+        val share = form.shares[folder.id.orEmpty()]
         if (share != null && share.shared) {
             folder.addDevice(device)
             folder.getDevice(device.deviceID)?.encryptionPassword = share.password

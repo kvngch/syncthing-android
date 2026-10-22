@@ -135,7 +135,7 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
             try {
                 // Both of these are cached config reads, not network calls.
                 val devices = api.getDevices(true)
-                val localDeviceId = api.localDevice.deviceID
+                val localDeviceId = api.localDevice.deviceID.orEmpty()
                 Log.v(TAG, "Querying disk events")
                 api.awaitDiskEvents(DISK_EVENT_LIMIT)?.let { diskEvents ->
                     changes = diskEvents
@@ -402,6 +402,6 @@ private fun resolveDeviceName(
     thisDeviceLabel: String,
 ): String {
     if (modifiedBy.isEmpty()) return modifiedBy
-    val device = devices.firstOrNull { it.deviceID.startsWith(modifiedBy) } ?: return modifiedBy
+    val device = devices.firstOrNull { it.deviceID.orEmpty().startsWith(modifiedBy) } ?: return modifiedBy
     return if (device.deviceID == localDeviceId) thisDeviceLabel else device.displayName
 }
