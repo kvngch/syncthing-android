@@ -1,6 +1,7 @@
 package com.nutomic.syncthingandroid.service
 
 import android.content.AsyncQueryHandler
+import android.content.ContentResolver
 import android.content.Context
 import android.media.MediaScannerConnection
 import android.os.Handler
@@ -40,6 +41,12 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
     private val gson = Gson()
+
+    /**
+     * Runs the media store deletions on a worker thread. Created on the main thread, where events
+     * are handled.
+     */
+    private val mediaStoreHandler by lazy { MediaStoreHandler(context.contentResolver) }
 
     @Volatile
     private var lastEventId = 0L
@@ -266,7 +273,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
                     return
                 }
                 Log.i(TAG, "onItemFinished: MediaStore, Deleting file: $fullFilePath")
-                AsyncQueryHandler(context.contentResolver).startDelete(
+                mediaStoreHandler.startDelete(
                     0,
                     null,
                     MediaStore.Files.getContentUri("external"),
@@ -316,6 +323,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             Log.v(TAG, message)
         }
     }
+
+    private class MediaStoreHandler(resolver: ContentResolver) : AsyncQueryHandler(resolver)
 
     private companion object {
         const val TAG = "EventProcessor"
