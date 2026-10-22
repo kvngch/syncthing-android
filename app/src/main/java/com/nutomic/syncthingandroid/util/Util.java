@@ -6,7 +6,6 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.common.base.Charsets;
@@ -411,22 +410,6 @@ public class Util {
         return ExtensionsKt.isTelevision(context.getResources().getConfiguration());
     }
 
-    /**
-     * Asks whether to drop the unsaved changes of an edit screen; OK closes it without a result.
-     * Shared by FolderActivity and DeviceActivity.
-     */
-    public static Dialog showDiscardChangesDialog(AppCompatActivity activity) {
-        Dialog dialog = new AlertDialog.Builder(activity)
-                .setMessage(R.string.dialog_discard_changes)
-                .setPositiveButton(android.R.string.ok, (d, which) -> {
-                    activity.setResult(AppCompatActivity.RESULT_CANCELED);
-                    activity.finish();
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .create();
-        dialog.show();
-        return dialog;
-    }
 
     /**
      * Converts dateTime to readable localized string.

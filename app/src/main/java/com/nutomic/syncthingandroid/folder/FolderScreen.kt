@@ -3,7 +3,6 @@ package com.nutomic.syncthingandroid.folder
 import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -70,6 +69,8 @@ import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.model.SharedWithDevice
 import com.nutomic.syncthingandroid.service.Constants
+import com.nutomic.syncthingandroid.ui.SectionTitle
+import com.nutomic.syncthingandroid.ui.SwitchItem
 
 private enum class FolderDialog { TYPE, PULL_ORDER, VERSIONING, DELETE, DISCARD }
 
@@ -445,37 +446,6 @@ private fun DeviceShare(device: Device, folder: Folder, onEditFolder: (Folder.()
                 .padding(start = 56.dp, end = 16.dp, bottom = 8.dp),
         )
     }
-}
-
-@Composable
-private fun SwitchItem(
-    icon: ImageVector,
-    @StringRes title: Int,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    @StringRes description: Int? = null,
-) {
-    ListItem(
-        headlineContent = { Text(stringResource(title)) },
-        supportingContent = if (description != null) {
-            { Text(stringResource(description)) }
-        } else {
-            null
-        },
-        leadingContent = { Icon(icon, contentDescription = null) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
-        modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
-    )
-}
-
-@Composable
-private fun SectionTitle(@StringRes title: Int, icon: ImageVector) {
-    ListItem(
-        headlineContent = {
-            Text(stringResource(title), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-        },
-        leadingContent = { Icon(icon, contentDescription = null) },
-    )
 }
 
 @Composable
