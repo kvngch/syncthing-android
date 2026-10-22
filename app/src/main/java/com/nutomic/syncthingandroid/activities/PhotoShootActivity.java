@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.Manifest;
 import android.net.Uri;
 import android.os.Build;
@@ -22,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.os.BundleCompat;
 
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.SyncthingApp;
@@ -32,6 +34,7 @@ import com.nutomic.syncthingandroid.util.PermissionUtil;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -51,6 +54,7 @@ public class PhotoShootActivity extends ThemedAppCompatActivity {
     private Button mBtnGrantStoragePerm;
 
     private Uri lastPhotoURI = null;
+    private static final String STATE_LAST_PHOTO_URI = "lastPhotoURI";
 
     @Inject
     SharedPreferences mPreferences;
@@ -59,6 +63,15 @@ public class PhotoShootActivity extends ThemedAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ((SyncthingApp) getApplication()).component().inject(this);
+
+        if (savedInstanceState != null) {
+            lastPhotoURI = BundleCompat.getParcelable(savedInstanceState, STATE_LAST_PHOTO_URI, Uri.class);
+            if (lastPhotoURI != null) {
+                // Recreated while the camera app was open: its result is on the way, do not
+                // launch the camera a second time.
+                return;
+            }
+        }
 
         // Check if required camera hardware is present.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
@@ -179,6 +192,28 @@ public class PhotoShootActivity extends ThemedAppCompatActivity {
         }
     }
 
+    /**
+     * Reads the image header only: decoding a full-size photo on the main thread costs memory
+     * and time, just to know the camera app wrote a valid picture.
+     */
+    private boolean isReadableImage(Uri uri) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+            BitmapFactory.decodeStream(inputStream, null, options);
+        } catch (IOException | RuntimeException e) {
+            return false;
+        }
+        return options.outWidth > 0 && options.outHeight > 0;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Survives the process being killed while the camera app is open.
+        outState.putParcelable(STATE_LAST_PHOTO_URI, lastPhotoURI);
+    }
+
     private File createImageFile() throws IOException {
         String timeStamp =
              new SimpleDateFormat("yyyyMMdd_HHmmss",
@@ -204,12 +239,11 @@ public class PhotoShootActivity extends ThemedAppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         boolean takePhotoSucceeded = false;
         if (requestCode == REQUEST_CAPTURE_IMAGE) {
-            try {
-                MediaStore.Images.Media.getBitmap(getContentResolver(), lastPhotoURI).getWidth();
+            if (lastPhotoURI != null && isReadableImage(lastPhotoURI)) {
                 Log.d(TAG, "User took a picture.");
                 lastPhotoURI = null;
                 takePhotoSucceeded = true;
-            } catch (Exception e) {
+            } else {
                 Log.d(TAG, "User cancelled or failed to take a picture.");
             }
 
@@ -225,6 +259,10 @@ public class PhotoShootActivity extends ThemedAppCompatActivity {
                     lastPhotoURI = null;
                 }
                 Toast.makeText(this, R.string.photo_shoot_take_picture_failure, Toast.LENGTH_SHORT).show();
+                if (mBtnGo == null) {
+                    // Came straight to the camera, without the intro screen: nothing to show here.
+                    finish();
+                }
                 return;
             }
 
