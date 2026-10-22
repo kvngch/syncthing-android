@@ -29,6 +29,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.SyncthingActivity
 import com.nutomic.syncthingandroid.service.Constants
@@ -142,6 +143,8 @@ class WebGuiActivity : SyncthingActivity(), SyncthingService.OnServiceStateChang
         setContent {
             ApplicationTheme {
                 WebGuiScreen(
+                    title = stringResource(R.string.web_gui_title),
+                    loadingText = stringResource(R.string.web_gui_loading),
                     loading = webGuiLoading,
                     error = webGuiLoadError,
                     onNavigateBack = { finish() },
