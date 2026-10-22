@@ -1,17 +1,25 @@
 package com.nutomic.syncthingandroid.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 public class UtilTest {
@@ -54,5 +62,29 @@ public class UtilTest {
     @Test
     public void getSyncConflictFilesOnMissingFolderIsEmpty() {
         assertEquals(0, Util.getSyncConflictFiles(tmp.getRoot() + "/missing").length);
+    }
+
+    @Test
+    public void isTcpPortListeningSeesLoopbackAndWildcardListeners() throws IOException {
+        int port;
+        try (ServerSocket listener = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))) {
+            port = listener.getLocalPort();
+            assertTrue(Util.isTcpPortListening(port));
+        }
+        assertFalse(Util.isTcpPortListening(port));
+        try (ServerSocket listener = new ServerSocket(port)) {
+            assertTrue(Util.isTcpPortListening(port));
+        }
+    }
+
+    @Test
+    public void getLocalZonedDateTimeIsCurrentUtcTime() throws ParseException {
+        String now = Util.getLocalZonedDateTime();
+        // Unit tests run with Build.VERSION.SDK_INT == 0: the pre-API 26 format.
+        assertTrue(now, now.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z"));
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+        long skewMillis = Math.abs(parser.parse(now).getTime() - System.currentTimeMillis());
+        assertTrue("skew " + skewMillis + " ms", skewMillis < 60_000);
     }
 }
