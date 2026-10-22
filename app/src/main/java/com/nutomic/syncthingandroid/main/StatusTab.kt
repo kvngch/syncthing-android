@@ -204,7 +204,6 @@ private fun RunModeSelector(preferences: SharedPreferences) {
                         stringResource(label),
                         style = MaterialTheme.typography.labelSmall,
                         textAlign = TextAlign.Center,
-                        maxLines = 2,
                     )
                 },
             )
