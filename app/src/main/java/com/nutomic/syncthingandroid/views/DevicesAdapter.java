@@ -114,7 +114,7 @@ public class DevicesAdapter extends ArrayAdapter<Device> {
                         mContext.getString(R.string.device_last_seen_never) : Util.formatDateTime(deviceLastSeen))
         );
 
-        List<Folder> sharedFolders = mConfigRouter.getSharedFolders(device.deviceID);
+        List<Folder> sharedFolders = mConfigRouter.getSharedFolders(mRestApi, device.deviceID);
         if (sharedFolders.size() == 0) {
             holder.sharedFoldersTitle.setText(R.string.device_state_unused);
             holder.sharedFolders.setVisibility(GONE);

@@ -39,7 +39,7 @@ public class ConfigRouter {
     public List<Folder> getFolders(RestApi restApi) {
         if (restApi == null || !restApi.isConfigLoaded()) {
             // Syncthing is not running or REST API is not (yet) available.
-            configXml.loadConfig();
+            configXml.loadConfigReadOnly();
             return configXml.getFolders();
         }
 
@@ -47,8 +47,8 @@ public class ConfigRouter {
         return restApi.getFolders();
     }
 
-    public List<Folder> getSharedFolders(String deviceID) {
-        List<Folder> folders = getFolders(null);
+    public List<Folder> getSharedFolders(RestApi restApi, String deviceID) {
+        List<Folder> folders = getFolders(restApi);
         List<Folder> sharedFolders = new ArrayList<>();
 
         for (Folder folder : folders) {
@@ -62,59 +62,62 @@ public class ConfigRouter {
     }
 
     public void addFolder(RestApi restApi, Folder folder) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.addFolder(folder);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.addFolder(folder);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.addFolder(folder));       // This will send the config afterwards.
     }
 
     public void ignoreFolder(RestApi restApi,
                                     final String deviceId,
                                     final String folderId,
                                     final String folderLabel) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            Log.e(TAG, "ignoreFolder failed, Syncthing is not running or REST API is not (yet) available.");
+        if (restApi == null) {
+            Log.e(TAG, "ignoreFolder failed, Syncthing is not running.");
             return;
         }
 
         // Syncthing is running and REST API is available.
-        restApi.ignoreFolder(
-                deviceId,
-                folderId,
-                folderLabel
-        );       // This will send the config afterwards.
+        restApi.runWhenConfigLoaded(() -> restApi.ignoreFolder(
+                    deviceId,
+                    folderId,
+                    folderLabel
+            ));       // This will send the config afterwards.
     }
 
     public void updateFolder(RestApi restApi, final Folder folder) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.updateFolder(folder);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.updateFolder(folder);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.updateFolder(folder));       // This will send the config afterwards.
     }
 
     public void removeFolder(RestApi restApi, final String folderId) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.removeFolder(folderId);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.removeFolder(folderId);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.removeFolder(folderId));       // This will send the config afterwards.
     }
 
     /**
@@ -123,7 +126,7 @@ public class ConfigRouter {
     public void getFolderIgnoreList(RestApi restApi, Folder folder, OnResultListener1<FolderIgnoreList> listener) {
         if (restApi == null || !restApi.isConfigLoaded()) {
             // Syncthing is not running or REST API is not (yet) available.
-            configXml.loadConfig();
+            configXml.loadConfigReadOnly();
             configXml.getFolderIgnoreList(folder, folderIgnoreList -> listener.onResult(folderIgnoreList));
             return;
         }
@@ -136,15 +139,16 @@ public class ConfigRouter {
      * Stores ignore list for given folder.
      */
     public void postFolderIgnoreList(RestApi restApi, Folder folder, String[] ignore) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.postFolderIgnoreList(folder, ignore);
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.postFolderIgnoreList(folder.id, ignore);
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.postFolderIgnoreList(folder.id, ignore));
     }
 
     public List<Device> getDevices(RestApi restApi, Boolean includeLocal) {
@@ -153,7 +157,7 @@ public class ConfigRouter {
 
         if (restApi == null || !restApi.isConfigLoaded()) {
             // Syncthing is not running or REST API is not (yet) available.
-            configXml.loadConfig();
+            configXml.loadConfigReadOnly();
             devices = configXml.getDevices(includeLocal);
         } else {
             // Syncthing is running and REST API is available.
@@ -164,52 +168,54 @@ public class ConfigRouter {
     }
 
     public void updateDevice(RestApi restApi, final Device device) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.updateDevice(device);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.updateDevice(device);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.updateDevice(device));       // This will send the config afterwards.
     }
 
     public void removeDevice(RestApi restApi, final String deviceID) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.removeDevice(deviceID);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.removeDevice(deviceID);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.removeDevice(deviceID));       // This will send the config afterwards.
     }
 
     public void ignoreDevice(RestApi restApi,
                                     final String deviceID,
                                     final String deviceName,
                                     final String deviceAddress) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            Log.e(TAG, "ignoreDevice failed, Syncthing is not running or REST API is not (yet) available.");
+        if (restApi == null) {
+            Log.e(TAG, "ignoreDevice failed, Syncthing is not running.");
             return;
         }
 
         // Syncthing is running and REST API is available.
-        restApi.ignoreDevice(
-                deviceID,
-                deviceName,
-                deviceAddress
-        );       // This will send the config afterwards.
+        restApi.runWhenConfigLoaded(() -> restApi.ignoreDevice(
+                    deviceID,
+                    deviceName,
+                    deviceAddress
+            ));       // This will send the config afterwards.
     }
 
     public Gui getGui(RestApi restApi) {
         if (restApi == null || !restApi.isConfigLoaded()) {
             // Syncthing is not running or REST API is not (yet) available.
-            configXml.loadConfig();
+            configXml.loadConfigReadOnly();
             return configXml.getGui();
         }
 
@@ -218,22 +224,23 @@ public class ConfigRouter {
     }
 
     public void updateGui(RestApi restApi, final Gui gui) {
-        if (restApi == null || !restApi.isConfigLoaded()) {
-            // Syncthing is not running or REST API is not (yet) available.
+        if (restApi == null) {
+            // Syncthing is not running: config.xml is not in use.
             configXml.loadConfig();
             configXml.updateGui(gui);
             configXml.saveChanges();
             return;
         }
 
-        // Syncthing is running and REST API is available.
-        restApi.updateGui(gui);       // This will send the config afterwards.
+        // Syncthing is running or starting. It has read config.xml already:
+        // write through the REST API, once it has loaded the config.
+        restApi.runWhenConfigLoaded(() -> restApi.updateGui(gui));       // This will send the config afterwards.
     }
 
     public Options getOptions(RestApi restApi) {
         if (restApi == null || !restApi.isConfigLoaded()) {
             // Syncthing is not running or REST API is not (yet) available.
-            configXml.loadConfig();
+            configXml.loadConfigReadOnly();
             return configXml.getOptions();
         }
 
