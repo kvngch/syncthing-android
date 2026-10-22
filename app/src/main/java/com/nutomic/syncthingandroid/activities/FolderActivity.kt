@@ -72,7 +72,7 @@ class FolderActivity : SyncthingActivity() {
     private val pickDirectoryInApp = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val path = result.data?.getStringExtra(FolderPickerActivity.EXTRA_RESULT_DIRECTORY)
         if (result.resultCode == RESULT_OK && path != null) {
-            viewModel.setPath(FileUtils.cutTrailingSlash(path), null)
+            viewModel.setPath(FileUtils.cutTrailingSlash(path).orEmpty(), null)
         }
     }
 
@@ -245,7 +245,7 @@ class FolderActivity : SyncthingActivity() {
             Toast.makeText(this, R.string.toast_invalid_folder_selected, Toast.LENGTH_LONG).show()
             return
         }
-        viewModel.setPath(FileUtils.cutTrailingSlash(path), uri)
+        viewModel.setPath(FileUtils.cutTrailingSlash(path).orEmpty(), uri)
     }
 
     private fun save() {
