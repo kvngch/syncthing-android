@@ -12,6 +12,7 @@ import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.nutomic.syncthingandroid.R;
 import com.nutomic.syncthingandroid.service.Constants;
 
@@ -19,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,8 +34,10 @@ import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -81,20 +85,13 @@ public class Util {
     public static boolean nativeBinaryCanWriteToPath(Context context, String absoluteFolderPath) {
         final String TOUCH_FILE_NAME = ".stwritetest";
 
-        // Write permission test file.
-        String touchFile = absoluteFolderPath + "/" + TOUCH_FILE_NAME;
-        int exitCode = runShellCommand("echo \"\" > \"" + touchFile + "\"\n");
-        if (exitCode != 0) {
-            String error;
-            switch (exitCode) {
-                case 1:
-                    error = "Permission denied";
-                    break;
-                default:
-                    error = "Shell execution failed";
-            }
-            Log.i(TAG, "Failed to write test file '" + touchFile +
-                "', " + error);
+        // Write permission test file. The native binary runs under our uid, so a plain
+        // Java write tests the same access without passing the path through a shell.
+        File touchFile = new File(absoluteFolderPath, TOUCH_FILE_NAME);
+        try {
+            new FileOutputStream(touchFile).close();
+        } catch (IOException e) {
+            Log.i(TAG, "Failed to write test file '" + touchFile + "', " + e.getMessage());
             return false;
         }
 
@@ -102,7 +99,7 @@ public class Util {
         Log.i(TAG, "Successfully wrote test file '" + touchFile + "'");
 
         // Remove test file.
-        if (runShellCommand("rm \"" + touchFile + "\"\n") != 0) {
+        if (!touchFile.delete()) {
             // This is very unlikely to happen, so we have less error handling.
             Log.i(TAG, "Failed to remove test file");
         }
@@ -481,40 +478,79 @@ public class Util {
             return;
         }
         for (File scriptFile : scriptFiles) {
-            // Build arguments using shell escape.
-            StringBuilder cmdBuilder = new StringBuilder();
-            cmdBuilder.append("cd \"").append(absPath).append("/..\";");
-            cmdBuilder.append("sh \"").append(scriptFile.getAbsolutePath()).append("\"");
+            // Paths and arguments go to the process as separate argv entries, never through a shell.
+            List<String> command = new ArrayList<>();
+            command.add("sh");
+            command.add(scriptFile.getAbsolutePath());
             if (scriptArgs != null) {
-                for (String arg : scriptArgs) {
-                    cmdBuilder.append(" \"").append(arg.replace("\"", "\\\"")).append("\"");
-                }
+                command.addAll(Arrays.asList(scriptArgs));
             }
 
-            // Execute script.
-            String command = cmdBuilder.toString();
-            // Log.d(TAG, "runScriptSet: Exec [" + command + "]");
-            Log.v(TAG, "runScriptSet: Exec result [" + runShellCommandGetOutput(command) + "]");
+            // Execute script from the folder root.
+            try {
+                Process process = new ProcessBuilder(command)
+                        .directory(scriptFolder.getParentFile())
+                        .redirectErrorStream(true)
+                        .start();
+                String output = CharStreams.toString(new InputStreamReader(process.getInputStream(), Charsets.UTF_8));
+                process.waitFor();
+                Log.v(TAG, "runScriptSet: Exec result [" + output + "]");
+            } catch (IOException e) {
+                Log.w(TAG, "runScriptSet: Failed to run " + scriptFile.getName(), e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
     
+    private static final Pattern SYNC_CONFLICT_FILE_NAME =
+            Pattern.compile(".*\\.sync-conflict-[0-9]{8}-[0-9]{6}-[a-zA-Z0-9]{7}.*");
+
     /**
      * Called by RestApi/setRemoteCompletionInfo after folder completed.
+     * Returns the paths, relative to absPath, of the ".sync-conflict-YYYYMMDD-HHMMSS-DEVICEI*"
+     * files found outside the top level ".stversions" directory. Symlinks are not followed.
+     * Stops early if the calling thread is interrupted.
      */
     public static String[] getSyncConflictFiles(final String absPath) {
-        StringBuilder cmdBuilder = new StringBuilder();
-        cmdBuilder.append("cd \"").append(absPath).append("/\";");
-        // Unescaped:
-        //  find -type f -name "*\.sync-conflict-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]*" -not -path "\.\/\.stversions\/*" -print | sed "s~\\.\/~~"
-        cmdBuilder.append("find -type f -name \"*\\.sync-conflict-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]-[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]*\" -not -path \"\\.\\/\\" + Constants.FOLDER_NAME_STVERSIONS + "\\/*\" -print | sed \"s~\\\\.\\/~~\"");
-        String command = cmdBuilder.toString();
-        // Log.v(TAG, "getSyncConflictFileCount: Exec [" + command + "]");
-        String output = runShellCommandGetOutput(command);
-        // Log.v(TAG, "getSyncConflictFileCount: Exec result [" + output + "]");
-        if (output == null || output.isEmpty()) {
-            return new String[]{};
+        List<String> conflictFiles = new ArrayList<>();
+        collectSyncConflictFiles(new File(absPath), "", conflictFiles);
+        return conflictFiles.toArray(new String[0]);
+    }
+
+    private static void collectSyncConflictFiles(File dir, String relativeDir, List<String> result) {
+        File[] entries = dir.listFiles();
+        if (entries == null) {
+            return;
         }
-        return output.split("\\n");
+        for (File entry : entries) {
+            if (Thread.currentThread().isInterrupted()) {
+                return;
+            }
+            String relativePath = relativeDir + entry.getName();
+            if (entry.isDirectory()) {
+                if (!relativePath.equals(Constants.FOLDER_NAME_STVERSIONS) && !isSymlink(entry)) {
+                    collectSyncConflictFiles(entry, relativePath + "/", result);
+                }
+            } else if (SYNC_CONFLICT_FILE_NAME.matcher(entry.getName()).matches()
+                    && entry.isFile() && !isSymlink(entry)) {
+                result.add(relativePath);
+            }
+        }
+    }
+
+    /**
+     * java.nio.file.Files.isSymbolicLink needs API 26, so compare the canonical path
+     * of the file with its path inside the canonical parent.
+     */
+    private static boolean isSymlink(File file) {
+        try {
+            File inCanonicalParent = new File(file.getParentFile().getCanonicalFile(), file.getName());
+            return !inCanonicalParent.getCanonicalFile().equals(inCanonicalParent.getAbsoluteFile());
+        } catch (IOException e) {
+            return true;
+        }
     }
 
     /**
