@@ -48,7 +48,8 @@ public class Options {
     public boolean crashReportingEnabled = true;
     public int stunKeepaliveStartS = 180;
     public int stunKeepaliveMinS = 20;
-    public String stunServer = "default";
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    public transient String stunServer = "default";
 
     // Since v1.4.0
     // See https://github.com/syncthing/syncthing/pull/6290
@@ -66,7 +67,8 @@ public class Options {
 
     // Since v1.12.0
     // See https://github.com/syncthing/syncthing/pull/7055
-    public String featureFlag = "";
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    public transient String featureFlag = "";
 
     // Since v1.13.0
     public int connectionLimitEnough = 0;
@@ -78,7 +80,8 @@ public class Options {
      * crAutoDisabled                  (crash reporting after upgrade to v1.2.0)
      * crAutoEnabled                   (crash reporting after upgrade to v1.2.0)
      */
-    public String unackedNotificationID = "";
+    // XML tag name, read and written by ConfigXml only. The JSON name differs, so Gson skips it.
+    public transient String unackedNotificationID = "";
 
     public static class MinHomeDiskFree {
         public float value = 1;

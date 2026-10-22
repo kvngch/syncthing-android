@@ -119,6 +119,8 @@ public class Constants {
     // from SystemClock.elapsedRealtime()
     public static final String PREF_LAST_RUN_TIME               = "last_run_time";
     public static final String PREF_APP_START_COUNTER           = "app_start_counter";
+    // Folder id to versioning cleanupIntervalS, as JSON, while the startup cleanup has them lowered.
+    public static final String PREF_VERSIONING_CLEANUP_RESTORE  = "versioning_cleanup_restore";
 
     /**
      * Cached device stats.

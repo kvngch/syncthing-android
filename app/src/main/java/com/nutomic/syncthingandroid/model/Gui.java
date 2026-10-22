@@ -27,7 +27,8 @@ public class Gui {
     // omitEmpty
     public boolean insecureAdminAccess = false;
     public boolean insecureAllowFrameLoading = false;
-    public boolean insecureSkipHostCheck = false;
+    // The JSON name is insecureSkipHostcheck, so Gson skips this field.
+    public transient boolean insecureSkipHostCheck = false;
 
     public String getBindAddress() {
         if (address == null) {

@@ -1019,7 +1019,7 @@ public class ConfigXml {
         gui.theme = getContentOrDefault(elementGui.getElementsByTagName("theme").item(0), gui.theme);
         gui.insecureAdminAccess = getContentOrDefault(elementGui.getElementsByTagName("insecureAdminAccess").item(0), gui.insecureAdminAccess);
         gui.insecureAllowFrameLoading = getContentOrDefault(elementGui.getElementsByTagName("insecureAllowFrameLoading").item(0), gui.insecureAllowFrameLoading);
-        gui.insecureSkipHostCheck = getContentOrDefault(elementGui.getElementsByTagName("insecureSkipHostCheck").item(0), gui.insecureSkipHostCheck);
+        gui.insecureSkipHostCheck = getContentOrDefault(elementGui.getElementsByTagName("insecureSkipHostcheck").item(0), gui.insecureSkipHostCheck);
         return gui;
     }
 
@@ -1040,7 +1040,7 @@ public class ConfigXml {
         setConfigElement(elementGui, "theme", gui.theme);
         setConfigElement(elementGui, "insecureAdminAccess", gui.insecureAdminAccess);
         setConfigElement(elementGui, "insecureAllowFrameLoading", gui.insecureAllowFrameLoading);
-        setConfigElement(elementGui, "insecureSkipHostCheck", gui.insecureSkipHostCheck);
+        setConfigElement(elementGui, "insecureSkipHostcheck", gui.insecureSkipHostCheck);
     }
 
     public Options getOptions() {

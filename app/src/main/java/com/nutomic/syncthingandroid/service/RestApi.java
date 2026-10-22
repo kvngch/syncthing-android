@@ -1,5 +1,6 @@
 package com.nutomic.syncthingandroid.service;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +9,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 
 import com.annimon.stream.Stream;
@@ -126,6 +128,12 @@ public class RestApi {
 
     private String mVersion;
     private Config mConfig;
+
+    /**
+     * Config as last received from Syncthing, including the fields the Java model does not know.
+     * {@link #sendConfig} merges {@link #mConfig} onto it. Guarded by {@link #mConfigLock}.
+     */
+    private JsonObject mRawConfig;
 
     /**
      * Results cached from systemInfo
@@ -253,8 +261,17 @@ public class RestApi {
         }
     }
 
+    // commit(), not apply(): the original intervals must be on disk before the lowered ones are sent.
+    @SuppressLint("ApplySharedPref")
     private void triggerVersioningCleanupIfNecessary() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+        // A previous run stopped before restoring the intervals it lowered: restore them now.
+        String pendingRestore = sharedPreferences.getString(Constants.PREF_VERSIONING_CLEANUP_RESTORE, null);
+        if (pendingRestore != null) {
+            restoreVersioningCleanupIntervals(sharedPreferences, pendingRestore);
+        }
+
         int startupCounter = sharedPreferences.getInt(Constants.PREF_APP_START_COUNTER, 0) + 1;
         startupCounter = (startupCounter == Integer.MAX_VALUE) ? 1 : startupCounter;
         sharedPreferences.edit()
@@ -267,18 +284,41 @@ public class RestApi {
         }
 
         // Temporarily lower cleanupIntervalS for every folder to force cleanup after startup.
-        setVersioningCleanupIntervalS(2);
+        // The current values are saved first, so they are restored even if we stop meanwhile.
+        Map<String, Integer> originalIntervals = new HashMap<>();
+        Map<String, Integer> loweredIntervals = new HashMap<>();
+        synchronized (mConfigLock) {
+            for (Folder folder : mConfig.folders) {
+                if (folder.versioning != null) {
+                    originalIntervals.put(folder.id, folder.versioning.cleanupIntervalS);
+                    loweredIntervals.put(folder.id, 2);
+                }
+            }
+        }
+        final String originalIntervalsJson = mGson.toJson(originalIntervals);
+        sharedPreferences.edit()
+            .putString(Constants.PREF_VERSIONING_CLEANUP_RESTORE, originalIntervalsJson)
+            .commit();
+        setVersioningCleanupIntervals(loweredIntervals);
         final Handler resetCleanupIntervalHandler = new Handler(Looper.getMainLooper());
         resetCleanupIntervalHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (hasShutdown) {
-                    LogV("Skipping setVersioningCleanupIntervalS(3600) due to hasShutdown == true");
+                    LogV("Versioning cleanup intervals will be restored at next start due to hasShutdown == true");
                     return;
                 }
-                setVersioningCleanupIntervalS(3600);
+                restoreVersioningCleanupIntervals(sharedPreferences, originalIntervalsJson);
             }
-        }, 10000); 
+        }, 10000);
+    }
+
+    private void restoreVersioningCleanupIntervals(SharedPreferences sharedPreferences, String intervalsJson) {
+        Map<String, Integer> intervals = mGson.fromJson(intervalsJson, new TypeToken<Map<String, Integer>>(){}.getType());
+        setVersioningCleanupIntervals(intervals);
+        sharedPreferences.edit()
+            .remove(Constants.PREF_VERSIONING_CLEANUP_RESTORE)
+            .apply();
     }
 
     public void reloadConfig() {
@@ -290,6 +330,7 @@ public class RestApi {
         synchronized(mConfigLock) {
             mConfig = mGson.fromJson(configResult, Config.class);
             configParseSuccess = mConfig != null;
+            mRawConfig = configParseSuccess ? JsonParser.parseString(configResult).getAsJsonObject() : null;
         }
         if (!configParseSuccess) {
             throw new RuntimeException("config is null: " + configResult);
@@ -600,13 +641,76 @@ public class RestApi {
     public void sendConfig() {
         String jsonConfig;
         synchronized (mConfigLock) {
-            jsonConfig = mGson.toJson(mConfig);
+            // POST /rest/system/config replaces the whole configuration, resetting any field
+            // absent from the body. Merging onto the config read from Syncthing keeps the fields
+            // the Java model does not know (ldap, stunServers, gui authMode, ...).
+            mRawConfig = mergeConfigJson(mRawConfig, mGson.toJsonTree(mConfig).getAsJsonObject());
+            jsonConfig = mRawConfig.toString();
         }
         // LogVMultipleLines("sendConfig: config=" + jsonToPrettyFormat(jsonConfig));
         new PostRequest(mContext, mUrl, PostRequest.URI_SYSTEM_CONFIG, mApiKey,
             null, jsonConfig, null);
         mUrl = getWebGuiUrl();
         mOnConfigChangedListener.onConfigChanged();
+    }
+
+    /**
+     * Returns {@code update} copied onto {@code base}, recursively: fields only present in base
+     * are kept. Arrays of objects identified by "id" or "deviceID" (folders, devices, shared
+     * devices, ignored entries) are merged element by element, in the order of {@code update};
+     * elements missing from update are dropped. Other arrays and values are taken from update.
+     */
+    static JsonObject mergeConfigJson(@Nullable JsonObject base, JsonObject update) {
+        return mergeJson(base, update).getAsJsonObject();
+    }
+
+    private static JsonElement mergeJson(@Nullable JsonElement base, JsonElement update) {
+        if (base != null && base.isJsonObject() && update.isJsonObject()) {
+            JsonObject merged = base.getAsJsonObject().deepCopy();
+            for (Map.Entry<String, JsonElement> entry : update.getAsJsonObject().entrySet()) {
+                merged.add(entry.getKey(), mergeJson(merged.get(entry.getKey()), entry.getValue()));
+            }
+            return merged;
+        }
+        if (base != null && base.isJsonArray() && update.isJsonArray()) {
+            String idKey = getArrayIdKey(update.getAsJsonArray());
+            if (idKey != null) {
+                Map<String, JsonElement> baseById = new HashMap<>();
+                for (JsonElement element : base.getAsJsonArray()) {
+                    if (element.isJsonObject() && element.getAsJsonObject().has(idKey)) {
+                        baseById.put(element.getAsJsonObject().get(idKey).getAsString(), element);
+                    }
+                }
+                JsonArray merged = new JsonArray();
+                for (JsonElement element : update.getAsJsonArray()) {
+                    String id = element.getAsJsonObject().get(idKey).getAsString();
+                    merged.add(mergeJson(baseById.get(id), element));
+                }
+                return merged;
+            }
+        }
+        return update;
+    }
+
+    /**
+     * Returns "id" or "deviceID" if every element of the array is an object carrying that key.
+     */
+    @Nullable
+    private static String getArrayIdKey(JsonArray array) {
+        for (String key : new String[]{"id", "deviceID"}) {
+            boolean allHaveKey = array.size() > 0;
+            for (JsonElement element : array) {
+                if (!element.isJsonObject() || !element.getAsJsonObject().has(key)
+                        || !element.getAsJsonObject().get(key).isJsonPrimitive()) {
+                    allHaveKey = false;
+                    break;
+                }
+            }
+            if (allHaveKey) {
+                return key;
+            }
+        }
+        return null;
     }
 
     /**
@@ -1485,15 +1589,21 @@ public class RestApi {
         }
     }
 
-    private void setVersioningCleanupIntervalS (Integer cleanupIntervalS) {
+    /**
+     * Sets the versioning cleanupIntervalS of the folders listed in intervals (by folder id),
+     * then sends the config. Folders no longer in the config are skipped.
+     */
+    private void setVersioningCleanupIntervals(Map<String, Integer> intervals) {
         synchronized (mConfigLock) {
             for (Folder folder : mConfig.folders) {
-                folder.versioning.cleanupIntervalS = cleanupIntervalS;
+                Integer interval = intervals.get(folder.id);
+                if (interval != null && folder.versioning != null) {
+                    folder.versioning.cleanupIntervalS = interval;
+                }
             }
-            LogV("Set VersioningCleanupIntervalS to " + cleanupIntervalS);
+            LogV("Set versioning cleanup intervals " + intervals);
             sendConfig();
         }
-        return;
     }
 
     private void onTotalSyncCompletionChange() {
