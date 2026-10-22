@@ -26,7 +26,6 @@ compose-ui = "1.11.3"
 constraintlayout = "2.2.2"
 core-ktx = "1.19.1"
 documentfile = "1.1.0"
-fragment-ktx = "1.9.1"
 gson = "2.14.0"
 guava = "33.7.1-android"
 jbcrypt = "0.4"
@@ -61,7 +60,6 @@ compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment-ktx" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 jbcrypt = { module = "org.mindrot:jbcrypt", version.ref = "jbcrypt" }
