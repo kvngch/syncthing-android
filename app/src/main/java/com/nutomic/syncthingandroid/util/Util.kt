@@ -298,7 +298,7 @@ object Util {
      * Backed by the Android OS trust store ("AndroidCAStore"), which aggregates both the system
      * CAs and the CAs the user installed. Built once, on first use.
      */
-    private val osTrustManager: X509TrustManager? by lazy {
+    private val cachedOsTrustManager: X509TrustManager? by lazy {
         try {
             val caStore = KeyStore.getInstance("AndroidCAStore").apply { load(null) }
             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
@@ -324,5 +324,5 @@ object Util {
      * @return the OS-backed trust manager, or null if it could not be built.
      */
     @JvmStatic
-    fun getOsTrustManager(): X509TrustManager? = osTrustManager
+    fun getOsTrustManager(): X509TrustManager? = cachedOsTrustManager
 }
