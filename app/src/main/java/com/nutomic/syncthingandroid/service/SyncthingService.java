@@ -286,6 +286,15 @@ public class SyncthingService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand");
+        /**
+         * A service started by startForegroundService() must call startForeground() before it
+         * stops, or Android kills the app. updatePersistentNotification() does it on Android 8+,
+         * so it comes before any early return below.
+         */
+        mNotificationHandler.updatePersistentNotification(this);
+
+        // The permission can be revoked or granted while the service lives.
+        mStoragePermissionGranted = PermissionUtil.haveStoragePermission(this);
         if (!mStoragePermissionGranted) {
             Log.e(TAG, "User revoked storage permission. Stopping service.");
             if (mNotificationHandler != null) {
