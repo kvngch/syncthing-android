@@ -1,7 +1,9 @@
 package com.nutomic.syncthingandroid.settings
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.os.Build
+import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.material3.AlertDialog
@@ -34,9 +36,7 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.LocalActivityScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -50,7 +50,6 @@ import me.zhanghai.compose.preference.TextFieldPreference
 import me.zhanghai.compose.preference.rememberPreferenceState
 import org.mindrot.jbcrypt.BCrypt
 import java.io.File
-import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "SettingsSyncthingOptionsScreen"
 
@@ -84,9 +83,12 @@ private object Keys {
 
 private const val BIND_ALL = "0.0.0.0"
 private const val BIND_LOCALHOST = "127.0.0.1"
+private val LOCAL_BIND_ADDRESSES = setOf(BIND_LOCALHOST, "localhost", "[::1]")
+
+// Cost used by Syncthing itself for the GUI password hash.
+private const val BCRYPT_COST = 10
 
 
-@OptIn(FlowPreview::class)
 @Composable
 fun SettingsSyncthingOptionsScreen() {
     val context = LocalContext.current
@@ -108,11 +110,23 @@ fun SettingsSyncthingOptionsScreen() {
     LaunchedEffect(stService?.api, isStServiceActive) {
         val currentApi = stService?.api
         if (currentApi != null && isStServiceActive) {
-            apiPrefFlow.value = currentApi.preferences
+            var applied = currentApi.preferences
+            apiPrefFlow.value = applied
             apiPrefFlow
                 .drop(1)
-                .debounce(0.5.seconds)
-                .collect { currentApi.preferences = it }
+                .collect { prefs ->
+                    val previous = applied
+                    applied = prefs
+                    // Applied at once: a delayed write was lost when leaving the screen meanwhile.
+                    // Off the main thread, bcrypt hashing of the GUI password takes a while.
+                    val passwordChanged = withContext(Dispatchers.IO) {
+                        currentApi.applyChangedPreferences(previous, prefs)
+                    }
+                    if (passwordChanged) {
+                        // WebGuiActivity authenticates with this copy: update it once the config has the new hash.
+                        sharedPrefWebGuiPassword.value = prefs.asMap()[Keys.WEB_GUI_PASSWORD] as String
+                    }
+                }
         }
     }
 
@@ -167,7 +181,14 @@ fun SettingsSyncthingOptionsScreen() {
                         password()
                     },
                     onClick = {
-                        val clipData = ClipData.newPlainText(apiKeyTitle, apiKey).toClipEntry()
+                        val clipData = ClipData.newPlainText(apiKeyTitle, apiKey).apply {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                // Kept out of the clipboard preview and the keyboard history.
+                                description.extras = PersistableBundle().apply {
+                                    putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+                                }
+                            }
+                        }.toClipEntry()
                         scope.launch {
                             clipboard.setClipEntry(clipData)
                             // Android 13+ shows a system confirmation automatically
@@ -315,7 +336,8 @@ fun SettingsSyncthingOptionsScreen() {
                     title = { Text(stringResource(R.string.webui_username_title)) },
                     summary = { Text(webGuiUsername.value) },
                     state = webGuiUsername,
-                    textToValue = { it },
+                    // An empty user name turns the GUI authentication off: refuse it.
+                    textToValue = { it.ifEmpty { null } },
                     enabled = isStServiceActive,
                 )
             }
@@ -325,9 +347,10 @@ fun SettingsSyncthingOptionsScreen() {
                     value = webGuiPassword.value,
                     onValueChange = {
                         webGuiPassword.value = it
-                        sharedPrefWebGuiPassword.value = it
                     },
-                    textToValue = { it },
+                    // An empty password still gives a valid hash: refuse it.
+                    textToValue = { it.ifEmpty { null } },
+                    textField = PasswordTextField,
                     enabled = isStServiceActive,
                 )
             }
@@ -535,7 +558,7 @@ private enum class SupportBundleDownloadState {
     INIT, DOWNLOADING, SUCCESS, FAILED
 }
 
-private var RestApi.preferences: Preferences
+private val RestApi.preferences: Preferences
     get() {
         if (!this.isConfigLoaded) return MapPreferences()
 
@@ -558,7 +581,7 @@ private var RestApi.preferences: Preferences
 
         this.gui?.let { gui ->
             values[Keys.WEB_GUI_PORT] = gui.bindPort.toIntOrNull() ?: Constants.DEFAULT_WEBGUI_TCP_PORT
-            values[Keys.WEB_GUI_REMOTE_ACCESS] = gui.bindAddress != BIND_LOCALHOST
+            values[Keys.WEB_GUI_REMOTE_ACCESS] = gui.bindAddress !in LOCAL_BIND_ADDRESSES
             values[Keys.WEB_GUI_USERNAME] = gui.user
             // use password saved in shared preference only
             // values[Keys.WEB_GUI_PASSWORD] = gui.password
@@ -566,71 +589,86 @@ private var RestApi.preferences: Preferences
 
         return MapPreferences(values)
     }
-    set(value) {
-        val splitter = Splitter.on(",").trimResults().omitEmptyStrings()
-        val valueMap = value.asMap()
 
-        // update calls that change internal state of RestApi
-        valueMap[Keys.USAGE_REPORTING]?.let { this.setUsageReporting(it as Boolean) }
+/**
+ * Sends to Syncthing the preferences that differ between old and new, and only those: an option
+ * not touched on this screen may have been changed in the web UI meanwhile. Returns true if the
+ * GUI password changed.
+ */
+private fun RestApi.applyChangedPreferences(old: Preferences, new: Preferences): Boolean {
+    val splitter = Splitter.on(",").trimResults().omitEmptyStrings()
+    val oldMap = old.asMap()
+    val valueMap = new.asMap()
+    val changed = valueMap.filter { (key, value) -> oldMap[key] != value }
+    if (changed.isEmpty()) {
+        return false
+    }
 
-        // assignments to options and gui
-        val options = this.options
-        val gui = this.gui
-        for ((key, mapValue) in valueMap) {
-            when (key) {
-                Keys.LISTEN_ADDRESSES -> {
-                    val addresses = splitter.splitToList(mapValue as String)
-                    options.listenAddresses = addresses.toTypedArray()
-                }
-                Keys.INCOMING_RATE_LIMIT -> {
-                    options.maxRecvKbps = mapValue as Int
-                }
-                Keys.OUTGOING_RATE_LIMIT -> {
-                    options.maxSendKbps = mapValue as Int
-                }
-                Keys.NAT_TRAVERSAL -> {
-                    options.natEnabled = mapValue as Boolean
-                }
-                Keys.LOCAL_DISCOVERY -> {
-                    options.localAnnounceEnabled = mapValue as Boolean
-                }
-                Keys.GLOBAL_DISCOVERY -> {
-                    options.globalAnnounceEnabled = mapValue as Boolean
-                }
-                Keys.RELAYING -> {
-                    options.relaysEnabled = mapValue as Boolean
-                }
-                Keys.GLOBAL_SERVERS -> {
-                    val servers = splitter.splitToList(mapValue as String)
-                    options.globalAnnounceServers = servers.toTypedArray()
-                }
-                Keys.CRASH_REPORTING -> {
-                    options.crashReportingEnabled = mapValue as Boolean
-                }
-                Keys.WEB_GUI_REMOTE_ACCESS -> {
-                    val address = if (mapValue as Boolean) BIND_ALL else BIND_LOCALHOST
-                    val port = (valueMap[Keys.WEB_GUI_PORT] as Int?) ?: Constants.DEFAULT_WEBGUI_TCP_PORT
-                    gui.address = "$address:$port"
-                }
-                Keys.WEB_GUI_PORT -> {/* Ignore here, handled in WEB_GUI_REMOTE_ACCESS */}
-                Keys.WEB_GUI_USERNAME -> {
-                    gui.user = mapValue as String
-                }
-                Keys.WEB_GUI_PASSWORD -> {
-                    val hashed = BCrypt.hashpw(mapValue as String, BCrypt.gensalt(4))
-                    gui.password = hashed
-                }
+    // update calls that change internal state of RestApi
+    changed[Keys.USAGE_REPORTING]?.let { this.setUsageReporting(it as Boolean) }
+
+    // assignments to options and gui
+    val options = this.options
+    val gui = this.gui
+    for ((key, mapValue) in changed) {
+        when (key) {
+            Keys.LISTEN_ADDRESSES -> {
+                val addresses = splitter.splitToList(mapValue as String)
+                options.listenAddresses = addresses.toTypedArray()
+            }
+            Keys.INCOMING_RATE_LIMIT -> {
+                options.maxRecvKbps = mapValue as Int
+            }
+            Keys.OUTGOING_RATE_LIMIT -> {
+                options.maxSendKbps = mapValue as Int
+            }
+            Keys.NAT_TRAVERSAL -> {
+                options.natEnabled = mapValue as Boolean
+            }
+            Keys.LOCAL_DISCOVERY -> {
+                options.localAnnounceEnabled = mapValue as Boolean
+            }
+            Keys.GLOBAL_DISCOVERY -> {
+                options.globalAnnounceEnabled = mapValue as Boolean
+            }
+            Keys.RELAYING -> {
+                options.relaysEnabled = mapValue as Boolean
+            }
+            Keys.GLOBAL_SERVERS -> {
+                val servers = splitter.splitToList(mapValue as String)
+                options.globalAnnounceServers = servers.toTypedArray()
+            }
+            Keys.CRASH_REPORTING -> {
+                options.crashReportingEnabled = mapValue as Boolean
+            }
+            Keys.WEB_GUI_REMOTE_ACCESS, Keys.WEB_GUI_PORT -> {/* Handled together below */}
+            Keys.WEB_GUI_USERNAME -> {
+                gui.user = mapValue as String
+            }
+            Keys.WEB_GUI_PASSWORD -> {
+                gui.password = BCrypt.hashpw(mapValue as String, BCrypt.gensalt(BCRYPT_COST))
             }
         }
-        // does not call sendConfig
-        this.editSettings(gui, options)
-
-        val localDevice = this.localDevice
-        val deviceName = valueMap[Keys.DEVICE_NAME] as String? ?: localDevice.name
-        localDevice.name = deviceName
-        // this calls the sendConfig method
-        this.updateDevice(localDevice)
     }
+    if (Keys.WEB_GUI_REMOTE_ACCESS in changed || Keys.WEB_GUI_PORT in changed) {
+        val port = (valueMap[Keys.WEB_GUI_PORT] as Int?) ?: Constants.DEFAULT_WEBGUI_TCP_PORT
+        // Keep a host set elsewhere (LAN address, localhost, IPv6) unless the switch was moved.
+        val host = if (Keys.WEB_GUI_REMOTE_ACCESS in changed) {
+            if (valueMap[Keys.WEB_GUI_REMOTE_ACCESS] as Boolean) BIND_ALL else BIND_LOCALHOST
+        } else {
+            gui.bindAddress
+        }
+        gui.address = "$host:$port"
+    }
+    // does not call sendConfig
+    this.editSettings(gui, options)
+
+    val localDevice = this.localDevice
+    changed[Keys.DEVICE_NAME]?.let { localDevice.name = it as String }
+    // this calls the sendConfig method
+    this.updateDevice(localDevice)
+    return Keys.WEB_GUI_PASSWORD in changed
+}
 
 private fun clearStVersions(folders: List<Folder>): Boolean {
     for (folder in folders) {
