@@ -41,7 +41,7 @@ class ConfigRouter(context: Context) {
         restApi.runWhenConfigLoaded { restApi.toApi() }
     }
 
-    fun getFolders(restApi: RestApi?): List<Folder> = read(restApi, { folders }, { folders })
+    fun getFolders(restApi: RestApi?): List<Folder> = read(restApi, { getFolders() }, { folders })
 
     fun addFolder(restApi: RestApi?, folder: Folder) = write(restApi, { addFolder(folder) }, { addFolder(folder) })
 
@@ -72,7 +72,7 @@ class ConfigRouter(context: Context) {
      * Gets ignore list for given folder.
      */
     fun getFolderIgnoreList(restApi: RestApi?, folder: Folder, listener: (FolderIgnoreList) -> Unit) =
-        read(restApi, { getFolderIgnoreList(folder) { listener(it) } }, { getFolderIgnoreList(folder.id) { listener(it) } })
+        read(restApi, { listener(getFolderIgnoreList(folder)) }, { getFolderIgnoreList(folder.id) { listener(it) } })
 
     /**
      * Stores ignore list for given folder. The .stignore file is not part of config.xml.
@@ -103,11 +103,11 @@ class ConfigRouter(context: Context) {
         restApi.runWhenConfigLoaded { restApi.ignoreDevice(deviceID, deviceName, deviceAddress) }
     }
 
-    fun getGui(restApi: RestApi?): Gui = read(restApi, { gui }, { gui })
+    fun getGui(restApi: RestApi?): Gui = read(restApi, { getGui() }, { gui })
 
     fun updateGui(restApi: RestApi?, gui: Gui) = write(restApi, { updateGui(gui) }, { updateGui(gui) })
 
-    fun getOptions(restApi: RestApi?): Options = read(restApi, { options }, { options })
+    fun getOptions(restApi: RestApi?): Options = read(restApi, { getOptions() }, { options })
 
     private companion object {
         const val TAG = "ConfigRouter"
