@@ -149,6 +149,7 @@
     <string name="remove_device_confirm">Voulez-vous vraiment enlever cet appareil ?</string>
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_required">L\'ID d\'appareil ne peut pas être vide</string>
+    <string name="device_id_exists">Un appareil avec cet identifiant existe déjà.</string>
     <!-- Content description for device ID qr code icon -->
     <string name="scan_qr_code_description">Scanner un QR Code</string>
     <!-- WebGuiActivity -->

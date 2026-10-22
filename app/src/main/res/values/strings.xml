@@ -391,6 +391,7 @@
 
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_required">The device ID must not be empty</string>
+    <string name="device_id_exists">A device with this ID already exists.</string>
 
     <!-- Toast shown when trying to create a device with an empty ID -->
     <string name="device_id_invalid">The device ID is not formatted correctly. Please retry and enter the correct ID.</string>
