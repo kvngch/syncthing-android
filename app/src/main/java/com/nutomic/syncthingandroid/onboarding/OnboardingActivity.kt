@@ -133,11 +133,12 @@ class OnboardingActivity : ThemedAppCompatActivity() {
         }
     }
 
+    // Android 12+ ignores a fine location request made without coarse location: ask both.
     private val fineLocationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
         refreshPermissionState()
-        if (!isGranted) {
+        if (results[Manifest.permission.ACCESS_FINE_LOCATION] != true) {
             Log.i(TAG, "User denied ACCESS_FINE_LOCATION permission.")
             return@registerForActivityResult
         }
@@ -410,9 +411,15 @@ class OnboardingActivity : ThemedAppCompatActivity() {
     }
 
     private fun haveLocationPermission(): Boolean {
+        // Reading the Wi-Fi SSID needs fine location on Android 10+, coarse below.
+        val ssidPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Manifest.permission.ACCESS_FINE_LOCATION
+        } else {
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        }
         val coarseLocationGranted = ContextCompat.checkSelfPermission(
             this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            ssidPermission
         ) == PackageManager.PERMISSION_GRANTED
 
         val backgroundLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -448,12 +455,18 @@ class OnboardingActivity : ThemedAppCompatActivity() {
     private fun requestLocationPermission() {
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                fineLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                fineLocationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    )
+                )
             }
             Build.VERSION.SDK_INT == Build.VERSION_CODES.Q -> {
                 androidQLocationPermissionLauncher.launch(
                     arrayOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                     )
                 )
