@@ -38,7 +38,6 @@ dependencies {
     implementation(libs.preference.ktx)
     implementation(libs.recyclerview)
     implementation(libs.stream)
-    implementation(libs.volley)
     implementation(libs.zhanghai.compose.preference)
     implementation(libs.zxing.core)
     ksp(libs.dagger.compiler)

@@ -86,9 +86,9 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
      * This polls on an interval rather than holding a long-poll open (which is how the web GUI stays
      * live). Two things make a subscription impractical here: `RestApi.getDiskEvents` has no `since`
      * parameter, so a loop would re-fetch the same buffered events and spin as fast as the server
-     * could answer; and Volley's `DefaultRetryPolicy` uses a 5s socket timeout, so it abandons and
-     * retries a blocked long-poll several times per call — the server explicitly notes such requests
-     * "should not be retried". Short `timeout=1` queries on a timer are far more predictable.
+     * could answer; and `ApiRequest` uses a 5s socket timeout, so it abandons and retries a blocked
+     * long-poll several times per call — the server explicitly notes such requests "should not be
+     * retried". Short `timeout=1` queries on a timer are far more predictable.
      *
      * `repeatOnLifecycle(STARTED)` stops polling when the screen is not visible.
      */
@@ -195,29 +195,30 @@ private val REQUEST_TIMEOUT = 30.seconds
  * ### Why the continuation is held behind an [AtomicReference]
  *
  * Cancelling this coroutine (e.g. the user presses back, destroying the Activity and its
- * `lifecycleScope`) does **not** cancel the underlying HTTP request. `ApiRequest.connect` adds the
- * request to a `static` Volley queue and keeps no handle to it, and `getDiskEvents` returns nothing
- * we could cancel with. The request therefore runs to completion and its result is discarded.
+ * `lifecycleScope`) does **not** cancel the underlying HTTP request. `ApiRequest.connect` launches
+ * the request in a process-wide scope and keeps no handle to it, and `getDiskEvents` returns
+ * nothing we could cancel with. The request therefore runs to completion and its result is
+ * discarded.
  *
- * That matters because Volley keeps the success listener alive until the request finishes, and a
+ * That matters because the request keeps the success listener alive until it finishes, and a
  * listener capturing the continuation directly would retain this chain:
  *
  * ```
- * static sVolleyQueue -> StringRequest -> listener -> continuation -> coroutine
+ * ApiRequest scope -> request coroutine -> listener -> continuation -> coroutine
  *     -> lifecycleScope -> Activity (and its whole Compose tree)
  * ```
  *
- * With `DefaultRetryPolicy(5000, 5, DEFAULT_BACKOFF_MULT)` that is up to ~30s (5s × 6 attempts) of a
- * destroyed Activity being unreachable-but-retained. Clearing the reference on cancellation breaks
- * the chain immediately, so the Activity is collectable as soon as it is destroyed. The `getAndSet`
- * also guarantees the continuation is resumed at most once, whichever thread delivers first.
+ * A timeout is tried again with twice the time, from 5s and up to five times, so a slow request
+ * can keep a destroyed Activity unreachable-but-retained for a long time. Clearing the reference on
+ * cancellation breaks the chain immediately, so the Activity is collectable as soon as it is
+ * destroyed. The `getAndSet` also guarantees the continuation is resumed at most once, whichever
+ * thread delivers first.
  *
  * **This only fixes the retention, not the wasted work.** Genuinely aborting the request would mean
- * plumbing a Volley request tag through `ApiRequest`/`GetRequest`/`RestApi` so the queue could
- * `cancelAll(tag)` — shared code used by every screen — and even then Volley's cancel only suppresses
- * *delivery*, it does not abort an in-flight socket. Since this is a loopback call to the local
- * Syncthing process it normally returns in milliseconds, so that was judged not worth the blast
- * radius. Revisit if these requests ever go off-device.
+ * returning a handle through `ApiRequest`/`GetRequest`/`RestApi`, shared code used by every screen.
+ * Since this is a loopback call to the local Syncthing process it normally returns in
+ * milliseconds, so that was judged not worth the blast radius. Revisit if these requests ever go
+ * off-device.
  */
 private suspend fun RestApi.awaitDiskEvents(limit: Int): List<DiskEvent>? =
     withTimeoutOrNull(REQUEST_TIMEOUT) {
