@@ -36,7 +36,6 @@ public class SegmentedButton extends LinearLayout {
     private StateListDrawable mBgCenterOff;
     private int mSelectedButtonIndex = 0;
 
-    private List<String> mButtonTitles = new ArrayList<String>();
     private int mColorOnStart;
     private int mColorOnEnd;
     private int mColorOffStart;
@@ -61,15 +60,6 @@ public class SegmentedButton extends LinearLayout {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.SegmentedButton, 0, 0);
 
-        CharSequence btnText1 = a.getString(R.styleable.SegmentedButton_btnText1);
-        CharSequence btnText2 = a.getString(R.styleable.SegmentedButton_btnText2);
-        if (btnText1 != null) {
-            mButtonTitles.add(btnText1.toString());
-        }
-        if (btnText2 != null) {
-            mButtonTitles.add(btnText2.toString());
-        }
-
         mColorOnStart = a.getColor(R.styleable.SegmentedButton_gradientColorOnStart, 0xFF0000);
         mColorOnEnd = a.getColor(R.styleable.SegmentedButton_gradientColorOnEnd, 0xFF0000);
         mColorOffStart = a.getColor(R.styleable.SegmentedButton_gradientColorOffStart, 0xFF0000);
@@ -89,10 +79,6 @@ public class SegmentedButton extends LinearLayout {
         buildDrawables(mColorOnStart, mColorOnEnd, mColorOffStart, mColorOffEnd,
                 mColorSelectedStart, mColorSelectedEnd, mCornerRadius, mColorStroke,
                 mStrokeWidth);
-
-        if (mButtonTitles.size() > 0) {
-            _addButtons(new String[mButtonTitles.size()]);
-        }
     }
 
     public void clearButtons() {

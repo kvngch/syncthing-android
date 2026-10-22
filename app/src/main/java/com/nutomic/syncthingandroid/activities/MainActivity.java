@@ -207,9 +207,6 @@ public class MainActivity extends SyncthingActivity
         ((SyncthingApp) getApplication()).component().inject(this);
         mConfig = new ConfigRouter(MainActivity.this);
         ENABLE_VERBOSE_LOG = AppPrefs.getPrefVerboseLog(mPreferences);
-        if (ENABLE_VERBOSE_LOG) {
-            Util.testPathEllipsis();
-        }
 
         setContentView(R.layout.activity_main);
         mDrawerLayout = findViewById(R.id.drawer_layout);

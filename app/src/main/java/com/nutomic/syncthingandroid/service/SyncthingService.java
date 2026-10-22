@@ -337,13 +337,8 @@ public class SyncthingService extends Service {
                  */
                 mCurrentState = State.ERROR;
                 shutdown(State.DISABLED);
-            } else {
-                // Graceful shutdown.
-                if (mCurrentState == State.STARTING ||
-                        mCurrentState == State.ACTIVE) {
-                    shutdown(State.DISABLED);
-                }
             }
+            // SyncthingRunnable, the only sender of ACTION_STOP, always sets the extra above.
         } else if (ACTION_RESET_DATABASE.equals(intent.getAction())) {
             /**
              * 1. Stop syncthing native if it's running.

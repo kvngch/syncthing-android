@@ -95,7 +95,6 @@ public class RunConditionMonitor {
     }
 
     private final Context mContext;
-    private ReceiverManager mReceiverManager;
     private @Nullable SyncTriggerReceiver mSyncTriggerReceiver = null;
     private @Nullable UpdateShouldRunDecisionReceiver mUpdateShouldRunDecisionReceiver = null;
     private Resources res;
@@ -238,7 +237,7 @@ public class RunConditionMonitor {
             localBroadcastManager.unregisterReceiver(mUpdateShouldRunDecisionReceiver);
             mUpdateShouldRunDecisionReceiver = null;
         }
-        mReceiverManager.unregisterAllReceivers(mContext);
+        ReceiverManager.unregisterAllReceivers(mContext);
         mPowerChangeHandler.removeCallbacks(mUpdateShouldRunDecisionRunnable);
     }
 

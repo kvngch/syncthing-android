@@ -1,5 +1,6 @@
 package com.nutomic.syncthingandroid.views;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.appcompat.widget.AppCompatEditText;
 import android.util.AttributeSet;
@@ -32,14 +33,14 @@ public class EnhancedEditText extends AppCompatEditText {
         super(context, attrs, defStyleAttr);
     }
 
+    // super.onTouchEvent performs the click on ACTION_UP; lint cannot see it through the super call.
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (!isEnabled()) {
             return false;
         }
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            super.performClick();
-        }
+        // super.onTouchEvent calls performClick on ACTION_UP: calling it here too clicked twice.
         return super.onTouchEvent(event);
     }
 
