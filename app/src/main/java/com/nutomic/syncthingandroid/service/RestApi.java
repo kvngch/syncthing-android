@@ -22,6 +22,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.nutomic.syncthingandroid.SyncthingApp;
 import com.nutomic.syncthingandroid.activities.ShareActivity;
@@ -431,7 +432,11 @@ public class RestApi {
                     Device matchingDevice = Stream.of(getDevices(false))
                             .filter(d -> d.deviceID.equals(offeredByDeviceId))
                             .findFirst()
-                            .get();
+                            .orElse(null);
+                    if (matchingDevice == null) {
+                        // The offering device was removed from the config meanwhile.
+                        continue;
+                    }
                     Boolean isNewFolder = Stream.of(getFolders())
                             .noneMatch(f -> f.id.equals(resultFolderId));
                     mNotificationHandler.showFolderShareNotification(
@@ -664,7 +669,11 @@ public class RestApi {
         }
         // LogVMultipleLines("sendConfig: config=" + jsonToPrettyFormat(jsonConfig));
         new PostRequest(mContext, mUrl, PostRequest.URI_SYSTEM_CONFIG, mApiKey,
-            null, jsonConfig, null);
+            null, jsonConfig, null, error -> {
+                // Syncthing rejected the config, e.g. a duplicate folder id: resync the model with it.
+                Log.e(TAG, "sendConfig: Syncthing rejected the config, reloading it", error);
+                reloadConfig();
+            });
         mUrl = getWebGuiUrl();
         mOnConfigChangedListener.onConfigChanged();
     }
@@ -960,6 +969,20 @@ public class RestApi {
         action.run();
     }
 
+    /**
+     * Parses a REST response, or returns null (logged) when Syncthing sent something unexpected,
+     * e.g. while restarting. Callers then drop the result, as they do on a failed request.
+     */
+    @Nullable
+    private <T> T parseOrNull(String json, Type type, String caller) {
+        try {
+            return mGson.fromJson(json, type);
+        } catch (JsonParseException e) {
+            Log.w(TAG, caller + ": Failed to parse the response", e);
+            return null;
+        }
+    }
+
     public boolean isConfigLoaded() {
         synchronized(mConfigLock) {
             return mConfig != null;
@@ -972,7 +995,10 @@ public class RestApi {
     public void getDiscoveredDevices(OnResultListener1<Map<String, DiscoveredDevice>> listener) {
         new GetRequest(mContext, mUrl, GetRequest.URI_SYSTEM_DISCOVERY, mApiKey,
                 null, result -> {
-            Map<String, DiscoveredDevice> discoveredDevices = mGson.fromJson(result, new TypeToken<Map<String, DiscoveredDevice>>(){}.getType());
+            Map<String, DiscoveredDevice> discoveredDevices = parseOrNull(result, new TypeToken<Map<String, DiscoveredDevice>>(){}.getType(), "getDiscoveredDevices");
+            if (discoveredDevices == null) {
+                return;
+            }
             if (ENABLE_TEST_DATA) {
                 DiscoveredDevice fakeDiscoveredDevice = new DiscoveredDevice();
                 fakeDiscoveredDevice.addresses = new String[]{"tcp4://192.168.178.10:40004"};
@@ -989,7 +1015,10 @@ public class RestApi {
     public void getFolderIgnoreList(String folderId, OnResultListener1<FolderIgnoreList> listener) {
         new GetRequest(mContext, mUrl, GetRequest.URI_DB_IGNORES, mApiKey,
                 ImmutableMap.of("folder", folderId), result -> {
-            FolderIgnoreList folderIgnoreList = mGson.fromJson(result, FolderIgnoreList.class);
+            FolderIgnoreList folderIgnoreList = parseOrNull(result, FolderIgnoreList.class, "getFolderIgnoreList");
+            if (folderIgnoreList == null) {
+                return;
+            }
             listener.onResult(folderIgnoreList);
         }, error -> {});
     }
@@ -1009,7 +1038,10 @@ public class RestApi {
      */
     public void getSystemVersion(OnResultListener1<SystemVersion> listener) {
         new GetRequest(mContext, mUrl, GetRequest.URI_VERSION, mApiKey, null, result -> {
-            SystemVersion systemVersion = mGson.fromJson(result, SystemVersion.class);
+            SystemVersion systemVersion = parseOrNull(result, SystemVersion.class, "getSystemVersion");
+            if (systemVersion == null) {
+                return;
+            }
             listener.onResult(systemVersion);
         }, error -> {});
     }
@@ -1034,7 +1066,10 @@ public class RestApi {
                      * We got connection status information for ALL devices instead of one.
                      * It does not hurt storing all of them.
                      */
-                    Connections connections = mGson.fromJson(result, Connections.class);
+                    Connections connections = parseOrNull(result, Connections.class, "getRemoteDeviceStatus");
+                    if (connections == null || connections.connections == null) {
+                        return;
+                    }
                     calculateConnectionStats(connections);
                     for (Map.Entry<String, Connection> e : connections.connections.entrySet()) {
                         mRemoteCompletion.setDeviceStatus(
@@ -1212,7 +1247,15 @@ public class RestApi {
         Map<String, String> params =
                 ImmutableMap.of("since", String.valueOf(sinceId), "limit", String.valueOf(limit));
         new GetRequest(mContext, mUrl, GetRequest.URI_EVENTS, mApiKey, params, result -> {
-            JsonArray jsonEvents = new JsonParser().parse(result).getAsJsonArray();
+            JsonArray jsonEvents;
+            try {
+                jsonEvents = JsonParser.parseString(result).getAsJsonArray();
+            } catch (JsonParseException | IllegalStateException e) {
+                // Same as a failed request: the event processor schedules the next poll.
+                Log.w(TAG, "getEvents: Failed to parse the response", e);
+                listener.onError();
+                return;
+            }
             long lastId = 0;
 
             for (int i = 0; i < jsonEvents.size(); i++) {

@@ -229,6 +229,7 @@ public class EventProcessor implements  Runnable, RestApi.OnReceiveEventListener
                 );
                 break;
                 */
+                break;
             case "RemoteIndexUpdated":
                 onRemoteIndexUpdated(
                         (String) event.data.get("device"),         // deviceId
@@ -306,14 +307,15 @@ public class EventProcessor implements  Runnable, RestApi.OnReceiveEventListener
     }
 
     private void onPendingFoldersChanged(Map<String, Object> added) {
-        String deviceId = added.get("deviceID").toString();
-        String folderId = added.get("folderID").toString();
-        String folderLabel = added.get("folderLabel").toString();
-        Boolean receiveEncrypted = (Boolean) added.get("receiveEncrypted");
-        Boolean remoteEncrypted = (Boolean) added.get("remoteEncrypted");
-        if (deviceId == null || folderId == null) {
+        if (added.get("deviceID") == null || added.get("folderID") == null) {
             return;
         }
+        String deviceId = added.get("deviceID").toString();
+        String folderId = added.get("folderID").toString();
+        Object folderLabelValue = added.get("folderLabel");
+        String folderLabel = (folderLabelValue == null) ? "" : folderLabelValue.toString();
+        Boolean receiveEncrypted = (Boolean) added.get("receiveEncrypted");
+        Boolean remoteEncrypted = (Boolean) added.get("remoteEncrypted");
         Log.d(TAG, "Device '" + deviceId + "' wants to share folder '" +
             folderLabel + "' (" + folderId + ")");
         // Find the deviceName corresponding to the deviceId.
