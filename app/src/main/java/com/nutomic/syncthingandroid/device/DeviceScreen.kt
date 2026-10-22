@@ -207,8 +207,9 @@ fun DeviceScreen(
                     modifier = Modifier.clickable(onClick = onAddFolder),
                 )
                 else -> folders.forEach { folder ->
-                    FolderShareItem(folder, form.shares[folder.id]) { share ->
-                        onEdit { it.copy(shares = it.shares + (folder.id to share)) }
+                    val id = folder.id.orEmpty()
+                    FolderShareItem(folder, form.shares[id]) { share ->
+                        onEdit { it.copy(shares = it.shares + (id to share)) }
                     }
                 }
             }

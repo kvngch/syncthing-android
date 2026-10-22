@@ -254,7 +254,7 @@ class FolderActivity : SyncthingActivity() {
             return
         }
         val folder = form.folder
-        folder.label = folder.label?.trim()
+        folder.label = folder.label.trim()
         val error = when {
             folder.id.isNullOrEmpty() -> R.string.folder_id_required
             folder.label.isNullOrEmpty() -> R.string.folder_label_required

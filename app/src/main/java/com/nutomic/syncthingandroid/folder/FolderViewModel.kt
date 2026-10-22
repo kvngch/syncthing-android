@@ -144,7 +144,7 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
         _saving.value = true
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                preCreateFolderStruct(form.folderUri, form.folder.path)
+                preCreateFolderStruct(form.folderUri, form.folder.path.orEmpty())
                 ConfigRouter(app).addFolder(api, form.folder)
             }
             LocalBroadcastManager.getInstance(app).sendBroadcast(

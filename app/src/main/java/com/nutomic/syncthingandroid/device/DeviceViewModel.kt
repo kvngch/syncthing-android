@@ -101,10 +101,11 @@ class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
             _form.update { form ->
                 form?.copy(
                     shares = folders.associate { folder ->
-                        val share = form.shares[folder.id] ?: folder.getDevice(form.device.deviceID).let {
+                        val id = folder.id.orEmpty()
+                        val share = form.shares[id] ?: folder.getDevice(form.device.deviceID).let {
                             FolderShare(shared = it != null, password = it?.encryptionPassword.orEmpty())
                         }
-                        folder.id to share
+                        id to share
                     }
                 )
             }
