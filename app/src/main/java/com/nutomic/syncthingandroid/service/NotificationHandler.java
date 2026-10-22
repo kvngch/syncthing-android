@@ -71,7 +71,7 @@ public class NotificationHandler {
             mPersistentChannelWaiting.enableVibration(false);
             mPersistentChannelWaiting.setSound(null, null);
             mPersistentChannelWaiting.setShowBadge(false);
-            mPersistentChannel.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
+            mPersistentChannelWaiting.setLockscreenVisibility(NotificationCompat.VISIBILITY_SECRET);
             mNotificationManager.createNotificationChannel(mPersistentChannelWaiting);
 
             mInfoChannel = new NotificationChannel(
@@ -264,7 +264,8 @@ public class NotificationHandler {
      * by {@link EventProcessor}.
      */
     public int getNotificationIdFromText(String text) {
-        return 1000 + text.hashCode() % 1000;
+        // Non-negative modulo: a negative hashCode must not land on the fixed ids below 1000.
+        return 1000 + ((text.hashCode() % 1000) + 1000) % 1000;
     }
 
     /**
@@ -349,7 +350,7 @@ public class NotificationHandler {
                 .putExtra(SyncthingService.EXTRA_DEVICE_NAME, deviceName)
                 .putExtra(SyncthingService.EXTRA_DEVICE_ADDRESS, deviceAddress);
         intentIgnore.setAction(SyncthingService.ACTION_IGNORE_DEVICE);
-        PendingIntent piIgnore = PendingIntent.getService(mContext, 0,
+        PendingIntent piIgnore = PendingIntent.getService(mContext, notificationId,
             intentIgnore, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Show notification.
@@ -394,7 +395,7 @@ public class NotificationHandler {
                 .putExtra(SyncthingService.EXTRA_FOLDER_ID, folderId)
                 .putExtra(SyncthingService.EXTRA_FOLDER_LABEL, folderLabel);
         intentIgnore.setAction(SyncthingService.ACTION_IGNORE_FOLDER);
-        PendingIntent piIgnore = PendingIntent.getService(mContext, 0,
+        PendingIntent piIgnore = PendingIntent.getService(mContext, notificationId,
             intentIgnore, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Show notification.
