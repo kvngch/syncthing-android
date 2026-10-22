@@ -1,11 +1,6 @@
-package com.nutomic.syncthingandroid.fragments
+package com.nutomic.syncthingandroid.main
 
 import android.content.Intent
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,7 +33,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,101 +44,66 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
-import androidx.fragment.app.Fragment
-
 import com.nutomic.syncthingandroid.R
-import com.nutomic.syncthingandroid.activities.MainActivity
 import com.nutomic.syncthingandroid.recentchanges.RecentChangesActivity
-import com.nutomic.syncthingandroid.webgui.WebGuiActivity
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingService
-import com.nutomic.syncthingandroid.service.SyncthingService.OnServiceStateChangeListener
 import com.nutomic.syncthingandroid.settings.SettingsActivity
-import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.isTelevision
+import com.nutomic.syncthingandroid.webgui.WebGuiActivity
 
-class DrawerFragment : Fragment(), OnServiceStateChangeListener {
-
-    private val stServiceRunning = mutableStateOf(false)
-    private val focusRequested = mutableStateOf(false)
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View = ComposeView(requireContext()).apply {
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-
-        setContent {
-            ApplicationTheme {
-                DrawerContent(stServiceRunning.value, focusRequested)
-            }
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val drawerContainer = requireActivity().findViewById<View>(R.id.drawer)
-
-        // inset correction
-        ViewCompat.setOnApplyWindowInsetsListener(drawerContainer) { v, i ->
-            v.setPadding(0, 0, 0, 0)
-            i
-        }
-        ViewCompat.requestApplyInsets(drawerContainer)
-
-        // width restriction
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-
-        val maxWidthPx = (360 * displayMetrics.density).toInt()
-        val minGapPx = (56 * displayMetrics.density).toInt()
-
-        val desiredWidth = minOf(maxWidthPx, screenWidth - minGapPx)
-
-        drawerContainer.layoutParams = drawerContainer.layoutParams.apply {
-            width = desiredWidth
-        }
-    }
-
-    override fun onServiceStateChange(currentState: SyncthingService.State?) {
-        stServiceRunning.value = currentState == SyncthingService.State.ACTIVE
-    }
-
-    fun drawerOpened() {
-        focusRequested.value = true
-    }
-}
-
-
+/**
+ * Content of the main navigation drawer.
+ *
+ * @param drawerOpen moves the focus to the first item when the drawer opens (TV remotes).
+ * @param runAsService the exit item then asks for a confirmation first.
+ */
 @Composable
-private fun DrawerContent(
-    stServiceRunning: Boolean,
-    focusRequested: MutableState<Boolean>,
+internal fun MainDrawerContent(
+    serviceRunning: Boolean,
+    drawerOpen: Boolean,
+    runAsService: Boolean,
+    onCloseDrawer: () -> Unit,
+    onShowDeviceId: () -> Unit,
+    onExit: () -> Unit,
 ) {
-    val activity = LocalActivity.current as MainActivity
+    val context = LocalContext.current
     val config = LocalConfiguration.current
-
     val firstItemFocusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(focusRequested.value) {
-        if (focusRequested.value) {
-            firstItemFocusRequester.requestFocus()
-            focusRequested.value = false
+    LaunchedEffect(drawerOpen) {
+        if (drawerOpen) {
+            runCatching { firstItemFocusRequester.requestFocus() }
         }
+    }
+
+    fun open(intent: Intent) {
+        context.startActivity(intent)
+        onCloseDrawer()
     }
 
     ModalDrawerSheet(
-        modifier = Modifier.fillMaxSize()
+        // D-pad right leaves the drawer, as on the former DrawerLayout.
+        modifier = Modifier.onKeyEvent {
+            if (it.type == KeyEventType.KeyDown && it.key == Key.DirectionRight) {
+                onCloseDrawer()
+                true
+            } else {
+                false
+            }
+        },
     ) {
         Column(
             modifier = Modifier
@@ -165,8 +124,8 @@ private fun DrawerContent(
                         icon = { Icon(Icons.Outlined.QrCode2, null) },
                         label = { Text(stringResource(R.string.show_device_id)) },
                         onClick = {
-                            activity.showQrCodeDialog()
-                            activity.closeDrawer()
+                            onShowDeviceId()
+                            onCloseDrawer()
                         },
                         modifier = Modifier.focusRequester(firstItemFocusRequester)
                     )
@@ -175,25 +134,18 @@ private fun DrawerContent(
                     DrawerItem(
                         icon = { Icon(Icons.Outlined.Restore, null) },
                         label = { Text(stringResource(R.string.recent_changes_title)) },
-                        onClick = {
-                            val intent = Intent(activity, RecentChangesActivity::class.java)
-                            activity.startActivity(intent)
-                            activity.closeDrawer()
-                        },
-                        enabled = stServiceRunning,
+                        onClick = { open(Intent(context, RecentChangesActivity::class.java)) },
+                        enabled = serviceRunning,
                     )
                 }
 
-                if (Constants.isDebuggable(activity) || !config.isTelevision) {
+                if (Constants.isDebuggable(context) || !config.isTelevision) {
                     item {
                         DrawerItem(
                             icon = { Icon(Icons.AutoMirrored.Outlined.ViewQuilt, null) },
                             label = { Text(stringResource(R.string.web_gui_title)) },
-                            onClick = {
-                                activity.startActivity(Intent(activity, WebGuiActivity::class.java))
-                                activity.closeDrawer()
-                            },
-                            enabled = stServiceRunning,
+                            onClick = { open(Intent(context, WebGuiActivity::class.java)) },
+                            enabled = serviceRunning,
                         )
                     }
                 }
@@ -203,16 +155,15 @@ private fun DrawerContent(
                         icon = { Icon(Icons.Outlined.ImportExport, null) },
                         label = { Text(stringResource(R.string.category_backup)) },
                         onClick = {
-                            val intent = Intent(activity, SettingsActivity::class.java).apply {
-                                putExtra(SettingsActivity.EXTRA_START_DESTINATION, "ImportExport")
-                            }
-                            activity.startActivity(intent)
-                            activity.closeDrawer()
+                            open(
+                                Intent(context, SettingsActivity::class.java)
+                                    .putExtra(SettingsActivity.EXTRA_START_DESTINATION, "ImportExport")
+                            )
                         },
                     )
                 }
                 item {
-                    RestartDrawerItem(stServiceRunning)
+                    RestartDrawerItem(serviceRunning, onCloseDrawer)
                 }
             }
 
@@ -224,20 +175,17 @@ private fun DrawerContent(
                 DrawerItem(
                     icon = { Icon(Icons.Outlined.Settings, null) },
                     label = { Text(stringResource(R.string.settings_title)) },
-                    onClick = {
-                        activity.startActivity(Intent(activity, SettingsActivity::class.java))
-                        activity.closeDrawer()
-                    },
+                    onClick = { open(Intent(context, SettingsActivity::class.java)) },
                 )
-                ExitDrawerItem()
+                ExitDrawerItem(runAsService, onCloseDrawer, onExit)
             }
         }
     }
 }
 
 @Composable
-private fun RestartDrawerItem(stServiceRunning: Boolean) {
-    val activity = LocalActivity.current as MainActivity
+private fun RestartDrawerItem(serviceRunning: Boolean, onCloseDrawer: () -> Unit) {
+    val context = LocalContext.current
     var showAlert by rememberSaveable { mutableStateOf(false) }
 
     DrawerItem(
@@ -245,9 +193,9 @@ private fun RestartDrawerItem(stServiceRunning: Boolean) {
         label = { Text(stringResource(R.string.restart)) },
         onClick = {
             showAlert = true
-            activity.closeDrawer()
+            onCloseDrawer()
         },
-        enabled = stServiceRunning,
+        enabled = serviceRunning,
     )
     if (showAlert) {
         AlertDialog(
@@ -256,10 +204,10 @@ private fun RestartDrawerItem(stServiceRunning: Boolean) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val intent = Intent(activity, SyncthingService::class.java).apply {
-                            action = SyncthingService.ACTION_RESTART
-                        }
-                        activity.startService(intent)
+                        context.startService(
+                            Intent(context, SyncthingService::class.java)
+                                .setAction(SyncthingService.ACTION_RESTART)
+                        )
                         showAlert = false
                     },
                 ) {
@@ -267,9 +215,7 @@ private fun RestartDrawerItem(stServiceRunning: Boolean) {
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showAlert = false },
-                ) {
+                TextButton(onClick = { showAlert = false }) {
                     Text(stringResource(android.R.string.cancel))
                 }
             },
@@ -278,22 +224,18 @@ private fun RestartDrawerItem(stServiceRunning: Boolean) {
 }
 
 @Composable
-private fun ExitDrawerItem() {
-    val activity = LocalActivity.current as MainActivity
-    val prefs = activity.mPreferences
-
+private fun ExitDrawerItem(runAsService: Boolean, onCloseDrawer: () -> Unit, onExit: () -> Unit) {
     var showAlert by rememberSaveable { mutableStateOf(false) }
 
     DrawerItem(
         icon = { Icon(Icons.AutoMirrored.Outlined.ExitToApp, null) },
         label = { Text(stringResource(R.string.exit)) },
         onClick = {
-            val isAutostartOn = prefs.getBoolean(Constants.PREF_START_SERVICE_ON_BOOT, false)
-            if (isAutostartOn) {
+            if (runAsService) {
                 showAlert = true
-                activity.closeDrawer()
+                onCloseDrawer()
             } else {
-                activity.doExit()
+                onExit()
             }
         },
     )
@@ -303,18 +245,12 @@ private fun ExitDrawerItem() {
             title = { Text(stringResource(R.string.dialog_exit_while_running_as_service_title)) },
             text = { Text(stringResource(R.string.dialog_exit_while_running_as_service_message)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        activity.doExit()
-                    },
-                ) {
+                TextButton(onClick = onExit) {
                     Text(stringResource(R.string.yes))
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showAlert = false },
-                ) {
+                TextButton(onClick = { showAlert = false }) {
                     Text(stringResource(R.string.no))
                 }
             },
@@ -322,7 +258,7 @@ private fun ExitDrawerItem() {
     }
 }
 
-// drawer item wrapper because NavigationDrawerItem doesn't support `enabled`
+// Drawer item wrapper because NavigationDrawerItem doesn't support `enabled`.
 @Composable
 private fun DrawerItem(
     icon: @Composable () -> Unit,

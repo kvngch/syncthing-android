@@ -17,8 +17,4 @@
 
     <!-- PhotoShootActivity intro background -->
     <color name="bg_screen4">#5e7c8b</color>
-
-    <!-- MainActivity start -->
-    <color name="bottom_navigation_bar">#1d57a1</color>
-    <!-- MainActivity end -->
 </resources>
