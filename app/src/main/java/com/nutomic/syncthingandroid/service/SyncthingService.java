@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -938,6 +939,7 @@ public class SyncthingService extends Service {
 
         // Create export dir if non-existant.
         File targetZip = getBackupZipFile();
+        File tmpZip = new File(targetZip.getPath() + ".tmp");
         targetZip.getParentFile().mkdirs();
 
         // Export SharedPreferences.
@@ -990,9 +992,10 @@ public class SyncthingService extends Service {
 
         // Compress files to zip file.
         try {
-            // Delete existing ZIP file to ensure we create a fresh archive instead of appending
-            if (targetZip.exists()) {
-                targetZip.delete();
+            // Build the archive next to the target, then rename it: on failure (storage full),
+            // the previous backup stays in place instead of a partial one.
+            if (tmpZip.exists()) {
+                tmpZip.delete();
             }
             
             ZipParameters parameters = new ZipParameters();
@@ -1001,10 +1004,10 @@ public class SyncthingService extends Service {
 
             ZipFile zipFile;
             if (zipEncryptionPassword.isEmpty()) {
-                zipFile = new ZipFile(targetZip);
+                zipFile = new ZipFile(tmpZip);
                 parameters.setEncryptFiles(false);
             } else {
-                zipFile = new ZipFile(targetZip, zipEncryptionPassword.toCharArray());
+                zipFile = new ZipFile(tmpZip, zipEncryptionPassword.toCharArray());
                 parameters.setEncryptFiles(true);
                 parameters.setEncryptionMethod(EncryptionMethod.AES);
                 parameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
@@ -1021,12 +1024,17 @@ public class SyncthingService extends Service {
                 }
             }
 
-            if (sharedPreferencesFile != null && sharedPreferencesFile.exists()) {
-                sharedPreferencesFile.delete();
+            if (!tmpZip.renameTo(targetZip)) {
+                throw new IOException("Failed to rename " + tmpZip.getName() + " to " + targetZip.getName());
             }
         } catch (Exception e) {
             Log.w(TAG, "exportConfig: Failed to export config, " + e.getMessage());
+            tmpZip.delete();
             failSuccess = false;
+        } finally {
+            if (sharedPreferencesFile != null && sharedPreferencesFile.exists()) {
+                sharedPreferencesFile.delete();
+            }
         }
         Log.d(TAG, "exportConfig END");
 
@@ -1098,49 +1106,55 @@ public class SyncthingService extends Service {
             return false;
         }
 
-        // Remove database folder if it exists.
-        File databasePath = Constants.getIndexDbFolder(this);
-        if (databasePath.exists()) {
-            Log.d(TAG, "importConfig: Clearing index database");
-            try {
-                FileUtils.deleteDirectoryRecursively(databasePath);
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to delete directory '" + databasePath.getAbsolutePath() + "'" + e);
-            }
-        }
-
-        // Decompress zip file.
+        /**
+         * Extract into a staging directory first. The current config, keys and database are only
+         * replaced once the whole archive was extracted and holds the required files: a failure
+         * on the way (storage full, corrupt archive) leaves the current setup untouched.
+         */
+        File stagingDir = new File(getCacheDir(), "import-staging");
         try {
-            zipFile.extractAll(this.getFilesDir().getAbsolutePath());
-        } catch (ZipException e) {
+            FileUtils.deleteDirectoryRecursively(stagingDir);
+            zipFile.extractAll(stagingDir.getAbsolutePath());
+        } catch (IOException e) {
             Log.e(TAG, "importConfig: Failed to extract zip, " + e.getMessage());
-            failSuccess = false;
+            deleteRecursivelyQuietly(stagingDir);
+            endConfigTransfer();
+            return false;
         }
-
-        // Check if necessary files are present after extraction.
-        List<File> checkPaths = Arrays.asList(
-            Constants.getConfigFile(this),
-
-            Constants.getPrivateKeyFile(this),
-            Constants.getPublicKeyFile(this),
-
-            Constants.getHttpsCertFile(this),
-            Constants.getHttpsKeyFile(this),
-
-            Constants.getSharedPrefsFile(this)
-        );
-        for (final File checkPath : checkPaths) {
-            if (!checkPath.exists()) {
-                Log.e(TAG, "importConfig: Missing file after extraction [" + checkPath.getName() + "]");
-                failSuccess = false;
+        for (String requiredFile : new String[]{Constants.CONFIG_FILE, Constants.PRIVATE_KEY_FILE, Constants.PUBLIC_KEY_FILE}) {
+            if (!new File(stagingDir, requiredFile).exists()) {
+                Log.e(TAG, "importConfig: Missing file after extraction [" + requiredFile + "]");
+                deleteRecursivelyQuietly(stagingDir);
+                endConfigTransfer();
+                return false;
             }
         }
-        
+        for (File optionalFile : new File[]{Constants.getHttpsCertFile(this), Constants.getHttpsKeyFile(this), Constants.getSharedPrefsFile(this)}) {
+            if (!new File(stagingDir, optionalFile.getName()).exists()) {
+                // Archives from older versions may lack them; Syncthing regenerates the HTTPS pair.
+                Log.w(TAG, "importConfig: Archive without [" + optionalFile.getName() + "]");
+            }
+        }
+        // The database of the previous setup does not match the imported config.
+        boolean archiveHasDatabase = new File(stagingDir, Constants.getIndexDbFolder(this).getName()).exists();
+        if (!moveIntoFilesDir(stagingDir)) {
+            Log.e(TAG, "importConfig: Failed to move the imported files into place, previous files restored");
+            deleteRecursivelyQuietly(stagingDir);
+            endConfigTransfer();
+            return false;
+        }
+        deleteRecursivelyQuietly(stagingDir);
+        if (!archiveHasDatabase) {
+            Log.d(TAG, "importConfig: Clearing index database");
+            deleteRecursivelyQuietly(Constants.getIndexDbFolder(this));
+        }
+
         // Import shared preferences.
         File sharedPreferencesFile = Constants.getSharedPrefsFile(this);
         if (sharedPreferencesFile.exists()) {
             Log.d(TAG, "importConfig: Importing shared preferences");
-            failSuccess = failSuccess && importConfigSharedPrefs(sharedPreferencesFile);
+            boolean sharedPrefsImported = importConfigSharedPrefs(sharedPreferencesFile);
+            failSuccess = failSuccess && sharedPrefsImported;
             sharedPreferencesFile.delete();
         }
 
@@ -1391,6 +1405,61 @@ public class SyncthingService extends Service {
         if (!bak.renameTo(target)) {
             Log.w(TAG, "restoreFile: Failed to restore " + target.getName());
         }
+    }
+
+    private void deleteRecursivelyQuietly(File fileOrDir) {
+        try {
+            FileUtils.deleteDirectoryRecursively(fileOrDir);
+        } catch (IOException e) {
+            Log.w(TAG, "deleteRecursivelyQuietly: Failed to delete " + fileOrDir.getName(), e);
+        }
+    }
+
+    /**
+     * Moves every entry of stagingDir into the files directory. Each entry replaced is kept as
+     * "[name].bak" until all moves succeeded; on a failure, the moved entries are removed and the
+     * backups renamed back. Renames stay atomic, the cache and files directories sharing a volume.
+     */
+    private boolean moveIntoFilesDir(File stagingDir) {
+        File[] entries = stagingDir.listFiles();
+        if (entries == null) {
+            return false;
+        }
+        List<File> moved = new ArrayList<>();
+        List<File[]> backups = new ArrayList<>();
+        boolean success = true;
+        for (File entry : entries) {
+            File target = new File(getFilesDir(), entry.getName());
+            File backup = new File(getFilesDir(), entry.getName() + ".bak");
+            deleteRecursivelyQuietly(backup);
+            if (target.exists()) {
+                if (!target.renameTo(backup)) {
+                    success = false;
+                    break;
+                }
+                backups.add(new File[]{target, backup});
+            }
+            if (!entry.renameTo(target)) {
+                success = false;
+                break;
+            }
+            moved.add(target);
+        }
+        if (success) {
+            for (File[] pair : backups) {
+                deleteRecursivelyQuietly(pair[1]);
+            }
+            return true;
+        }
+        for (File target : moved) {
+            deleteRecursivelyQuietly(target);
+        }
+        for (File[] pair : backups) {
+            if (!pair[1].renameTo(pair[0])) {
+                Log.e(TAG, "moveIntoFilesDir: Failed to restore " + pair[0].getName());
+            }
+        }
+        return false;
     }
 
     private void deleteQuietly(@Nullable File file) {
