@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -187,7 +190,8 @@ private fun RunModeSelector(preferences: SharedPreferences) {
         R.string.button_force_start,
         R.string.button_force_stop,
     )
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp)) {
+    // The labels wrap on two or three lines: all buttons take the height of the tallest.
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(16.dp).height(IntrinsicSize.Min)) {
         labels.forEachIndexed { index, label ->
             SegmentedButton(
                 selected = selected == index,
@@ -199,6 +203,7 @@ private fun RunModeSelector(preferences: SharedPreferences) {
                         .sendBroadcast(Intent(RunConditionMonitor.ACTION_UPDATE_SHOULDRUN_DECISION))
                 },
                 shape = SegmentedButtonDefaults.itemShape(index = index, count = labels.size),
+                modifier = Modifier.fillMaxHeight(),
                 label = {
                     Text(
                         stringResource(label),
