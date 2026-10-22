@@ -24,6 +24,7 @@ import com.nutomic.syncthingandroid.R;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -365,7 +366,27 @@ public class FileUtils {
         }
         return dir.delete();
     }
-    
+
+    /**
+     * Writes data to "[target].tmp", syncs it to disk, then renames it over target.
+     * On any failure the target is left untouched and an IOException is thrown.
+     */
+    public static void writeBytesAtomic(File target, byte[] data) throws IOException {
+        File tmp = new File(target.getParentFile(), target.getName() + ".tmp");
+        try (FileOutputStream fos = new FileOutputStream(tmp)) {
+            fos.write(data);
+            fos.flush();
+            fos.getFD().sync();
+        } catch (IOException e) {
+            tmp.delete();
+            throw e;
+        }
+        if (!tmp.renameTo(target)) {
+            tmp.delete();
+            throw new IOException("Failed to rename " + tmp.getName() + " to " + target.getName());
+        }
+    }
+
     /**
      * Expands the "~" path.
      * Equals SyncthingRunnable env "HOME"
