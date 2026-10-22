@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid.settings
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +14,8 @@ import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.util.Util
+import java.io.File
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.zhanghai.compose.preference.Preference
@@ -126,25 +127,29 @@ private fun getAppVersion(context: Context): String? {
     }
 }
 
-private fun getOpenFileLimit(): String? {
-    val shellCommand = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-        "/system/bin/ulimit -n"
-    else
-        "ulimit -n"
-
-    val result = Util.runShellCommandGetOutput(shellCommand)
-    return if (result.isNullOrBlank()) null else result.trim()
-}
-
-private fun getDatabaseSize(context: Context): String? {
-    val dbPath = Constants.getIndexDbFolder(context).absolutePath
-    val result = Util.runShellCommandGetOutput("/system/bin/du -sh $dbPath")
-
-    if (result.isNullOrBlank()) {
-        return null
+/**
+ * The soft limit of open files of the app, which the Syncthing binary inherits.
+ */
+private fun getOpenFileLimit(): String? =
+    try {
+        File("/proc/self/limits").readLines()
+            .firstOrNull { it.startsWith("Max open files") }
+            ?.removePrefix("Max open files")
+            ?.trim()
+            ?.substringBefore(' ')
+    } catch (e: IOException) {
+        Log.w(TAG, "Failed to read the open file limit", e)
+        null
     }
 
-    // Split by whitespace and grab the first part (the size)
-    val resultParts = result.trim().split(Regex("\\s+"))
-    return resultParts.firstOrNull()
+/**
+ * The size of the files of the index database.
+ */
+private fun getDatabaseSize(context: Context): String? {
+    val dbFolder = Constants.getIndexDbFolder(context)
+    if (!dbFolder.isDirectory) {
+        return null
+    }
+    val bytes = dbFolder.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    return Util.readableFileSize(context, bytes.toDouble())
 }
