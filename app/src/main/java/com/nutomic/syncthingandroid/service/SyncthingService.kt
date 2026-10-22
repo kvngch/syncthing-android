@@ -1,5 +1,6 @@
 package com.nutomic.syncthingandroid.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.content.SharedPreferences
@@ -1149,6 +1150,8 @@ class SyncthingService : Service() {
         }
     }
 
+    // The result of commit() reports a failed write, which the KTX edit {} drops.
+    @SuppressLint("UseKtx")
     private fun importConfigSharedPrefs(file: File): Boolean {
         try {
             // Read, deserialize shared preferences.
