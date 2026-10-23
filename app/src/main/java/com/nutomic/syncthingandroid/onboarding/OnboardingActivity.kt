@@ -21,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.os.BundleCompat
-import androidx.preference.PreferenceManager
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.Serializable
 import androidx.lifecycle.lifecycleScope
 import com.nutomic.syncthingandroid.R
@@ -78,7 +78,7 @@ class OnboardingActivity : ThemedAppCompatActivity() {
         private fun isKeyGenerationRunning() = keyGeneration?.isActive == true
     }
 
-    private val prefs: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val prefs: SharedPreferences by lazy { defaultPreferences }
 
     private var uiState by mutableStateOf(OnboardingUiState())
 

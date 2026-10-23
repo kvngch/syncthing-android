@@ -57,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.IntentCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
@@ -66,6 +65,7 @@ import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.Util
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.io.IOException
 import java.text.DateFormat
@@ -79,7 +79,7 @@ import kotlinx.coroutines.withContext
  */
 class ShareActivity : SyncthingActivity() {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
     private lateinit var config: ConfigRouter
 

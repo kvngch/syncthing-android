@@ -2,7 +2,7 @@ package com.nutomic.syncthingandroid.service
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
+import com.nutomic.syncthingandroid.util.defaultPreferences
 
 /**
  * Provides preference getters.
@@ -10,7 +10,7 @@ import androidx.preference.PreferenceManager
 object AppPrefs {
     @JvmStatic
     fun getPrefVerboseLog(context: Context): Boolean =
-        getPrefVerboseLog(PreferenceManager.getDefaultSharedPreferences(context))
+        getPrefVerboseLog(context.defaultPreferences)
 
     @JvmStatic
     fun getPrefVerboseLog(sharedPreferences: SharedPreferences): Boolean =
@@ -18,5 +18,5 @@ object AppPrefs {
 
     @JvmStatic
     fun getStartServiceOnBoot(context: Context): Boolean =
-        PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Constants.PREF_START_SERVICE_ON_BOOT, false)
+        context.defaultPreferences.getBoolean(Constants.PREF_START_SERVICE_ON_BOOT, false)
 }

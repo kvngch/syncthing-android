@@ -23,7 +23,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.folder.FolderForm
 import com.nutomic.syncthingandroid.folder.FolderScreen
@@ -37,6 +36,7 @@ import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.Util
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
@@ -48,7 +48,7 @@ import kotlinx.coroutines.withContext
  */
 class FolderActivity : SyncthingActivity() {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
     private val viewModel: FolderViewModel by viewModels()
     private lateinit var config: ConfigRouter

@@ -7,8 +7,8 @@ import android.graphics.drawable.Icon
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
+import com.nutomic.syncthingandroid.util.defaultPreferences
 
 /**
  * Cycles through following the run conditions, forcing Syncthing to run and forcing it to stop.
@@ -16,7 +16,7 @@ import com.nutomic.syncthingandroid.R
 class QuickSettingsTileForce : TileService() {
 
     private val preferences: SharedPreferences
-        get() = PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        get() = applicationContext.defaultPreferences
 
     override fun onStartListening() {
         val tile = qsTile

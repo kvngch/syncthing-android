@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.activities.ShareActivity
 import com.nutomic.syncthingandroid.http.ApiRequest
@@ -40,6 +39,7 @@ import com.nutomic.syncthingandroid.model.SystemStatus
 import com.nutomic.syncthingandroid.model.deepCopy
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.Util
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.io.IOException
 import java.net.MalformedURLException
@@ -119,7 +119,7 @@ class RestApi(
         private set
 
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
-    private val preferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences: SharedPreferences = context.defaultPreferences
     private val verboseLog = AppPrefs.getPrefVerboseLog(context)
 
     /**

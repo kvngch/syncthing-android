@@ -9,12 +9,12 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.model.Event
 import com.nutomic.syncthingandroid.model.FolderStatus
 import com.nutomic.syncthingandroid.model.SyncthingJson
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -40,7 +40,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
      */
     private val mainThreadHandler = Handler(Looper.getMainLooper())
 
-    private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences = context.defaultPreferences
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
 

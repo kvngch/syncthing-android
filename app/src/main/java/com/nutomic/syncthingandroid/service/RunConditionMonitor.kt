@@ -18,9 +18,9 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.util.JobUtils
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.lang.ref.WeakReference
 
 /**
@@ -45,7 +45,7 @@ class RunConditionMonitor(
 
     private class LocationUnavailableException : Exception()
 
-    private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences = context.defaultPreferences
     private val res = context.resources
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

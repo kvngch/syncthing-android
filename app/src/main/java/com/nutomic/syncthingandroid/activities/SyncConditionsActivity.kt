@@ -43,10 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
+import com.nutomic.syncthingandroid.util.defaultPreferences
 
 /**
  * Exceptions to the global run conditions for one folder or device, stored in the preferences
@@ -54,7 +54,7 @@ import com.nutomic.syncthingandroid.theme.ApplicationTheme
  */
 class SyncConditionsActivity : ThemedAppCompatActivity() {
 
-    private val sharedPreferences: SharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
     private lateinit var prefix: String
     private var conditions by mutableStateOf<Conditions?>(null)

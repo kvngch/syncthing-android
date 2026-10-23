@@ -5,10 +5,10 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.util.Log
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.util.FileUtils
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -34,7 +34,7 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
 
     class ExecutableNotFoundException(message: String) : Exception(message)
 
-    private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences = context.defaultPreferences
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
 

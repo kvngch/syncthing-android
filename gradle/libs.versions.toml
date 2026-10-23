@@ -31,7 +31,6 @@ kotlinSerialization = "2.4.20"
 kotlinxSerializationCore = "1.11.0"
 lingala-zip4j = "2.11.6"
 nav3Core = "1.1.3"
-preference-ktx = "1.2.1"
 zhanghai-compose-preference = "2.2.0"
 zxing-core = "3.5.4"
 
@@ -57,7 +56,6 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 lingala-zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "lingala-zip4j" }
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
-preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preference-ktx" }
 zhanghai-compose-preference = { module = "me.zhanghai.compose.preference:preference", version.ref = "zhanghai-compose-preference" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing-core" }
 

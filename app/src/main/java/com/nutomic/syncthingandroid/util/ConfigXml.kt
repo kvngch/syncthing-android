@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.core.content.edit
-import androidx.preference.PreferenceManager
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
@@ -46,7 +45,7 @@ class ConfigXml(private val context: Context) {
     class OpenConfigException : RuntimeException()
 
     private val verboseLog = AppPrefs.getPrefVerboseLog(context)
-    private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences = context.defaultPreferences
     private val configFile = Constants.getConfigFile(context)
     private lateinit var config: Document
 
