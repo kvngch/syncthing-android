@@ -1,12 +1,14 @@
 package com.nutomic.syncthingandroid.http
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.URL
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Polls the web interface until it answers, then calls the listener once.
@@ -18,7 +20,7 @@ class PollWebGuiAvailableTask(
     listener: OnSuccessListener,
 ) : ApiRequest(context, url, "", apiKey) {
 
-    private val handler = Handler(Looper.getMainLooper())
+    private val scope = MainScope()
 
     @Volatile
     private var listener: OnSuccessListener? = listener
@@ -32,6 +34,7 @@ class PollWebGuiAvailableTask(
 
     fun cancelRequestsAndCallback() {
         listener = null
+        scope.cancel()
     }
 
     private fun performRequest() {
@@ -52,7 +55,10 @@ class PollWebGuiAvailableTask(
             Log.v(TAG, "Cancelled callback and outstanding requests")
             return
         }
-        handler.postDelayed(::performRequest, WEB_GUI_POLL_INTERVAL)
+        scope.launch {
+            delay(WEB_GUI_POLL_INTERVAL)
+            performRequest()
+        }
         // Refused, timed out or not ready yet: expected while Syncthing starts.
         if (error is ConnectException || error is SocketTimeoutException || error is HttpException) {
             // Reduce lag caused by massively logging the same line while waiting.

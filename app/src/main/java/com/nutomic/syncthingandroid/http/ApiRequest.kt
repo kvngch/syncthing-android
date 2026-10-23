@@ -15,7 +15,6 @@ import java.nio.charset.Charset
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import java.util.Locale
-import java.util.concurrent.Executors
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
@@ -24,7 +23,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -168,7 +166,7 @@ abstract class ApiRequest internal constructor(
          * As many requests at once as Volley had network threads: a burst of requests, e.g. one
          * completion query per folder and device, waits its turn.
          */
-        private val network = Executors.newFixedThreadPool(4).asCoroutineDispatcher()
+        private val network = Dispatchers.IO.limitedParallelism(4)
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
         @Volatile

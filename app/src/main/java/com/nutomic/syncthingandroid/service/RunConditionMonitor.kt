@@ -11,8 +11,6 @@ import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
@@ -22,6 +20,11 @@ import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.util.JobUtils
 import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Decides whether Syncthing should run, from the run conditions set by the user and the state of
@@ -52,9 +55,10 @@ class RunConditionMonitor(
 
     /**
      * Re-evaluates the run conditions on the main thread, where the listeners expect it.
+     * Cancelled at shutdown.
      */
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private val updateRunnable = Runnable { updateShouldRunDecision() }
+    private val scope = MainScope()
+    private var delayedUpdate: Job? = null
 
     var runDecisionExplanation = ""
         private set
@@ -102,7 +106,7 @@ class RunConditionMonitor(
         private fun onFacts(facts: List<Boolean>?) {
             if (facts != lastFacts) {
                 lastFacts = facts
-                mainHandler.post(updateRunnable)
+                scope.launch { updateShouldRunDecision() }
             }
         }
     }
@@ -112,8 +116,11 @@ class RunConditionMonitor(
             when (intent.action) {
                 // Let the charging state settle. onReceive runs on the main thread: never sleep here.
                 Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED -> {
-                    mainHandler.removeCallbacks(updateRunnable)
-                    mainHandler.postDelayed(updateRunnable, 5000)
+                    delayedUpdate?.cancel()
+                    delayedUpdate = scope.launch {
+                        delay(5000)
+                        updateShouldRunDecision()
+                    }
                 }
                 PowerManager.ACTION_POWER_SAVE_MODE_CHANGED -> updateShouldRunDecision()
             }
@@ -123,7 +130,7 @@ class RunConditionMonitor(
     // Android's "AutoSync" quick toggle.
     private val syncStatusObserverHandle = ContentResolver.addStatusChangeListener(
         ContentResolver.SYNC_OBSERVER_TYPE_SETTINGS
-    ) { mainHandler.post(updateRunnable) }
+    ) { scope.launch { updateShouldRunDecision() } }
 
     init {
         logV("Created new instance")
@@ -181,7 +188,7 @@ class RunConditionMonitor(
         }
         context.unregisterReceiver(systemReceiver)
         connectivityManager.unregisterNetworkCallback(networkCallback)
-        mainHandler.removeCallbacks(updateRunnable)
+        scope.cancel()
     }
 
     private fun onSyncTrigger(extraBeginActiveTimeWindow: Boolean) {
@@ -616,7 +623,7 @@ class RunConditionMonitor(
          */
         private fun post(action: (RunConditionMonitor) -> Unit) {
             val monitor = current?.get() ?: return
-            monitor.mainHandler.post {
+            monitor.scope.launch {
                 if (current?.get() === monitor) {
                     action(monitor)
                 }
