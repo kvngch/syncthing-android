@@ -61,7 +61,6 @@ class OnboardingActivity : ThemedActivity() {
 
     companion object {
         private const val TAG = "OnboardingActivity"
-        const val REQUEST_WRITE_STORAGE = 143
 
         // Key used to persist the whole UI state across configuration changes (e.g. rotation).
         private const val STATE_UI_STATE = "onboarding_ui_state"
@@ -80,6 +79,23 @@ class OnboardingActivity : ThemedActivity() {
     private val prefs: SharedPreferences by lazy { defaultPreferences }
 
     private var uiState by mutableStateOf(OnboardingUiState())
+
+    /**
+     * Before Android 11 only: see [PermissionUtil.requestStoragePermission].
+     */
+    val storagePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        refreshPermissionState()
+        if (isGranted) {
+            Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
+            Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
+            advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
+        } else {
+            Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
+            openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
+        }
+    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -307,28 +323,6 @@ class OnboardingActivity : ThemedActivity() {
         ) {
             advance()
         }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
-        if (requestCode == REQUEST_WRITE_STORAGE) {
-            refreshPermissionState()
-            if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
-                if (grantResults.isNotEmpty()) {
-                    openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
-                }
-            } else {
-                Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
-                Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
-                advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
-            }
-            return
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     fun startApp() {

@@ -75,6 +75,10 @@ class PhotoShootActivity : ThemedActivity() {
         refreshPermissions()
     }
 
+    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        refreshPermissions()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -134,7 +138,7 @@ class PhotoShootActivity : ThemedActivity() {
                 Text(stringResource(R.string.photo_shoot_intro_welcome_title), style = MaterialTheme.typography.headlineSmall)
                 Text(stringResource(R.string.photo_shoot_intro_permission_title), style = MaterialTheme.typography.titleMedium)
                 if (!granted.storage) {
-                    OutlinedButton(onClick = { PermissionUtil.requestStoragePermission(this@PhotoShootActivity, REQUEST_STORAGE) }) {
+                    OutlinedButton(onClick = { PermissionUtil.requestStoragePermission(this@PhotoShootActivity, requestStorage) }) {
                         Text(stringResource(R.string.grant_storage_permission))
                     }
                 }
@@ -250,6 +254,5 @@ class PhotoShootActivity : ThemedActivity() {
         private const val TAG = "PhotoShootActivity"
         private const val STATE_PHOTO_URI = "lastPhotoURI"
         private const val STATE_INTRO = "intro"
-        private const val REQUEST_STORAGE = 142
     }
 }
