@@ -31,7 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +51,8 @@ import com.google.zxing.ReaderException
 import com.google.zxing.common.HybridBinarizer
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
-import java.util.concurrent.Executors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.awaitCancellation
 
 /**
@@ -134,10 +134,6 @@ class QRScannerActivity : ThemedAppCompatActivity() {
         val context = LocalContext.current
         val lifecycleOwner = LocalLifecycleOwner.current
         var surfaceRequest by remember { mutableStateOf<SurfaceRequest?>(null) }
-        val executor = remember { Executors.newSingleThreadExecutor() }
-        DisposableEffect(executor) {
-            onDispose { executor.shutdown() }
-        }
 
         LaunchedEffect(lifecycleOwner) {
             val provider = ProcessCameraProvider.awaitInstance(context)
@@ -148,7 +144,7 @@ class QRScannerActivity : ThemedAppCompatActivity() {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .apply {
-                    setAnalyzer(executor, QrCodeAnalyzer { code ->
+                    setAnalyzer(Dispatchers.Default.asExecutor(), QrCodeAnalyzer { code ->
                         ContextCompat.getMainExecutor(context).execute { onCode(code) }
                     })
                 }

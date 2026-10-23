@@ -1,11 +1,7 @@
 package com.nutomic.syncthingandroid.service
 
-import android.content.AsyncQueryHandler
-import android.content.ContentResolver
 import android.content.Context
 import android.media.MediaScannerConnection
-import android.os.Handler
-import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.edit
@@ -16,6 +12,11 @@ import com.nutomic.syncthingandroid.model.FolderStatus
 import com.nutomic.syncthingandroid.model.SyncthingJson
 import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -32,23 +33,19 @@ import kotlinx.serialization.json.doubleOrNull
  * It uses [RestApi.getEvents] to read the pending events and wait for new events.
  */
 class EventProcessor(private val context: Context, private val restApi: RestApi) :
-    Runnable, RestApi.OnReceiveEventListener {
+    RestApi.OnReceiveEventListener {
 
     /**
      * Use the MainThread for all callbacks and message handling
-     * or we have to track down nasty threading problems.
+     * or we have to track down nasty threading problems. Media store deletions run on a worker
+     * thread.
      */
-    private val mainThreadHandler = Handler(Looper.getMainLooper())
+    private val scope = MainScope()
+    private var nextRun: Job? = null
 
     private val preferences = context.defaultPreferences
     private val notificationHandler = (context.applicationContext as SyncthingApp).notificationHandler
     private val verboseLog = AppPrefs.getPrefVerboseLog(preferences)
-
-    /**
-     * Runs the media store deletions on a worker thread. Created on the main thread, where events
-     * are handled.
-     */
-    private val mediaStoreHandler by lazy { MediaStoreHandler(context.contentResolver) }
 
     @Volatile
     private var lastEventId = 0L
@@ -56,7 +53,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     @Volatile
     private var shutdown = true
 
-    override fun run() {
+    private fun readEvents() {
         // Restore the last event id if the event processor may have been restarted.
         if (lastEventId == 0L) {
             lastEventId = preferences.getLong(Constants.PREF_EVENT_PROCESSOR_LAST_SYNC_ID, 0)
@@ -151,10 +148,9 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     }
 
     private fun scheduleNextRun() {
-        synchronized(mainThreadHandler) {
+        synchronized(this) {
             if (!shutdown) {
-                mainThreadHandler.removeCallbacks(this)
-                mainThreadHandler.postDelayed(this, EVENT_UPDATE_INTERVAL)
+                runAfterInterval()
             }
         }
     }
@@ -162,20 +158,27 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     fun start() {
         Log.d(TAG, "Starting event processor.")
 
-        // Remove all pending callbacks and add a new one. This makes sure that only one
+        // Cancel the pending run and add a new one. This makes sure that only one
         // event poller is running at any given time.
-        synchronized(mainThreadHandler) {
+        synchronized(this) {
             shutdown = false
-            mainThreadHandler.removeCallbacks(this)
-            mainThreadHandler.postDelayed(this, EVENT_UPDATE_INTERVAL)
+            runAfterInterval()
         }
     }
 
     fun stop() {
         Log.d(TAG, "Stopping event processor.")
-        synchronized(mainThreadHandler) {
+        synchronized(this) {
             shutdown = true
-            mainThreadHandler.removeCallbacks(this)
+            nextRun?.cancel()
+        }
+    }
+
+    private fun runAfterInterval() {
+        nextRun?.cancel()
+        nextRun = scope.launch {
+            delay(EVENT_UPDATE_INTERVAL)
+            readEvents()
         }
     }
 
@@ -276,13 +279,13 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
                     return
                 }
                 Log.i(TAG, "onItemFinished: MediaStore, Deleting file: $fullFilePath")
-                mediaStoreHandler.startDelete(
-                    0,
-                    null,
-                    MediaStore.Files.getContentUri("external"),
-                    MediaStore.Images.ImageColumns.DATA + " = ?",
-                    arrayOf(fullFilePath),
-                )
+                scope.launch(Dispatchers.IO) {
+                    context.contentResolver.delete(
+                        MediaStore.Files.getContentUri("external"),
+                        MediaStore.Images.ImageColumns.DATA + " = ?",
+                        arrayOf(fullFilePath),
+                    )
+                }
             }
             // File contents changed.
             "update" -> {
@@ -338,8 +341,6 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             Log.v(TAG, message)
         }
     }
-
-    private class MediaStoreHandler(resolver: ContentResolver) : AsyncQueryHandler(resolver)
 
     private companion object {
         const val TAG = "EventProcessor"

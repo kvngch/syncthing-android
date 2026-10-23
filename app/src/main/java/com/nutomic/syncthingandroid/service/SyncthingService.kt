@@ -5,9 +5,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Environment
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import com.nutomic.syncthingandroid.R
@@ -27,6 +25,9 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.concurrent.CountDownLatch
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.exception.ZipException
 import net.lingala.zip4j.model.ZipParameters
@@ -124,7 +125,11 @@ class SyncthingService : Service() {
     private val configRouter by lazy { ConfigRouter(this) }
     private var verboseLog = false
 
-    private val handler = Handler(Looper.getMainLooper())
+    /**
+     * Runs work on the main thread, where the state machine lives. Not cancelled in onDestroy: a
+     * shutdown deferred while the binary starts must still run.
+     */
+    private val scope = MainScope()
     private val binder = SyncthingServiceBinder(this)
     private val onServiceStateChangeListeners = HashSet<OnServiceStateChangeListener>()
 
@@ -418,7 +423,7 @@ class SyncthingService : Service() {
             Log.e(TAG, "mSyncthingRunnableThread: Uncaught exception", ex)
             notificationHandler.showCrashedNotification(R.string.executable_not_found, Constants.FILENAME_SYNCTHING_BINARY)
             // The binary is not running: leave State.STARTING, in which shutdown() would defer forever.
-            handler.post {
+            scope.launch {
                 if (syncthingRunnableThread == failedThread) {
                     currentState = State.ERROR
                     shutdown(State.DISABLED)
@@ -489,7 +494,10 @@ class SyncthingService : Service() {
     private fun shutdown(newState: State) {
         if (currentState == State.STARTING) {
             Log.w(TAG, "Deferring shutdown until State.STARTING was left")
-            handler.postDelayed({ shutdown(newState) }, 1000)
+            scope.launch {
+                delay(1000)
+                shutdown(newState)
+            }
             return
         }
 
@@ -540,7 +548,10 @@ class SyncthingService : Service() {
      */
     private fun runWhenNotStarting(task: () -> Unit) {
         if (currentState == State.STARTING) {
-            handler.postDelayed({ runWhenNotStarting(task) }, 1000)
+            scope.launch {
+                delay(1000)
+                runWhenNotStarting(task)
+            }
             return
         }
         task()
@@ -554,7 +565,7 @@ class SyncthingService : Service() {
      */
     private fun stopBinaryForConfigTransfer(): Boolean {
         val stopped = CountDownLatch(1)
-        handler.post {
+        scope.launch {
             runWhenNotStarting {
                 if (currentState != State.DISABLED) {
                     // Shutdown synchronously.
@@ -574,7 +585,7 @@ class SyncthingService : Service() {
     }
 
     private fun endConfigTransfer() {
-        handler.post {
+        scope.launch {
             configTransferInProgress = false
             if (lastDeterminedShouldRun) {
                 launchStartupTask(SyncthingRunnable.Command.main)
@@ -625,8 +636,8 @@ class SyncthingService : Service() {
         }
         Log.i(TAG, "onServiceStateChange: from $currentState to $newState")
         currentState = newState
-        handler.post {
-            notificationHandler.updatePersistentNotification(this)
+        scope.launch {
+            notificationHandler.updatePersistentNotification(this@SyncthingService)
             // A copy: a listener may register or unregister one meanwhile.
             for (listener in onServiceStateChangeListeners.toList()) {
                 listener.onServiceStateChange(currentState)
@@ -852,7 +863,7 @@ class SyncthingService : Service() {
      * orchestration fields are only safe to touch there.
      */
     fun replaceHttpsCertificate(certPem: ByteArray, keyPem: ByteArray, listener: OnHttpsCertReplaceResultListener) {
-        handler.post { doReplaceHttpsCertificate(certPem, keyPem, listener) }
+        scope.launch { doReplaceHttpsCertificate(certPem, keyPem, listener) }
     }
 
     /**
@@ -860,13 +871,16 @@ class SyncthingService : Service() {
      * certificate at the next start, then restarts (with rollback on failure).
      */
     fun resetHttpsCertificate(listener: OnHttpsCertReplaceResultListener) {
-        handler.post { doResetHttpsCertificate(listener) }
+        scope.launch { doResetHttpsCertificate(listener) }
     }
 
     private fun doReplaceHttpsCertificate(certPem: ByteArray, keyPem: ByteArray, listener: OnHttpsCertReplaceResultListener) {
         // shutdown() defers while STARTING; wait it out so our file writes don't race the binary.
         if (currentState == State.STARTING) {
-            handler.postDelayed({ doReplaceHttpsCertificate(certPem, keyPem, listener) }, 1000)
+            scope.launch {
+                delay(1000)
+                doReplaceHttpsCertificate(certPem, keyPem, listener)
+            }
             return
         }
         val certFile = Constants.getHttpsCertFile(this)
@@ -901,7 +915,10 @@ class SyncthingService : Service() {
 
     private fun doResetHttpsCertificate(listener: OnHttpsCertReplaceResultListener) {
         if (currentState == State.STARTING) {
-            handler.postDelayed({ doResetHttpsCertificate(listener) }, 1000)
+            scope.launch {
+                delay(1000)
+                doResetHttpsCertificate(listener)
+            }
             return
         }
         val certFile = Constants.getHttpsCertFile(this)
@@ -990,7 +1007,8 @@ class SyncthingService : Service() {
         }
 
         lateinit var verifyListener: OnServiceStateChangeListener
-        val watchdog = Runnable {
+        val watchdog = scope.launch {
+            delay(HTTPS_CERT_VERIFY_TIMEOUT_MS)
             if (!resolved) {
                 resolved = true
                 unregisterOnServiceStateChangeListener(verifyListener)
@@ -1011,9 +1029,9 @@ class SyncthingService : Service() {
                 return@OnServiceStateChangeListener
             }
             resolved = true
-            handler.removeCallbacks(watchdog)
+            watchdog.cancel()
             // Defer unregister + lifecycle work out of onServiceStateChange's listener iteration.
-            handler.post {
+            scope.launch {
                 unregisterOnServiceStateChangeListener(verifyListener)
                 if (success) finishSuccess() else finishFailure()
             }
@@ -1022,7 +1040,6 @@ class SyncthingService : Service() {
         // registerOnServiceStateChangeListener replays the current state (DISABLED) synchronously;
         // that is ignored because sawStarting is still false.
         registerOnServiceStateChangeListener(verifyListener)
-        handler.postDelayed(watchdog, HTTPS_CERT_VERIFY_TIMEOUT_MS)
         launchStartupTask(SyncthingRunnable.Command.main)
     }
 

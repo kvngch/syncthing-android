@@ -3,8 +3,6 @@ package com.nutomic.syncthingandroid.service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.core.content.edit
 import com.nutomic.syncthingandroid.SyncthingApp
@@ -45,8 +43,13 @@ import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.Locale
-import java.util.concurrent.Executors
 import kotlin.math.floor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -175,7 +178,11 @@ class RestApi(
     @Volatile
     private var hasShutdown = false
 
-    private val executorService = Executors.newSingleThreadExecutor()
+    /**
+     * Cancelled at shutdown. Conflict files are searched for one folder at a time, in order.
+     */
+    private val scope = MainScope()
+    private val conflictSearch = Dispatchers.IO.limitedParallelism(1)
 
     private val loadedConfig: Config
         get() = config ?: throw IllegalStateException("The config is not loaded yet")
@@ -254,13 +261,11 @@ class RestApi(
         // commit(), not apply(): the original intervals must be on disk before the lowered ones are sent.
         preferences.edit(commit = true) { putString(Constants.PREF_VERSIONING_CLEANUP_RESTORE, originalIntervalsJson) }
         setVersioningCleanupIntervals(originalIntervals.mapValues { 2 })
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (hasShutdown) {
-                logV("Versioning cleanup intervals will be restored at next start due to hasShutdown == true")
-            } else {
-                restoreVersioningCleanupIntervals(originalIntervalsJson)
-            }
-        }, 10_000)
+        // Cancelled by shutdown: the intervals are then restored at the next start.
+        scope.launch {
+            delay(10_000)
+            restoreVersioningCleanupIntervals(originalIntervalsJson)
+        }
     }
 
     private fun restoreVersioningCleanupIntervals(intervalsJson: String) {
@@ -518,7 +523,7 @@ class RestApi(
      */
     fun shutdown() {
         hasShutdown = true
-        executorService.shutdownNow()
+        scope.cancel()
         post(PostRequest.URI_SYSTEM_SHUTDOWN)
     }
 
@@ -959,16 +964,17 @@ class RestApi(
         if (planOnFolderSyncCompleted) {
             localCompletion.setRemoteIndexUpdated(folderId, false)
         }
-        if (hasShutdown || executorService.isShutdown) {
+        if (hasShutdown) {
             // We are on the way to shutdown SyncthingNative.
             return
         }
-        executorService.execute {
+        scope.launch(conflictSearch) {
             if (hasShutdown) {
-                return@execute
+                return@launch
             }
-            // Check for ".sync-conflict-YYYYMMDD-HHMMSS-DEVICEI*" files.
-            localCompletion.setDiscoveredConflictFiles(folderId, Util.getSyncConflictFiles(folder.path.orEmpty()))
+            // Check for ".sync-conflict-YYYYMMDD-HHMMSS-DEVICEI*" files. Shutdown interrupts the search.
+            val conflictFiles = runInterruptible { Util.getSyncConflictFiles(folder.path.orEmpty()) }
+            localCompletion.setDiscoveredConflictFiles(folderId, conflictFiles)
             if (planOnFolderSyncCompleted) {
                 onFolderSyncCompleted(folder, folderStatus.state.orEmpty(), deviceId)
             }
