@@ -10,7 +10,6 @@ plugins {
 dependencies {
     implementation(libs.aboutlibraries.compose.m3)
     implementation(libs.aboutlibraries.core)
-    implementation(libs.accompanist.permissions)
     implementation(libs.activity.compose)
     implementation(libs.activity.ktx)
     implementation(libs.androidx.appcompat)
