@@ -12,7 +12,6 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -26,7 +25,7 @@ import java.io.Serializable
 import androidx.lifecycle.lifecycleScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.MainActivity
-import com.nutomic.syncthingandroid.activities.ThemedAppCompatActivity
+import com.nutomic.syncthingandroid.activities.ThemedActivity
 import com.nutomic.syncthingandroid.webgui.WebGuiActivity
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingRunnable.ExecutableNotFoundException
@@ -58,7 +57,7 @@ data class OnboardingUiState(
     val keyGenerationStatus: String = "",
 ) : Serializable
 
-class OnboardingActivity : ThemedAppCompatActivity() {
+class OnboardingActivity : ThemedActivity() {
 
     companion object {
         private const val TAG = "OnboardingActivity"
@@ -177,8 +176,6 @@ class OnboardingActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // TODO: move to ThemedAppCompatActivity when every activity is compose
-        enableEdgeToEdge()
 
         val activityScope = this.lifecycleScope
 

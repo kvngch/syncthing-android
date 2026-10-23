@@ -55,6 +55,7 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.FileUtils
+import com.nutomic.syncthingandroid.util.SuggestFileManagerDialog
 import com.nutomic.syncthingandroid.util.Util
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -149,6 +150,7 @@ private fun FolderItem(row: FolderRow, onClick: () -> Unit, onAction: (FolderAct
     val folder = row.folder
     val status = row.status
     val cached = row.cached
+    var suggestFileManager by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -185,10 +187,13 @@ private fun FolderItem(row: FolderRow, onClick: () -> Unit, onAction: (FolderAct
                 val (text, color) = folderStateText(folder, status, cached)
                 Text(text, color = color, style = MaterialTheme.typography.labelLarge)
             }
-            IconButton(onClick = { FileUtils.openFolder(context, folder.path) }) {
+            IconButton(onClick = { suggestFileManager = !FileUtils.openFolder(context, folder.path) }) {
                 Icon(folderTypeIcon(folder.type), contentDescription = stringResource(R.string.open_file_manager))
             }
         }
+    }
+    if (suggestFileManager) {
+        SuggestFileManagerDialog(onDismiss = { suggestFileManager = false })
     }
 }
 

@@ -12,7 +12,12 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.webkit.MimeTypeMap
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
@@ -374,17 +379,17 @@ object FileUtils {
 
     /**
      * Opens a folder in a compatible file manager app. The "file://" URI is allowed by the VM
-     * policy SyncthingApp sets.
+     * policy SyncthingApp sets. False if no app can open folders: see [SuggestFileManagerDialog].
      */
     @JvmStatic
-    fun openFolder(context: Context, folderPath: String?) {
+    fun openFolder(context: Context, folderPath: String?): Boolean {
         if (folderPath.isNullOrEmpty() || !File(folderPath).isDirectory) {
             Toast.makeText(
                 context,
                 context.getString(R.string.state_error_message, "Invalid folder path"),
                 Toast.LENGTH_LONG,
             ).show()
-            return
+            return true
         }
         val intent = Intent(Intent.ACTION_VIEW)
             .setDataAndType(Uri.fromFile(File(folderPath)), "resource/folder")
@@ -399,7 +404,7 @@ object FileUtils {
             )
         try {
             context.startActivity(intent)
-            return
+            return true
         } catch (e: ActivityNotFoundException) {
             Log.e(TAG, "openFolder: No compatible file manager app found (stage #1)", e)
         } catch (e: SecurityException) {
@@ -414,32 +419,14 @@ object FileUtils {
             )
             try {
                 context.startActivity(intent)
-                return
+                return true
             } catch (e: ActivityNotFoundException) {
                 Log.e(TAG, "openFolder: No compatible file manager app found (stage #2)", e)
             } catch (e: SecurityException) {
                 Log.e(TAG, "openFolder: File manager app has insufficient permissions (stage #2)", e)
             }
         }
-        suggestFileManagerApp(context)
-    }
-
-    private fun suggestFileManagerApp(context: Context) {
-        AlertDialog.Builder(context)
-            .setTitle(R.string.suggest_file_manager_app_dialog_title)
-            .setMessage(R.string.suggest_file_manager_app_dialog_text)
-            .setPositiveButton(R.string.yes) { _, _ ->
-                val appPackageName = "me.zhanghai.android.files"
-                try {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$appPackageName".toUri()))
-                } catch (e: ActivityNotFoundException) {
-                    context.startActivity(
-                        Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$appPackageName".toUri())
-                    )
-                }
-            }
-            .setNegativeButton(R.string.no, null)
-            .show()
+        return false
     }
 
     /**
@@ -472,4 +459,39 @@ object FileUtils {
             else -> null
         }
     }
+}
+
+/**
+ * Offers to install a file manager, after [FileUtils.openFolder] found no app to open a folder.
+ */
+@Composable
+fun SuggestFileManagerDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.suggest_file_manager_app_dialog_title)) },
+        text = { Text(stringResource(R.string.suggest_file_manager_app_dialog_text)) },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onDismiss()
+                    val appPackageName = "me.zhanghai.android.files"
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$appPackageName".toUri()))
+                    } catch (e: ActivityNotFoundException) {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$appPackageName".toUri())
+                        )
+                    }
+                },
+            ) {
+                Text(stringResource(R.string.yes))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.no))
+            }
+        },
+    )
 }

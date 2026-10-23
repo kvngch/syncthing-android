@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +24,7 @@ import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.service.SyncthingServiceBinder
 import com.nutomic.syncthingandroid.theme.ApplicationTheme
 import com.nutomic.syncthingandroid.util.FileUtils
+import com.nutomic.syncthingandroid.util.SuggestFileManagerDialog
 import com.nutomic.syncthingandroid.util.defaultPreferences
 import java.io.File
 import java.text.SimpleDateFormat
@@ -51,11 +51,11 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
     private var refreshInFlight = false
 
     private var showExactTimes by mutableStateOf(false)
+    private var suggestFileManager by mutableStateOf(false)
     private lateinit var preferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         preferences = defaultPreferences
         showExactTimes = preferences.getBoolean(PREF_SHOW_EXACT_TIMES, false)
@@ -71,6 +71,9 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
                     onToggleExactTimes = ::toggleExactTimes,
                     onItemClick = ::openChange,
                 )
+                if (suggestFileManager) {
+                    SuggestFileManagerDialog(onDismiss = { suggestFileManager = false })
+                }
             }
         }
 
@@ -156,7 +159,7 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
         }
         val fullPath = folder.path + File.separator + change.rawPath
         when (change.type) {
-            ChangeType.DIR -> FileUtils.openFolder(this, fullPath)
+            ChangeType.DIR -> suggestFileManager = !FileUtils.openFolder(this, fullPath)
             ChangeType.FILE -> FileUtils.openFile(this, fullPath)
             ChangeType.UNKNOWN -> Log.e(TAG, "openChange: unknown type for path=[${change.rawPath}]")
         }

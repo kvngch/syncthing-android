@@ -12,7 +12,6 @@ dependencies {
     implementation(libs.aboutlibraries.core)
     implementation(libs.activity.compose)
     implementation(libs.activity.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.camera.camera2)
     implementation(libs.camera.compose)
     implementation(libs.camera.lifecycle)

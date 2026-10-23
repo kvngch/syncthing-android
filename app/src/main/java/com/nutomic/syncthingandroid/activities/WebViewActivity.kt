@@ -14,7 +14,6 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material3.AlertDialog
@@ -35,7 +34,7 @@ import com.nutomic.syncthingandroid.webgui.WebGuiScreen
 /**
  * Shows a web page inside the app, e.g. Syncthing's usage statistics.
  */
-class WebViewActivity : ThemedAppCompatActivity() {
+class WebViewActivity : ThemedActivity() {
 
     /**
      * A certificate error waiting for the user's answer, with the host it concerns.
@@ -77,7 +76,6 @@ class WebViewActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         url = intent.getStringExtra(EXTRA_WEB_URL) ?: run {
             Log.e(TAG, "EXTRA_WEB_URL not set.")
             finish()

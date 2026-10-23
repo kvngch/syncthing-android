@@ -39,6 +39,11 @@ object Constants {
     const val PREF_EXPERT_MODE = "expert_mode"
     const val PREF_START_INTO_WEB_GUI = "start_into_web_gui"
 
+    // Values of PREF_APP_THEME: AppCompat's night modes, which the setting has always stored.
+    const val APP_THEME_FOLLOW_SYSTEM = "-1"
+    const val APP_THEME_LIGHT = "1"
+    const val APP_THEME_DARK = "2"
+
     // Preferences - Behaviour
     const val PREF_START_SERVICE_ON_BOOT = "always_run_in_background"
     const val PREF_BROADCAST_SERVICE_CONTROL = "broadcast_service_control"

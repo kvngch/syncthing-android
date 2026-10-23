@@ -9,7 +9,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.compose.CameraXViewfinder
 import androidx.camera.core.CameraSelector
@@ -58,7 +57,7 @@ import kotlinx.coroutines.awaitCancellation
 /**
  * Reads a device ID from a QR code with the back camera.
  */
-class QRScannerActivity : ThemedAppCompatActivity() {
+class QRScannerActivity : ThemedActivity() {
 
     /**
      * The analyzer keeps reading frames until the activity is gone: one result only.
@@ -67,7 +66,6 @@ class QRScannerActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ApplicationTheme {
                 ScannerScreen(onCode = ::deliver, onCancel = ::finish)

@@ -11,7 +11,6 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,7 @@ import java.util.Locale
  * "Syncthing Camera": takes a picture with the system camera app and keeps it in the folder
  * Syncthing shares for it. The first time, an introduction asks for consent and permissions.
  */
-class PhotoShootActivity : ThemedAppCompatActivity() {
+class PhotoShootActivity : ThemedActivity() {
 
     private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
@@ -78,7 +77,6 @@ class PhotoShootActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ApplicationTheme {
                 permissions?.let { IntroScreen(it) }

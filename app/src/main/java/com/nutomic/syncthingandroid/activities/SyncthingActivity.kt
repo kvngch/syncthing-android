@@ -11,7 +11,7 @@ import com.nutomic.syncthingandroid.service.SyncthingServiceBinder
 /**
  * Binds to [SyncthingService] while the activity is resumed.
  */
-abstract class SyncthingActivity : ThemedAppCompatActivity(), ServiceConnection {
+abstract class SyncthingActivity : ThemedActivity(), ServiceConnection {
 
     /**
      * The service, or null while it is not bound.

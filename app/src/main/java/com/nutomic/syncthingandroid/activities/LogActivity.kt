@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -52,11 +51,10 @@ import kotlinx.coroutines.withContext
 /**
  * Shows the Android log or the Syncthing log, and shares a masked copy of either.
  */
-class LogActivity : ThemedAppCompatActivity() {
+class LogActivity : ThemedActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ApplicationTheme {
                 LogScreen()
