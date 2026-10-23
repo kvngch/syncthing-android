@@ -45,14 +45,24 @@ Java, plus de layout XML, ni AppCompat ni bibliothèques héritées. Le suivi es
 
 Cette version n'a pas encore été essayée sur un téléphone. Elle est vérifiée par le build, le lint,
 des tests unitaires et des captures sur un émulateur Android 15, à chaque pull request. La variante
-release, minifiée par R8, se construit et démarre sur cet émulateur. Aucune release n'est publiée pour
-l'instant.
+release, minifiée par R8, se construit et démarre sur cet émulateur.
 
 L'application s'appelle Synchro, identifiant `fr.kvngch.synchro`. Elle s'installe à côté de
 Syncthing-Fork sans reprendre ses réglages : ceux-ci passent par l'export puis l'import de la
 configuration.
 
-## Essayer
+## Installer
+
+Avec [Obtainium](https://github.com/ImranR98/Obtainium), ajouter une application depuis l'URL de ce
+dépôt, `https://github.com/kvngch/syncthing-android` : les mises à jour suivent les releases. Chaque
+release contient un APK par architecture et un APK universel, sans architecture dans son nom ;
+Obtainium demande lequel suivre, `arm64-v8a` convient à presque tous les téléphones récents. Sinon,
+télécharger l'APK de la [dernière release](https://github.com/kvngch/syncthing-android/releases/latest).
+
+Les APK sont signés par une clé propre à Synchro, d'empreinte SHA-256
+`F7:F2:FA:72:32:67:71:BD:24:49:88:C4:F7:EF:09:EE:0F:2D:69:57:C9:8D:EB:EA:78:3E:7F:C1:24:C1:05:78`.
+
+## Essayer une version de développement
 
 La CI produit un APK de debug signé avec une clé de test publique, dans l'artefact
 `signed-fr.kvngch.synchro` de chaque run de

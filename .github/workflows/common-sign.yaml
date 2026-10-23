@@ -75,7 +75,7 @@ jobs:
               --ks "${{ runner.temp }}/.android/signing-keystore.jks" \
               --ks-pass pass:'${{ secrets.SIGNING_PASSWORD }}' \
               --key-pass pass:'${{ secrets.SIGNING_PASSWORD }}' \
-              --ks-key-alias Syncthing-Fork \
+              --ks-key-alias synchro \
               --out "${SIGNED_APK}" "${UNSIGNED_APK}"
           done
           #
