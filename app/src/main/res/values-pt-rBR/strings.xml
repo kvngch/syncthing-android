@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Um aplicativo aberto, confiável e descentralizado para sincronização de arquivos.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -38,7 +37,7 @@
     <string name="refresh">Recarregar</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Câmera do Sync.</string>
-    <string name="photo_shoot_activity_title">Câmera do Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">Câmera do Synchro</string>
     <string name="photo_shoot_intro_welcome_title">Boas-vindas à Câmera do Syncthing</string>
     <string name="photo_shoot_intro_permission_title">Permissões necessárias</string>
     <string name="photo_shoot_intro_no_camera">Desculpe, este dispositivo não tem uma câmera.</string>
@@ -341,7 +340,7 @@
     <!-- Settings item that opens issue tracker -->
     <string name="report_issue_title">Reportar problema</string>
     <!-- Summary for the issue tracker settings item -->
-    <string name="open_issue_tracker_summary">Abra o rastreador de problemas do Syncthing-Fork em %1$s</string>
+    <string name="open_issue_tracker_summary">Abra o rastreador de problemas do Synchro em %1$s</string>
     <!-- Menu item to donate -->
     <!-- Title of the preference showing upstream version name -->
     <string name="syncthing_version_title">Versão do Syncthing</string>
@@ -613,7 +612,7 @@
     <string name="syncthing_forum_title">Fórum do Syncthing</string>
     <string name="syncthing_forum_summary">Vá ao Fórum do Syncthing e obtenha ajuda</string>
     <string name="privacy_summary">Abra a política de privacidade do syncthing-android, que cobre o uso (se qualquer) de dados pessoais, como a localização.</string>
-    <string name="app_version_title">Versão do pacote do Syncthing-Fork</string>
+    <string name="app_version_title">Versão do pacote do Synchro</string>
     <string name="syncthing_database_size">Tamanho do banco de dados do Syncthing</string>
     <string name="os_open_file_limit">Limite de abrir arquivos do Android</string>
     <string name="advanced_storage_path_overview">Visão geral do caminho de armazenamento avançado</string>

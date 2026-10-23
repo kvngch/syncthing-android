@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="cont">متابعة</string>
     <!-- Title of the "add folder" menu action -->
     <string name="add_folder">إضافة مجلد</string>
@@ -32,7 +31,7 @@
     <string name="accept">قبول</string>
     <string name="ignore">تجاهل</string>
     <string name="refresh">تحديث</string>
-    <string name="photo_shoot_activity_title">آلة تصوير Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">آلة تصوير Synchro</string>
     <string name="photo_shoot_intro_welcome_title">مرحبًا بك في آلة تصوير Syncthing</string>
     <string name="photo_shoot_intro_permission_title">الأذونات المطلوبة</string>
     <string name="photo_shoot_intro_no_camera">عُذرًا، هذا الجهاز لا يتضمّن آلة تصوير.</string>
@@ -71,9 +70,9 @@
     <string name="verbose_log_title">سِجِلّ مُفصّل</string>
     <string name="verbose_log_summary">سيساعد تمكين هذا الخيار في إنشاء سجلّات تصحيح الأخطاء بمستوى تفصيلي عالٍ.</string>
     <string name="report_issue_title">إبلاغ عن مشكلة</string>
-    <string name="app_version_title">إصدار Syncthing-Fork Wrapper</string>
+    <string name="app_version_title">إصدار Synchro Wrapper</string>
     <string name="api_key_copied_to_clipboard">تم نسخ مفتاح API الخاص بـ Syncthing إلى الحافظة</string>
-    <string name="open_issue_tracker_summary">فتح متتبع مشاكل Syncthing-Fork على ‎%1$s</string>
+    <string name="open_issue_tracker_summary">فتح متتبع مشاكل Synchro على ‎%1$s</string>
     <string name="share_title">مشاركة</string>
     <string name="complete_welcome_wizard_first">أولاً، قم بتشغيل التطبيق من درج التطبيقات وأكمل معالج الترحيب قبل مشاركة الملفات.</string>
     <string name="share_activity_title">حفظ في Syncthing</string>

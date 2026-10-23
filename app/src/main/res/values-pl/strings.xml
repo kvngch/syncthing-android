@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Otwarta, godna zaufania i zdecentralizowana aplikacja do synchronizacji plików.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -28,7 +27,7 @@
     <string name="accept">Akceptuj</string>
     <string name="ignore">Ignoruj</string>
     <string name="refresh">Odśwież</string>
-    <string name="photo_shoot_activity_title">Aparat Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">Aparat Synchro</string>
     <string name="photo_shoot_intro_permission_title">Wymagane uprawnienia</string>
     <string name="photo_shoot_intro_no_camera">Niestety, to urządzenie nie posiada dostępnej kamery.</string>
     <string name="photo_shoot_intro_missing_permissions">Aby kontynuować, wymagane są uprawnienia dostępu do aparatu oraz do zapisu plików.</string>
@@ -455,7 +454,7 @@
     <string name="welcome_text">Syncthing to otwartoźródłowa aplikacja do synchronizacji plików. Aby udostępnić dane innym urządzeniom, musisz dodać ich unikalne identyfikatory urządzeń do listy urządzeń. Następnie możesz wybrać, które foldery chcesz udostępnić ustalonym urządzeniom. \n \nWszelkie problemy, które napotkasz, prosimy zgłaszać za pośrednictwem serwisu GitHub.</string>
     <string name="notification_permission_desc">Wymagane do wyświetlania powiadomień dotyczących nowych połączeń urządzeń, żądań udostępnienia folderów oraz do utrzymywania działania usługi i połączenia.</string>
     <string name="download_support_bundle_failed">Pobieranie pakietu obsługi nie powiodło się. Sprawdź dzienniki.</string>
-    <string name="app_version_title">Wersja nakładki Syncthing-Fork</string>
+    <string name="app_version_title">Wersja nakładki Synchro</string>
     <string name="folder_type_sendreceive_description">Zawartość tego folderu będzie zarówno wysyłana jak i odbierana z innych urządzeń.</string>
     <string name="download_support_bundle_succeeded">Pakiet obsługi został pomyślnie pobrany do %s.</string>
     <string name="dialog_settings_restart_app_question">Zmiana tej opcji wymaga natychmiastowego ponownego uruchomienia aplikacji. Wszystkie inne zmiany zostaną odrzucone. Kontynuować?</string>
@@ -502,7 +501,7 @@
     <string name="pull_order_type_alphabetic_description">Pobierz pliki w kolejności alfabetycznej według nazwy.</string>
     <string name="state_syncing_general">Synchronizowanie</string>
     <string name="notifications_persistent_channel">Syncthing jest aktywny</string>
-    <string name="open_issue_tracker_summary">Otwórz narzędzie do śledzenia problemów Syncthing-Fork pod adresem %1$s</string>
+    <string name="open_issue_tracker_summary">Otwórz narzędzie do śledzenia problemów Synchro pod adresem %1$s</string>
     <string name="folders">Foldery</string>
     <string name="preference_app_theme_follow_light">Jasny</string>
     <string name="discovered_device_list_empty">Wykrywanie lokalne nie znalazło żadnych urządzeń w sieci lokalnej. Uruchom tę aplikację na drugim telefonie. Pliki instalacyjne dla komputerów są dostępne pod adresem: %1$s</string>

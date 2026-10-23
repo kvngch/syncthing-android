@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Un\'applicazione affidabile, decentralizzata e aperta per la sincronizzazione di file.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -38,7 +37,7 @@
     <string name="refresh">Aggiorna</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Sync. Camera</string>
-    <string name="photo_shoot_activity_title">Fotocamera Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">Fotocamera Synchro</string>
     <string name="photo_shoot_intro_welcome_title">Benvenuto in Fotocamera Syncthing</string>
     <string name="photo_shoot_intro_permission_title">Autorizzazioni necessarie</string>
     <string name="photo_shoot_intro_no_camera">Questo dispositivo non ha una fotocamera.</string>
@@ -398,12 +397,12 @@
     <!-- Settings item that opens issue tracker -->
     <string name="report_issue_title">Segnala Problema</string>
     <!-- Summary for the issue tracker settings item -->
-    <string name="open_issue_tracker_summary">Apri il registro problemi di Syncthing-Fork a %1$s</string>
+    <string name="open_issue_tracker_summary">Apri il registro problemi di Synchro a %1$s</string>
     <!-- Menu item to donate -->
     <!-- Title of the preference showing upstream version name -->
     <string name="syncthing_version_title">Versione Syncthing</string>
     <!-- Title of the preference showing this app's version name -->
-    <string name="app_version_title">Versione Syncthing-Fork Wrapper</string>
+    <string name="app_version_title">Versione Synchro Wrapper</string>
     <!-- Title of the preference showing the REST API key -->
     <string name="syncthing_api_key">Chiave API di Syncthing (clicca per copiare)</string>
     <!-- Shown when the API key is copied to the clipboard -->

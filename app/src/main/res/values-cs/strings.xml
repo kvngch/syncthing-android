@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Otevřená, důvěryhodná a decentralizovaná aplikace pro synchronizaci souborů.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -422,7 +421,7 @@
     <string name="location_permission_desc">Synchronizaci lze nakonfigurovat tak, aby fungovala ve vybraných sítích Wi-Fi. Systém Android vyžaduje, aby aplikace měla oprávnění k poloze, aby mohla číst název aktivní sítě Wi-Fi. Pokud chcete tuto funkci používat, stiskněte výše uvedené tlačítko. Tento krok můžete přeskočit. Další podrobnosti naleznete v našich zásadách ochrany osobních údajů.</string>
     <string name="location_permission_title">Oprávnění k poloze</string>
     <string name="dialog_confirm_skip_ignore_doze_permission">Pozor: Pokud se SyncthingNative přeruší a udělá něco divného, je to vaše vina. Přeskočte pouze v případě, že vaše zařízení nepodporuje udělení oprávnění. Opravdu přeskočit?</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Fotoaparát</string>
+    <string name="photo_shoot_activity_title">Synchro Fotoaparát</string>
     <string name="folder_ignore_delete_caption">Ignorovat Odstranění</string>
     <string name="discovered_devices_title">Objevená zařízení - Klepnutím vyberte</string>
     <string name="folders">Složky</string>
@@ -456,7 +455,7 @@
     <string name="broadcast_service_control_summary">Výchozí: Vypnuto. Povolte tuto možnost, pokud chcete umožnit nástrojům jako ADB nebo aplikacím třetích stran (např. automatizačním aplikacím) ovlivňovat chování Syncthingu – např. řídit podmínky spuštění, vynuceně spustit nebo zastavit proces.</string>
     <string name="dialog_settings_restart_app_question">Změna této možnosti vyžaduje okamžitý restart aplikace. Všechny ostatní změny budou zahozeny. Pokračovat?</string>
     <string name="verbose_log_summary">Povolení této možnosti pomůže generovat logy ladění na velmi podrobné úrovni.</string>
-    <string name="app_version_title">Verze Syncthing-Fork Wrapper</string>
+    <string name="app_version_title">Verze Synchro Wrapper</string>
     <string name="syncthing_api_key">Syncthing API Key (kliknutím zkopírujete)</string>
     <string name="syncthing_database_size">Velikost databáze Syncthing</string>
     <string name="os_open_file_limit">Omezení otevřených souborů systému Android</string>
@@ -549,7 +548,7 @@
     <string name="use_proxy">Připojit prostřednictvím proxy</string>
     <string name="config_export_failed">Export konfigurace selhal. Jděte do Nastavení-Odstraňování problémů-Otevřít log pro důvod selhání.</string>
     <string name="verbose_log_title">Podrobný log</string>
-    <string name="open_issue_tracker_summary">Otevřete nástroj pro sledování problémů Syncthing-Fork na adrese %1$s</string>
+    <string name="open_issue_tracker_summary">Otevřete nástroj pro sledování problémů Synchro na adrese %1$s</string>
     <string name="complete_welcome_wizard_first">Nejprve spusťte aplikaci a před sdílením souborů dokončete uvítacího průvodce.</string>
     <string name="reason_force_start">Syncthing běží, protože bylo vynuceno spuštění bez ohledu na podmínky spuštění.</string>
     <string name="reason_not_within_time_frame_2">Povolili jste „Spustit podle časového plánu“ a poslední synchronizace proběhla před %s.</string>

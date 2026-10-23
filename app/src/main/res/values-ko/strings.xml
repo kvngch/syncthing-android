@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">개방적이고 신뢰할 수 있는 분산형 파일 동기화 응용프로그램.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -290,7 +289,7 @@
     <string name="notification_permission_title">알림 권한</string>
     <string name="photo_shoot_launcher_title">카메라 동기화</string>
     <string name="refresh">새로고침</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork 카메라</string>
+    <string name="photo_shoot_activity_title">Synchro 카메라</string>
     <string name="photo_shoot_intro_welcome_title">Syncthing 카메라에 오신것을 환영합니다</string>
     <string name="photo_shoot_intro_permission_title">요구되는 권한</string>
     <string name="photo_shoot_intro_no_camera">죄송합니다, 이 기기에는 카메라가 없습니다.</string>
@@ -446,8 +445,8 @@
     <string name="sync_duration_minutes_summary">%1$s 분</string>
     <string name="behaviour_autostart_title">자동 시작</string>
     <string name="expert_mode_title">전문가 모드</string>
-    <string name="open_issue_tracker_summary">%1$s에서 Syncthing-Fork 이슈 트래커를 엽니다</string>
-    <string name="app_version_title">Syncthing-Fork 래퍼 버전</string>
+    <string name="open_issue_tracker_summary">%1$s에서 Synchro 이슈 트래커를 엽니다</string>
+    <string name="app_version_title">Synchro 래퍼 버전</string>
     <string name="syncthing_api_key">Syncthing API 키 (클릭하여 복사)</string>
     <string name="api_key_copied_to_clipboard">Syncthing API 키가 클립보드에 복사되었습니다</string>
     <string name="syncthing_database_size">Syncthing 데이터베이스 크기</string>

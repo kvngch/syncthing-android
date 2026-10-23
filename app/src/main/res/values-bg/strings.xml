@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Отворено, надеждно и нецентрализирано приложение за синхронизиране на файлове.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -282,7 +281,7 @@
     <string name="suggest_file_manager_app_dialog_text">Препоръчваме ви да инсталирате приложението за управление на файлове с отворен код „Material Files“. Желаети ли да видите страницата му в магазина за приложения?</string>
     <string name="dialog_confirm_skip_ignore_doze_permission">Внимателно: Ако SyncthingNative бъде прекъснат и направи нещо странно, вие сте си виновни. Прескочете само в случай, че устройството ви не поддържа даване на разрешение. Желаете ли да прескочите стъпката?</string>
     <string name="key_generation_title">Създаване на ключове</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Камера</string>
+    <string name="photo_shoot_activity_title">Synchro Камера</string>
     <string name="grant_storage_permission">Разрешаване на достъп до файловете</string>
     <string name="override_changes_question">По този начин ще отмените промените от другите устройства, споделящи папката. Желаете ли да продължите?</string>
     <string name="folder_rejected">Устройството „%1$s“ желае да сподели папката „%2$s“</string>
@@ -350,7 +349,7 @@
     <string name="environment_variables">Променливи на средата</string>
     <string name="st_reset_database_question">Това действие трябва да бъде извършвано само след препоръка от екип по поддръжка.\nЖелаете ли хранилището на Syncthing да бъде нулирано?</string>
     <string name="verbose_log_summary">Когато е отментато, записите в дневника ще съдържат подробности.</string>
-    <string name="app_version_title">Издание на Syncthing-Fork</string>
+    <string name="app_version_title">Издание на Synchro</string>
     <string name="syncthing_api_key">Ключ за ППИ на Syncthing (докоснете за копиране)</string>
     <string name="current_path">Текущ път: %1$s</string>
     <string name="folder_path_readonly">Това издание на Андроид дава на Syncthing само права за четене на избраната папка.</string>

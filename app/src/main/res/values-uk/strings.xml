@@ -195,7 +195,6 @@
     <string name="app_description">Відкритий, надійний додаток для децентралізованої синхронізації файлів.</string>
     <string name="override_changes">Перезапиши зміни</string>
     <string name="folder_fileWatcher">Відстежувати зміни</string>
-    <string name="app_name">Syncthing-Fork</string>
     <string name="welcome_text">Syncthing — це програма для синхронізації файлів з відкритим кодом. Для того, щоб поділитися даними з іншими пристроями, вам потрібно додати їх унікальні ідентифікатори пристроїв до списку пристроїв. Після цього ви зможете вибрати, які папки ділити з якими пристроями.\n\nБудь ласка, повідомляйте про будь-які проблеми, які ви зіштовхнете, через GitHub.</string>
     <string name="storage_permission_desc">Syncthing потребує доступу до вашого сховища для синхронізації файлів.</string>
     <string name="ignore_doze_permission_os_notice">Відомо, що Android TV іноді завершують додаток, коли він працює у фоновому режимі. Рішення доступне на вікі за посиланням \'%1$s/%2$s\'.</string>
@@ -339,7 +338,7 @@
     <string name="respect_master_sync_summary">Вимкнути Syncthing, коли швидке налаштування \'Автоматична синхронізація даних\' вимкнено.</string>
     <string name="respect_master_sync_title">Поважати налаштування Android \'Автоматична синхронізація даних\'</string>
     <string name="photo_shoot_launcher_title">Sync. Камера</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Камера</string>
+    <string name="photo_shoot_activity_title">Synchro Камера</string>
     <string name="run_in_flight_mode_title">Працювати без мережі</string>
     <string name="run_on_time_schedule_title">Працювати за розкладом</string>
     <string name="sync_duration_minutes_title">Тривалість циклу синхронізації</string>
@@ -400,9 +399,9 @@
     <string name="reason_mobile_data_disallowed">Syncthing не налаштовано на роботу в мобільних мережах.</string>
     <string name="st_reset_deltas_question">Цю дію слід виконувати лише за рекомендацією нашої служби підтримки. \nВи впевнені, що хочете очистити дельта-індекси Syncthing?</string>
     <string name="st_reset_deltas_done">Дельта-індекси Syncthing успішно очищені</string>
-    <string name="open_issue_tracker_summary">Відкрити відстежувач помилок Syncthing-Fork на %1$s</string>
+    <string name="open_issue_tracker_summary">Відкрити відстежувач помилок Synchro на %1$s</string>
     <string name="syncthing_version_title">Версія Syncthing</string>
-    <string name="app_version_title">Версія обгортки Syncthing-Fork</string>
+    <string name="app_version_title">Версія обгортки Synchro</string>
     <string name="current_path">Поточний шлях: %1$s</string>
     <string name="directory_empty">Тека порожня</string>
     <string name="folder_go_up">Перейти вгору</string>

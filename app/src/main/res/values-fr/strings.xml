@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Une application ouverte, fiable et décentralisée pour synchroniser des fichiers.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -429,8 +428,8 @@
     <string name="dialog_settings_restart_app_question">Le changement de cette option requiert le redémarrage immédiat de Syncthing. Tous les autres changements seront ignorés. Continuer ?</string>
     <string name="verbose_log_summary">Pour débogage détaillé.</string>
     <string name="verbose_log_title">Journal bavard</string>
-    <string name="open_issue_tracker_summary">Ouvrir le traceur de bugs de Syncthing-Fork sur %1$s</string>
-    <string name="app_version_title">Version du fournisseur Syncthing-Fork</string>
+    <string name="open_issue_tracker_summary">Ouvrir le traceur de bugs de Synchro sur %1$s</string>
+    <string name="app_version_title">Version du fournisseur Synchro</string>
     <string name="syncthing_api_key">Clé d\'API (Cliquer pour copier)</string>
     <string name="syncthing_database_size">Taille de la base de données</string>
     <string name="os_open_file_limit">Limite d\'ouverture de fichiers d\'Android</string>
@@ -467,7 +466,7 @@
     <string name="notification_permission_desc">Nécessaire pour afficher les notifications de nouveaux appareils, nouveaux partages et pour garder le service actif et connecté.</string>
     <string name="accept">Accepter</string>
     <string name="photo_shoot_launcher_title">Synchro Appareil Photo</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Appareil photo</string>
+    <string name="photo_shoot_activity_title">Synchro Appareil photo</string>
     <string name="photo_shoot_intro_permission_title">Permissions requises</string>
     <string name="photo_shoot_intro_no_camera">Désolé, cet appareil n\'a pas d\'appareil photo.</string>
     <string name="photo_shoot_intro_missing_permissions">Il faut la permission d\'accès au stockage et à l\'appareil photo.</string>

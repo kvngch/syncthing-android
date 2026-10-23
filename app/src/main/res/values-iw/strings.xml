@@ -5,7 +5,6 @@
     <string name="storage_permission_desc">היישום Syncthing צריך לגשת לאחסון שלך כדי לבצע סנכרון קבצים.</string>
     <string name="dialog_all_files_access_not_supported">ההתקן שלך לא תומך בגישה לכל הקבצים</string>
     <string name="ignore_doze_permission_title">מיטוב סוללה</string>
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">יישום פתוח, אמין ומבוזר לסנכרון קבצים.</string>
     <string name="welcome_title">ברוך הבא אל Syncthing עבור אנדרואיד</string>
     <string name="name">שם</string>
@@ -148,7 +147,7 @@
     <string name="dialog_disable_battery_optimizations_not_supported">ההתקן שלך אינו תומך בהשבתת מיטובי סוללה</string>
     <string name="location_permission_desc">ניתן להגדיר את Syncthing כך שיעבוד על רשתות Wi-Fi שנבחרו. אנדרואיד דורש שליישום תהיה הרשאת מיקום כדי לקרוא את השם של רשת Wi-Fi פעילה. אם אתה רוצה להשתמש בתכונה זו, לחץ על הלחצן למעלה. אתה יכול לדלג על שלב זה. ראה את מדיניות הפרטיות שלנו לפרטים נוספים.</string>
     <string name="dialog_confirm_skip_ignore_doze_permission">זהירות: אם SyncthingNative נקטע ועושה משהו מוזר, אתה אשם. דלג רק במקרה שההתקן שלך לא תומך בהענקת ההרשאה. לדלג באמת?</string>
-    <string name="photo_shoot_activity_title">מצלמת Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">מצלמת Synchro</string>
     <string name="cont">המשך</string>
     <string name="refresh">רענן</string>
     <string name="photo_shoot_intro_permission_desc">מצלמת Syncthing דורשת את הסכמתך כדי לצלם תמונות ולאחסן אותן בהתקן שלך. תכונה זו היא אופציונלית. כדי להשתמש בה, הענק הרשאות והקש \"המשך\". אנחנו נגדיר תיקיית מצלמת Syncthing עבורך אשר תוכל לשתף עם התקני Syncthing אחרים מאוחר יותר.</string>
@@ -277,9 +276,9 @@
     <string name="open_log">פתיחת יומן</string>
     <string name="open_log_summary">פתח את חלון היומנים של Syncthing ואנדרואיד</string>
     <string name="report_issue_title">דווח על בעיה</string>
-    <string name="open_issue_tracker_summary">פתח את מערכת מעקב הבעיות של Syncthing-Fork בכתובת %1$s</string>
+    <string name="open_issue_tracker_summary">פתח את מערכת מעקב הבעיות של Synchro בכתובת %1$s</string>
     <string name="syncthing_version_title">גרסת Syncthing</string>
-    <string name="app_version_title">גרסת עטיפת Syncthing-Fork</string>
+    <string name="app_version_title">גרסת עטיפת Synchro</string>
     <string name="syncthing_api_key">מפתח API של Syncthing (לחץ כדי להעתיק)</string>
     <string name="api_key_copied_to_clipboard">מפתח API של Syncthing הועתק ללוח</string>
     <string name="syncthing_database_size">גודל מסד הנתונים של Syncthing</string>
