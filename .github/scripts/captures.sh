@@ -3,9 +3,9 @@
 # passed, Syncthing must start, then one screenshot per screen.
 # Fails if the app crashed or if Syncthing never answered. Usage: captures.sh <directory of the APK>
 set -uo pipefail
-PAQUET=com.github.catfriend1.syncthingfork.debug
+PAQUET=com.github.catfriend1.syncthingfork
 mkdir -p captures
-adb install -r "$(ls "$1"/*.apk | head -1)"
+adb install -r "$(ls "$1"/*_x86_64.apk | head -1)"
 
 # Hide the system "isn't responding" windows, which can cover the app on a slow emulator.
 adb shell settings put global hide_error_dialogs 1
