@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
@@ -82,7 +81,6 @@ class FolderActivity : SyncthingActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         config = ConfigRouter(this)
 
         if (viewModel.form.value == null) {

@@ -11,7 +11,7 @@ import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.nutomic.syncthingandroid.R
@@ -33,12 +33,13 @@ object PermissionUtil {
     }
 
     /**
-     * Asks for the storage permission, or opens the system screen granting all files access.
+     * Asks for the storage permission through [launcher] before Android 11, or opens the system
+     * screen granting all files access.
      */
     @JvmStatic
-    fun requestStoragePermission(activity: Activity, requestCode: Int) {
+    fun requestStoragePermission(activity: Activity, launcher: ActivityResultLauncher<String>) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), requestCode)
+            launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             return
         }
         val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)

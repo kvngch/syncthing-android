@@ -1,7 +1,6 @@
 package com.nutomic.syncthingandroid.settings
 
 import android.util.Log
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +41,7 @@ fun SettingsUserInterfaceScreen() {
     val themeNames = stringArrayResource(R.array.app_theme_names)
     val themeValues = stringArrayResource(R.array.app_theme_values)
 
-    var theme by rememberPreferenceState(Constants.PREF_APP_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM.toString())
+    var theme by rememberPreferenceState(Constants.PREF_APP_THEME, Constants.APP_THEME_FOLLOW_SYSTEM)
     val expertMode = rememberPreferenceState(Constants.PREF_EXPERT_MODE, false)
     val startInWebGui = rememberPreferenceState(Constants.PREF_START_INTO_WEB_GUI, false)
 
@@ -55,10 +54,9 @@ fun SettingsUserInterfaceScreen() {
                 summary = { Text(themeNames[themeValues.indexOf(theme)]) },
                 value = theme,
                 onValueChange = { newTheme ->
-                    val newThemeInt = newTheme.toIntOrNull()
-                    if (newTheme != theme && newThemeInt != null) {
+                    if (newTheme != theme) {
+                        // Once saved, ThemedActivity recreates the activities in the new theme.
                         theme = newTheme
-                        AppCompatDelegate.setDefaultNightMode(newThemeInt)
                         scope.launch(Dispatchers.IO) {
                             withContext(NonCancellable) {
                                 try {
@@ -66,8 +64,8 @@ fun SettingsUserInterfaceScreen() {
                                     val restApi = stService?.api
                                     val gui = config.getGui(restApi)
                                     gui.theme = when (newTheme) {
-                                        AppCompatDelegate.MODE_NIGHT_YES.toString() -> "dark"
-                                        AppCompatDelegate.MODE_NIGHT_NO.toString() -> "light"
+                                        Constants.APP_THEME_DARK -> "dark"
+                                        Constants.APP_THEME_LIGHT -> "light"
                                         else -> "default"
                                     }
                                     config.updateGui(restApi, gui)

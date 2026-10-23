@@ -16,7 +16,6 @@ go_version = "1.27.1"
 aboutLibraries = "14.0.0-a01"
 activity = "1.13.0"
 camerax = "1.6.2"
-androidx-appcompat = "1.8.0"
 android-gradle-plugin = "9.4.1"
 compose-material3 = "1.4.0"
 compose-material-icons = "1.7.8"
@@ -41,7 +40,6 @@ activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activ
 camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
 camera-compose = { module = "androidx.camera:camera-compose", version.ref = "camerax" }
 camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
-androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 android-gradlePlugin = { module = "com.android.tools.build:gradle", version.ref = "android-gradle-plugin" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "compose-material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "compose-material-icons" }

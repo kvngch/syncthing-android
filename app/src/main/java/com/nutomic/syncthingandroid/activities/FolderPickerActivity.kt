@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,7 +57,7 @@ import kotlinx.coroutines.withContext
 /**
  * Allows selecting a directory in the local file system, when the system picker cannot.
  */
-class FolderPickerActivity : ThemedAppCompatActivity() {
+class FolderPickerActivity : ThemedActivity() {
 
     /**
      * A directory entry, typed off the main thread.
@@ -67,7 +66,6 @@ class FolderPickerActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val roots = roots()
         // With a single root, its content is shown instead of the list of roots.
         val initial = intent.getStringExtra(EXTRA_INITIAL_DIRECTORY) ?: roots.singleOrNull()?.path

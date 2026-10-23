@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -52,7 +51,7 @@ import com.nutomic.syncthingandroid.util.defaultPreferences
  * Exceptions to the global run conditions for one folder or device, stored in the preferences
  * under the object's prefix. Each option can only narrow its global counterpart.
  */
-class SyncConditionsActivity : ThemedAppCompatActivity() {
+class SyncConditionsActivity : ThemedActivity() {
 
     private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
@@ -82,7 +81,6 @@ class SyncConditionsActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val objectPrefix = intent.getStringExtra(EXTRA_OBJECT_PREFIX_AND_ID)
         if (objectPrefix == null || !intent.hasExtra(EXTRA_OBJECT_READABLE_NAME)) {
             Log.e(TAG, "onCreate extra missing")

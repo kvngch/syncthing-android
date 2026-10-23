@@ -2,7 +2,6 @@ package com.nutomic.syncthingandroid.settings
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,7 +41,6 @@ import com.nutomic.syncthingandroid.util.LocalActivityScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.zhanghai.compose.preference.LocalPreferenceFlow
 import me.zhanghai.compose.preference.LocalPreferenceTheme
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.PreferenceCategory
@@ -262,7 +260,6 @@ private fun ImportConfigPreference() {
     val scope = LocalActivityScope.current
     val navigator = LocalSettingsNavigator.current
     val stService = LocalSyncthingService.current
-    val prefs = LocalPreferenceFlow.current
 
     var showAlert by rememberSaveable { mutableStateOf(false) }
 
@@ -291,15 +288,7 @@ private fun ImportConfigPreference() {
                                                 Toast.LENGTH_LONG
                                             ).show()
 
-                                            // apply theme from restored config
-                                            val raw: Any? = prefs.value[Constants.PREF_APP_THEME]
-                                            val theme = when (raw) {
-                                                is Int -> raw
-                                                is String -> raw.toIntOrNull()
-                                                else -> null
-                                            } ?: AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                                            AppCompatDelegate.setDefaultNightMode(theme)
-
+                                            // ThemedActivity recreates the activities if the theme changed.
                                             service.evaluateRunConditions()
 
                                             navigator.navigateUp()

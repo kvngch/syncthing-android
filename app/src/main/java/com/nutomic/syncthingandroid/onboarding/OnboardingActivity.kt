@@ -12,7 +12,6 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -26,7 +25,7 @@ import java.io.Serializable
 import androidx.lifecycle.lifecycleScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.MainActivity
-import com.nutomic.syncthingandroid.activities.ThemedAppCompatActivity
+import com.nutomic.syncthingandroid.activities.ThemedActivity
 import com.nutomic.syncthingandroid.webgui.WebGuiActivity
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingRunnable.ExecutableNotFoundException
@@ -58,11 +57,10 @@ data class OnboardingUiState(
     val keyGenerationStatus: String = "",
 ) : Serializable
 
-class OnboardingActivity : ThemedAppCompatActivity() {
+class OnboardingActivity : ThemedActivity() {
 
     companion object {
         private const val TAG = "OnboardingActivity"
-        const val REQUEST_WRITE_STORAGE = 143
 
         // Key used to persist the whole UI state across configuration changes (e.g. rotation).
         private const val STATE_UI_STATE = "onboarding_ui_state"
@@ -81,6 +79,23 @@ class OnboardingActivity : ThemedAppCompatActivity() {
     private val prefs: SharedPreferences by lazy { defaultPreferences }
 
     private var uiState by mutableStateOf(OnboardingUiState())
+
+    /**
+     * Before Android 11 only: see [PermissionUtil.requestStoragePermission].
+     */
+    val storagePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        refreshPermissionState()
+        if (isGranted) {
+            Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
+            Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
+            advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
+        } else {
+            Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
+            openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
+        }
+    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -177,8 +192,6 @@ class OnboardingActivity : ThemedAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // TODO: move to ThemedAppCompatActivity when every activity is compose
-        enableEdgeToEdge()
 
         val activityScope = this.lifecycleScope
 
@@ -310,28 +323,6 @@ class OnboardingActivity : ThemedAppCompatActivity() {
         ) {
             advance()
         }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
-        if (requestCode == REQUEST_WRITE_STORAGE) {
-            refreshPermissionState()
-            if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
-                if (grantResults.isNotEmpty()) {
-                    openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
-                }
-            } else {
-                Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
-                Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
-                advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
-            }
-            return
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     fun startApp() {

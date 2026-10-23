@@ -10,7 +10,6 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,7 +40,6 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         // The user can come back to this activity from the recent apps list, service stopped.
         startForegroundService(Intent(this, SyncthingService::class.java))

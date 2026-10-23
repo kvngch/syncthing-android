@@ -11,7 +11,6 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,7 @@ import java.util.Locale
  * "Syncthing Camera": takes a picture with the system camera app and keeps it in the folder
  * Syncthing shares for it. The first time, an introduction asks for consent and permissions.
  */
-class PhotoShootActivity : ThemedAppCompatActivity() {
+class PhotoShootActivity : ThemedActivity() {
 
     private val sharedPreferences: SharedPreferences by lazy { defaultPreferences }
 
@@ -76,9 +75,12 @@ class PhotoShootActivity : ThemedAppCompatActivity() {
         refreshPermissions()
     }
 
+    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        refreshPermissions()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             ApplicationTheme {
                 permissions?.let { IntroScreen(it) }
@@ -136,7 +138,7 @@ class PhotoShootActivity : ThemedAppCompatActivity() {
                 Text(stringResource(R.string.photo_shoot_intro_welcome_title), style = MaterialTheme.typography.headlineSmall)
                 Text(stringResource(R.string.photo_shoot_intro_permission_title), style = MaterialTheme.typography.titleMedium)
                 if (!granted.storage) {
-                    OutlinedButton(onClick = { PermissionUtil.requestStoragePermission(this@PhotoShootActivity, REQUEST_STORAGE) }) {
+                    OutlinedButton(onClick = { PermissionUtil.requestStoragePermission(this@PhotoShootActivity, requestStorage) }) {
                         Text(stringResource(R.string.grant_storage_permission))
                     }
                 }
@@ -252,6 +254,5 @@ class PhotoShootActivity : ThemedAppCompatActivity() {
         private const val TAG = "PhotoShootActivity"
         private const val STATE_PHOTO_URI = "lastPhotoURI"
         private const val STATE_INTRO = "intro"
-        private const val REQUEST_STORAGE = 142
     }
 }
