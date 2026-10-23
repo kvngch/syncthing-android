@@ -1,94 +1,77 @@
 # Synchro
 
-Application Android qui fait tourner [Syncthing](https://syncthing.net) sur le téléphone et le pilote
-depuis une interface native. Syncthing synchronise des dossiers entre appareils, en direct et sans
-serveur central. L'application lance le binaire officiel de Syncthing comme un processus et lui parle
-par son API REST locale.
+Synchro garde des dossiers identiques entre ton téléphone Android et tes autres appareils :
+ordinateur, tablette, autre téléphone. Les photos prises sur le téléphone arrivent sur l'ordinateur,
+un document modifié sur l'ordinateur se retrouve sur le téléphone.
+
+Les fichiers passent directement d'un appareil à l'autre, chiffrés, sans compte ni stockage en
+ligne. Synchro repose sur [Syncthing](https://syncthing.net), logiciel libre de synchronisation, qu'il
+faut aussi installer sur les autres appareils.
 
 <p align="center">
-  <img src="docs/statut.png" width="220" alt="Onglet Statut : mode d'exécution, raisons pour lesquelles Syncthing tourne, mémoire et débits">
-  <img src="docs/tiroir.png" width="220" alt="Tiroir : identifiant de l'appareil, changements récents, interface web, import et export, redémarrage">
+  <img src="docs/statut.png" width="220" alt="Onglet Statut : mode d'exécution et raisons pour lesquelles la synchronisation tourne">
+  <img src="docs/tiroir.png" width="220" alt="Menu : identifiant de l'appareil, changements récents, interface web, import et export">
   <img src="docs/reglages.png" width="220" alt="Écran des réglages">
 </p>
 
-Captures prises par la CI sur un émulateur Android 15, interface en anglais.
-
-## Ce que fait l'application
-
-- Liste des dossiers et des appareils, avec la progression de la synchronisation de chacun.
-- Ajout, modification et suppression d'un dossier ou d'un appareil, que Syncthing tourne ou non.
-  Un appareil s'ajoute en scannant son code QR.
-- Conditions d'exécution : Wi-Fi, réseaux Wi-Fi choisis, données mobiles, Wi-Fi facturé, itinérance,
-  mode avion, source d'alimentation, économiseur d'énergie, synchronisation automatique d'Android.
-  Elles se règlent aussi dossier par dossier et appareil par appareil.
-- Synchronisation planifiée, par exemple quelques minutes toutes les heures. L'onglet Statut dit
-  pourquoi Syncthing tourne ou non.
-- Changements récents, avec ouverture du fichier ou du dossier concerné.
-- Partage de fichiers vers un dossier synchronisé depuis les autres applications, et prise de photos
-  directement dans un dossier.
-- Tuiles de réglages rapides, démarrage au démarrage du téléphone, pilotage par diffusion d'intents
-  (`fr.kvngch.synchro.action.START`, `STOP` et `FOLLOW`).
-- Import et export de la configuration dans une archive, chiffrée si un mot de passe est donné.
-- Certificat HTTPS personnalisé pour l'interface web de Syncthing, qui reste accessible depuis
-  l'application.
-- Thème clair, sombre ou celui du système. Interface traduite dans une trentaine de langues.
-
-## État
-
-Le code vient de Syncthing-Fork, lui-même dérivé de l'application officielle
-[syncthing-android](https://github.com/syncthing/syncthing-android), aujourd'hui arrêtée. Ce dépôt
-est une version indépendante.
-
-L'application a été réécrite en Kotlin et Jetpack Compose (Material 3) en octobre 2026 : plus de
-Java, plus de layout XML, ni AppCompat ni bibliothèques héritées. Le suivi est dans
-[#73](https://github.com/kvngch/syncthing-android/issues/73).
-
-Cette version n'a pas encore été essayée sur un téléphone. Elle est vérifiée par le build, le lint,
-des tests unitaires et des captures sur un émulateur Android 15, à chaque pull request. La variante
-release, minifiée par R8, se construit et démarre sur cet émulateur.
-
-L'application s'appelle Synchro, identifiant `fr.kvngch.synchro`. Elle s'installe à côté de
-Syncthing-Fork sans reprendre ses réglages : ceux-ci passent par l'export puis l'import de la
-configuration.
-
 ## Installer
 
-Avec [Obtainium](https://github.com/ImranR98/Obtainium), ajouter une application depuis l'URL de ce
-dépôt, `https://github.com/kvngch/syncthing-android` : les mises à jour suivent les releases. Chaque
-release contient un APK par architecture et un APK universel, sans architecture dans son nom ;
-Obtainium demande lequel suivre, `arm64-v8a` convient à presque tous les téléphones récents. Sinon,
-télécharger l'APK de la [dernière release](https://github.com/kvngch/syncthing-android/releases/latest).
+1. Installer [Obtainium](https://github.com/ImranR98/Obtainium) sur le téléphone.
+2. Y ajouter une application avec l'adresse `https://github.com/kvngch/syncthing-android`.
+3. Choisir l'APK qui se termine par `arm64-v8a`, qui convient à presque tous les téléphones récents.
 
-Les APK sont signés par une clé propre à Synchro, d'empreinte SHA-256
-`F7:F2:FA:72:32:67:71:BD:24:49:88:C4:F7:EF:09:EE:0F:2D:69:57:C9:8D:EB:EA:78:3E:7F:C1:24:C1:05:78`.
+Obtainium installe ensuite les mises à jour. Sans Obtainium, l'APK se télécharge depuis la
+[dernière version](https://github.com/kvngch/syncthing-android/releases/latest).
 
-## Essayer une version de développement
+Au premier lancement, Synchro demande l'accès aux fichiers, l'envoi de notifications et l'exemption
+d'optimisation de la batterie, sans laquelle Android arrête la synchronisation en arrière-plan.
 
-La CI produit un APK de debug signé avec une clé de test publique, dans l'artefact
-`signed-fr.kvngch.synchro` de chaque run de
-[Build App](https://github.com/kvngch/syncthing-android/actions/workflows/build-app.yaml) (compte
-GitHub requis pour le télécharger). Son identifiant se termine par `.debug`. Deux applis qui font
-tourner Syncthing ne peuvent pas le faire en même temps, la première occupant le port de l'interface
-web.
+## Ajouter un appareil
 
-## Permissions
+Chaque appareil a un identifiant, affiché en code QR dans le menu de Synchro. Pour relier deux
+appareils, on scanne le code de l'autre avec le bouton d'ajout de l'onglet Appareils, puis on choisit
+les dossiers à partager avec lui.
 
-| Permission | Usage |
-| --- | --- |
-| Accès à tous les fichiers (Android 11 et plus), stockage avant | Lire et écrire les dossiers synchronisés |
-| Notifications | Notification permanente du service, demandes de partage d'appareils et de dossiers |
-| Exemption d'optimisation de la batterie | Garder Syncthing actif en arrière-plan |
-| Localisation, y compris en arrière-plan | Lire le nom du Wi-Fi, pour la condition « réseaux Wi-Fi choisis » seulement |
-| Appareil photo | Scanner un code QR, prendre une photo dans un dossier |
-| Réseau local, multidiffusion Wi-Fi | Découvrir les appareils Syncthing du réseau local |
+## Choisir quand synchroniser
 
-L'application ne collecte rien. Syncthing lui-même peut envoyer des rapports d'utilisation anonymes si
-on l'accepte : voir sa [documentation](https://docs.syncthing.net).
+Par défaut, Synchro synchronise en Wi-Fi seulement. Les conditions se règlent dans
+Réglages, Conditions d'exécution :
+- Wi-Fi, ou seulement certains réseaux Wi-Fi ;
+- données mobiles, itinérance ;
+- en charge seulement, ou hors économiseur d'énergie ;
+- quelques minutes toutes les heures, pour économiser la batterie.
 
-## Construire
+Chaque dossier et chaque appareil peut avoir ses propres conditions : les photos en Wi-Fi seulement,
+les documents aussi sur données mobiles. L'onglet Statut indique si la synchronisation tourne et
+pourquoi.
 
-Le build compile Syncthing (Go) et ses bibliothèques natives pour quatre ABI avec le NDK, puis
-l'application. Prérequis : JDK 21, Go, Python 3 et le SDK Android.
+En haut de l'onglet Statut, trois modes :
+- **Suivre les conditions d'exécution** : le mode normal, qui applique les réglages ci-dessus ;
+- **Démarrage forcé** : synchronise tout de suite, quelles que soient les conditions, jusqu'au retour
+  au mode normal ;
+- **Arrêt forcé** : suspend la synchronisation.
+
+## Autres fonctions
+
+- Changements récents : les derniers fichiers reçus ou envoyés, à ouvrir d'un appui.
+- Partage : un fichier d'une autre application s'envoie dans un dossier synchronisé.
+- Appareil photo : une photo prise depuis la tuile de réglages rapides va directement dans un dossier.
+- Tuiles de réglages rapides pour forcer ou planifier la synchronisation.
+- Sauvegarde et restauration de toute la configuration, chiffrée par mot de passe si besoin.
+- Thème clair ou sombre, interface traduite dans une trentaine de langues.
+
+## Données personnelles
+
+Synchro ne collecte rien et n'envoie rien ailleurs qu'aux appareils choisis. La localisation ne sert
+qu'à lire le nom du réseau Wi-Fi, pour la condition « certains réseaux Wi-Fi ». Elle est proposée au
+premier lancement et peut être refusée.
+
+## Pour les développeurs
+
+Application en Kotlin et Jetpack Compose, `minSdk` 26 (Android 8). Elle lance le binaire officiel de
+Syncthing (v2.1.7-rc.2, en sous-module) et le pilote par son API REST locale. Le code vient de
+Syncthing-Fork, dérivé de l'application officielle
+[syncthing-android](https://github.com/syncthing/syncthing-android), aujourd'hui arrêtée.
 
 ```bash
 git clone --recursive https://github.com/kvngch/syncthing-android.git
@@ -99,7 +82,9 @@ export ANDROID_HOME="$PWD/../syncthing-android-prereq"
 ./gradlew lintDebug testDebugUnitTest assembleDebug
 ```
 
-`minSdk` 26 (Android 8), `targetSdk` 37. Syncthing est en sous-module, à la version v2.1.7-rc.2.
+Le build demande JDK 21, Go et Python 3. Une version publiée se crée en lançant le workflow
+Release App avec un tag ; les APK sont signés par la clé de Synchro, d'empreinte SHA-256
+`F7:F2:FA:72:32:67:71:BD:24:49:88:C4:F7:EF:09:EE:0F:2D:69:57:C9:8D:EB:EA:78:3E:7F:C1:24:C1:05:78`.
 
 ## Licence
 
