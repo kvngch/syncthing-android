@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Een open, betrouwbare en gedecentraliseerde applicatie voor bestandssynchronisatie.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -358,7 +357,7 @@
     <string name="dialog_confirm_skip_ignore_doze_permission">Voorzichtig: Als SyncthingNative wordt onderbroken en iets vreemds doet, is dat jouw schuld. Sla alleen over als je apparaat het verlenen van de machtiging niet ondersteunt. Echt overslaan?</string>
     <string name="refresh">Ververs</string>
     <string name="photo_shoot_launcher_title">Camera synchroniseren</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Camera</string>
+    <string name="photo_shoot_activity_title">Synchro Camera</string>
     <string name="dialog_all_files_access_not_supported">Jouw apparaat ondersteunt geen toegang tot alle bestanden</string>
     <string name="location_permission_desc">Syncthing kan ingesteld worden om te werken op geselecteerde wifi-netwerken. Android vereist dat de app locatie-machtiging heeft om de naam van het actieve wifi-netwerk te lezen. Als je deze functie wilt gebruiken, druk dan op de knop hierboven. Je kunt deze stap overslaan. Zie ons privacybeleid voor meer informatie.</string>
     <string name="ignore_doze_permission_os_notice">Android TV’s staan erom bekend dat ze af en toe de app beëindigen wanneer deze op de achtergrond werkt. Een oplossing is beschikbaar op de wiki bij ‘%1$s/%2$s’.</string>
@@ -566,8 +565,8 @@
     <string name="syncthing_forum_summary">Bezoek het Syncthing Forum voor ondersteuning</string>
     <string name="privacy_title">Privacybeleid</string>
     <string name="privacy_summary">Open Syncthing-Android privacybeleid, waarin gebruik van persoonlijke data (zoals locatie) wordt behandeld.</string>
-    <string name="open_issue_tracker_summary">Bezoek de Syncthing-Fork probleemtracker op %1$s</string>
-    <string name="app_version_title">Syncthing-Fork Wrapper Versie</string>
+    <string name="open_issue_tracker_summary">Bezoek de Synchro probleemtracker op %1$s</string>
+    <string name="app_version_title">Synchro Wrapper Versie</string>
     <string name="syncthing_api_key">Syncthing API sleutel (klik om te kopiëren)</string>
     <string name="api_key_copied_to_clipboard">Syncthing API sleutel gekopieerd naar het klembord</string>
     <string name="syncthing_database_size">Syncthing database grootte</string>

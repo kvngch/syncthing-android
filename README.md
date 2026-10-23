@@ -1,4 +1,4 @@
-# Syncthing pour Android
+# Synchro
 
 Application Android qui fait tourner [Syncthing](https://syncthing.net) sur le téléphone et le pilote
 depuis une interface native. Syncthing synchronise des dossiers entre appareils, en direct et sans
@@ -27,7 +27,7 @@ Captures prises par la CI sur un émulateur Android 15, interface en anglais.
 - Partage de fichiers vers un dossier synchronisé depuis les autres applications, et prise de photos
   directement dans un dossier.
 - Tuiles de réglages rapides, démarrage au démarrage du téléphone, pilotage par diffusion d'intents
-  (`<identifiant>.action.START`, `STOP` et `FOLLOW`).
+  (`fr.kvngch.synchro.action.START`, `STOP` et `FOLLOW`).
 - Import et export de la configuration dans une archive, chiffrée si un mot de passe est donné.
 - Certificat HTTPS personnalisé pour l'interface web de Syncthing, qui reste accessible depuis
   l'application.
@@ -48,17 +48,18 @@ des tests unitaires et des captures sur un émulateur Android 15, à chaque pull
 release, minifiée par R8, se construit et démarre sur cet émulateur. Aucune release n'est publiée pour
 l'instant.
 
-L'application s'affiche encore sous le nom Syncthing-Fork, avec l'identifiant
-`com.github.catfriend1.syncthingfork`.
+L'application s'appelle Synchro, identifiant `fr.kvngch.synchro`. Elle s'installe à côté de
+Syncthing-Fork sans reprendre ses réglages : ceux-ci passent par l'export puis l'import de la
+configuration.
 
 ## Essayer
 
 La CI produit un APK de debug signé avec une clé de test publique, dans l'artefact
-`signed-com.github.catfriend1.syncthingfork` de chaque run de
+`signed-fr.kvngch.synchro` de chaque run de
 [Build App](https://github.com/kvngch/syncthing-android/actions/workflows/build-app.yaml) (compte
-GitHub requis pour le télécharger). Son identifiant se termine par `.debug` : il s'installe à côté
-d'une Syncthing-Fork existante. Les deux ne peuvent pas faire tourner Syncthing en même temps, l'une
-occupant le port de l'interface web.
+GitHub requis pour le télécharger). Son identifiant se termine par `.debug`. Deux applis qui font
+tourner Syncthing ne peuvent pas le faire en même temps, la première occupant le port de l'interface
+web.
 
 ## Permissions
 

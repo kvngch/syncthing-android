@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">En öppen, pålitlig och decentraliserad filsynkroniserings applikation.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -461,7 +460,7 @@
     <string name="welcome_text">Syncthing är ett program för filsynkronisering med öppen källkod. För att dela data med andra enheter måste du lägga till deras unika enhets-ID i enhetslistan. Efteråt kan du välja vilka mappar som ska delas med vilka enheter. \n \nRapportera eventuella problem du stöter på via GitHub.</string>
     <string name="notification_permission_title">Aviseringstillstånd</string>
     <string name="photo_shoot_intro_welcome_title">Välkommen till Syncthing Camera</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork Camera</string>
+    <string name="photo_shoot_activity_title">Synchro Camera</string>
     <string name="default_syncthing_camera_folder_label">Syncthing Camera</string>
     <string name="device_addresses_invalid">Enhetsadresserna är inte korrekt formaterade. Försök igen. Titta på Syncthing-dokumenten för mer information.</string>
     <string name="notification_permission_desc">Krävs för att visa aviseringar om nya enhetsanslutningar, förfrågningar om mappdelning och för att hålla tjänsten vid liv och ansluten.</string>
@@ -538,8 +537,8 @@
     <string name="webui_remote_access_title">Fjärråtkomst för webbgränssnittet</string>
     <string name="broadcast_service_control_title">Tjänstekontroll genom sändning</string>
     <string name="verbose_log_summary">Om du aktiverar detta alternativ kommer du att skapa felsökningsloggar på en mycket detaljerad nivå.</string>
-    <string name="open_issue_tracker_summary">Öppna Syncthing-Fork-problemspåraren på %1$s</string>
-    <string name="app_version_title">Syncthing-Fork Wrapper version</string>
+    <string name="open_issue_tracker_summary">Öppna Synchro-problemspåraren på %1$s</string>
+    <string name="app_version_title">Synchro Wrapper version</string>
     <string name="advanced_storage_path_overview">Översikt över avancerad lagringsväg</string>
     <string name="folder_go_up">Gå upp</string>
     <string name="complete_welcome_wizard_first">Starta först appen från applådan och slutför välkomstguiden innan du delar filer.</string>

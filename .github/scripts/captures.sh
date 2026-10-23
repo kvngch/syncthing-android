@@ -3,7 +3,7 @@
 # passed, Syncthing must start, then one screenshot per screen.
 # Fails if the app crashed or if Syncthing never answered. Usage: captures.sh <directory of the APK>
 set -uo pipefail
-PAQUET=com.github.catfriend1.syncthingfork.debug
+PAQUET=fr.kvngch.synchro.debug
 mkdir -p captures
 adb install -r "$(ls "$1"/*.apk | head -1)"
 

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing 衍生版</string>
     <string name="app_description">一個開放、可靠、去中心化的檔案同步應用程式。</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -26,7 +25,7 @@
     <string name="accept">接受</string>
     <string name="ignore">拒絕</string>
     <string name="refresh">更新</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork 相機</string>
+    <string name="photo_shoot_activity_title">Synchro 相機</string>
     <string name="photo_shoot_intro_welcome_title">歡迎使用 Syncthing 相機</string>
     <string name="photo_shoot_intro_permission_title">所需要的權限</string>
     <string name="photo_shoot_intro_no_camera">抱歉，這台設備並無相機。</string>
@@ -334,7 +333,7 @@
     <string name="default_syncthing_camera_folder_label">Syncthing Camera</string>
     <string name="activity_main_bottom_navigation_rescan_all">重新掃描全部</string>
     <string name="dialog_settings_restart_app_question">改變本選項將會強制重新啟動應用程式，方才的其他改變將被放棄，確定要繼續嗎？</string>
-    <string name="app_version_title">Syncthing 衍生版封装版本</string>
+    <string name="app_version_title">Synchro封装版本</string>
     <string name="dialog_all_files_access_not_supported">您的裝置不支援「管理所有檔案」的特殊權限</string>
     <string name="ignore_doze_permission_os_notice">目前已知部分 Android TV 裝置會時不時關閉背景執行的應用程式。我們有在「%1$s/%2$s」提供一個可能的解決方案。</string>
     <string name="back">上一步</string>

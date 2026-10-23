@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">Một ứng dụng đồng bộ hoá tập tin phi tập trung, mở và đáng tin cậy.</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -38,7 +37,7 @@
     <string name="refresh">Làm mới</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">Máy ảnh Sync.</string>
-    <string name="photo_shoot_activity_title">Máy ảnh Syncthing-Fork</string>
+    <string name="photo_shoot_activity_title">Máy ảnh Synchro</string>
     <string name="photo_shoot_intro_welcome_title">Chào mừng đến Máy ảnh Syncthing</string>
     <string name="photo_shoot_intro_permission_title">Quyền bắt buộc</string>
     <string name="photo_shoot_intro_no_camera">Xin lỗi, thiết bị này không có máy ảnh.</string>
@@ -394,12 +393,12 @@
     <!-- Settings item that opens issue tracker -->
     <string name="report_issue_title">Báo cáo lỗi</string>
     <!-- Summary for the issue tracker settings item -->
-    <string name="open_issue_tracker_summary">Mở trình theo dõi vấn đề của Syncthing-Fork tại %1$s</string>
+    <string name="open_issue_tracker_summary">Mở trình theo dõi vấn đề của Synchro tại %1$s</string>
     <!-- Menu item to donate -->
     <!-- Title of the preference showing upstream version name -->
     <string name="syncthing_version_title">Phiên bản Syncthing</string>
     <!-- Title of the preference showing this app's version name -->
-    <string name="app_version_title">Phiên bản Wrapper Syncthing-Fork</string>
+    <string name="app_version_title">Phiên bản Wrapper Synchro</string>
     <!-- Title of the preference showing the REST API key -->
     <string name="syncthing_api_key">Mã API Syncthing (nhấn để sao chép)</string>
     <!-- Shown when the API key is copied to the clipboard -->

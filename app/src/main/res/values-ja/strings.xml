@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Syncthing-Fork</string>
     <string name="app_description">オープンで、信頼できる、分散型ファイル同期アプリケーション。</string>
     <!-- FirstStartActivity -->
     <!-- Title for dialog displayed on first start -->
@@ -35,7 +34,7 @@
     <string name="refresh">再読み込み</string>
     <!-- PhotoShootActivity -->
     <string name="photo_shoot_launcher_title">カメラを同期する</string>
-    <string name="photo_shoot_activity_title">Syncthing-Fork カメラ</string>
+    <string name="photo_shoot_activity_title">Synchro カメラ</string>
     <string name="photo_shoot_intro_welcome_title">Syncthing Cameraにようこそ</string>
     <string name="photo_shoot_intro_permission_title">権限が必要です</string>
     <string name="photo_shoot_intro_no_camera">このデバイスにはカメラはありません。</string>
@@ -321,7 +320,7 @@
     <!-- Title of the preference showing upstream version name -->
     <string name="syncthing_version_title">Syncthing バージョン</string>
     <!-- Title of the preference showing this app's version name -->
-    <string name="app_version_title">Syncthing-Fork ラッパー バージョン</string>
+    <string name="app_version_title">Synchro ラッパー バージョン</string>
     <!-- Title of the preference showing the REST API key -->
     <string name="syncthing_api_key">Syncthing API キー (クリックでコピー)</string>
     <!-- Shown when the API key is copied to the clipboard -->
