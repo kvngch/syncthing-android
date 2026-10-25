@@ -60,6 +60,8 @@ fun EntryProviderScope<SettingsRoute>.settingsImportExportEntry() {
 fun SettingsImportExportScreen() {
     val defaultBackupPath = "backups/syncthing/config.zip"
     val backupPath = rememberPreferenceState(Constants.PREF_BACKUP_REL_PATH_TO_ZIP,defaultBackupPath)
+    // One import or export at a time: both entries wait for the end of the current one.
+    var transferRunning by remember { mutableStateOf(false) }
 
     SettingsScaffold(
         title = stringResource(R.string.category_backup),
@@ -98,10 +100,10 @@ fun SettingsImportExportScreen() {
             )
         }
         item {
-            ExportConfigPreference()
+            ExportConfigPreference(transferRunning) { transferRunning = it }
         }
         item {
-            ImportConfigPreference()
+            ImportConfigPreference(transferRunning) { transferRunning = it }
         }
     }
 }
@@ -192,7 +194,7 @@ private fun PasswordPreference() {
 }
 
 @Composable
-private fun ExportConfigPreference() {
+private fun ExportConfigPreference(transferRunning: Boolean, onTransferRunning: (Boolean) -> Unit) {
     val context = LocalContext.current
     val scope = LocalActivityScope.current
     val navigator = LocalSettingsNavigator.current
@@ -201,7 +203,7 @@ private fun ExportConfigPreference() {
     var showAlert by rememberSaveable { mutableStateOf(false) }
 
     Preference(
-        enabled = stService != null,
+        enabled = stService != null && !transferRunning,
         title = { Text(stringResource(R.string.export_config)) },
         onClick = { showAlert = true }
     )
@@ -214,10 +216,12 @@ private fun ExportConfigPreference() {
                 TextButton(
                     onClick = {
                         stService?.let { service ->
+                            showAlert = false
+                            onTransferRunning(true)
                             scope.launch(Dispatchers.IO) {
-                                showAlert = false
                                 service.exportConfig().also { success ->
                                     withContext(Dispatchers.Main) {
+                                        onTransferRunning(false)
                                         if (success) {
                                             Toast.makeText(
                                                 context,
@@ -255,7 +259,7 @@ private fun ExportConfigPreference() {
 }
 
 @Composable
-private fun ImportConfigPreference() {
+private fun ImportConfigPreference(transferRunning: Boolean, onTransferRunning: (Boolean) -> Unit) {
     val context = LocalContext.current
     val scope = LocalActivityScope.current
     val navigator = LocalSettingsNavigator.current
@@ -264,7 +268,7 @@ private fun ImportConfigPreference() {
     var showAlert by rememberSaveable { mutableStateOf(false) }
 
     Preference(
-        enabled = stService != null,
+        enabled = stService != null && !transferRunning,
         title = { Text(stringResource(R.string.import_config)) },
         onClick = { showAlert = true }
     )
@@ -277,10 +281,12 @@ private fun ImportConfigPreference() {
                 TextButton(
                     onClick = {
                         stService?.let { service ->
+                            showAlert = false
+                            onTransferRunning(true)
                             scope.launch(Dispatchers.IO) {
-                                showAlert = false
                                 service.importConfig().also { success ->
                                     withContext(Dispatchers.Main) {
+                                        onTransferRunning(false)
                                         if (success) {
                                             Toast.makeText(
                                                 context,
