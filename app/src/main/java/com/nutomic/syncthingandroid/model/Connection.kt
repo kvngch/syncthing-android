@@ -18,10 +18,7 @@ class Connection {
     @JvmField var outBits: Long = 0
 
     fun setTransferRate(previous: Connection, msElapsed: Long) {
-        val secondsElapsed = msElapsed / 1000
-        val inBytes = 8 * (inBytesTotal - previous.inBytesTotal) / secondsElapsed
-        val outBytes = 8 * (outBytesTotal - previous.outBytesTotal) / secondsElapsed
-        inBits = maxOf(0, inBytes)
-        outBits = maxOf(0, outBytes)
+        inBits = maxOf(0, 8 * (inBytesTotal - previous.inBytesTotal) * 1000 / msElapsed)
+        outBits = maxOf(0, 8 * (outBytesTotal - previous.outBytesTotal) * 1000 / msElapsed)
     }
 }

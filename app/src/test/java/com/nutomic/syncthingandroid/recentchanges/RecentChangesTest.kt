@@ -21,8 +21,8 @@ class RecentChangesTest {
     @Test
     fun deletedDirectoryHidesItsEntriesInTheSameFolderOnly() {
         val events = listOf(
-            event(1, "photos", "2024/a.jpg", "added", "file"),
-            event(2, "backup", "2024/a.jpg", "added", "file"),
+            event(1, "photos", "2024/a.jpg", "modified", "file"),
+            event(2, "backup", "2024/a.jpg", "modified", "file"),
             event(3, "backup", "2024", "deleted", "dir"),
         )
 
@@ -30,13 +30,15 @@ class RecentChangesTest {
     }
 
     @Test
-    fun deletedFileHidesItsEarlierAdditionInTheSameFolderOnly() {
+    fun deletedFileHidesItsEarlierChangesInTheSameFolderOnly() {
+        // Syncthing v2 reports a creation as "modified".
         val events = listOf(
-            event(1, "photos", "notes.txt", "added", "file"),
-            event(2, "backup", "notes.txt", "added", "file"),
+            event(1, "photos", "notes.txt", "modified", "file"),
+            event(2, "backup", "notes.txt", "modified", "file"),
             event(3, "photos", "notes.txt", "deleted", "file"),
+            event(4, "photos", "notes.txt", "modified", "file"),
         )
 
-        assertEquals(listOf(2L, 3L), events.withoutUselessEvents().map { it.id })
+        assertEquals(listOf(2L, 3L, 4L), events.withoutUselessEvents().map { it.id })
     }
 }

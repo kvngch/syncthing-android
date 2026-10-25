@@ -327,7 +327,7 @@ private val OFFSET_WITH_COLON = Regex("([+-]\\d{2}):(\\d{2})$")
 /**
  * Drops disk events that are not useful to display:
  *  - events carrying no data,
- *  - an "added" entry whose exact path is deleted by a later event,
+ *  - an entry whose exact path a later event deletes,
  *  - any entry inside a directory that a later event deletes.
  *
  * Later means "has a higher event id". Deletions are indexed up front so this stays linear in the
@@ -356,10 +356,7 @@ internal fun List<DiskEvent>.withoutUselessEvents(): List<DiskEvent> {
     return valid.filterNot { event ->
         val folderId = event.data.folderID
         val path = event.data.path
-        val supersededByDelete = ChangeAction.of(event.data.action) == ChangeAction.ADDED &&
-            deletedAfter(lastDeletedAt, key(folderId, path), event.id)
-
-        supersededByDelete ||
+        deletedAfter(lastDeletedAt, key(folderId, path), event.id) ||
             path.ancestorPaths().any { deletedAfter(lastDirDeletedAt, key(folderId, it), event.id) }
     }
 }
