@@ -107,6 +107,9 @@ object Constants {
     const val PREF_LAST_BINARY_VERSION = "lastBinaryVersion"
     const val PREF_LOCAL_DEVICE_ID = "localDeviceID"
 
+    // Whether ACCESS_MEDIA_LOCATION was asked once, see MainActivity.
+    const val PREF_MEDIA_LOCATION_ASKED = "mediaLocationAsked"
+
     // from SystemClock.elapsedRealtime()
     const val PREF_LAST_RUN_TIME = "last_run_time"
     const val PREF_APP_START_COUNTER = "app_start_counter"

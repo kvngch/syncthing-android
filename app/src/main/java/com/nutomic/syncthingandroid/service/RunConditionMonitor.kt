@@ -114,8 +114,11 @@ class RunConditionMonitor(
     }
 
     private val systemReceiver = object : BroadcastReceiver() {
+        @Suppress("DEPRECATION")
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
+                // Android 8 only: see vpnUnderlyingType.
+                ConnectivityManager.CONNECTIVITY_ACTION -> updateShouldRunDecision()
                 // Let the charging state settle. onReceive runs on the main thread: never sleep here.
                 Intent.ACTION_POWER_CONNECTED, Intent.ACTION_POWER_DISCONNECTED -> {
                     delayedUpdate?.cancel()
@@ -141,6 +144,11 @@ class RunConditionMonitor(
             addAction(Intent.ACTION_POWER_CONNECTED)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
             addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                // Under a VPN, the default network callback does not see the network below change.
+                @Suppress("DEPRECATION")
+                addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+            }
         }
         ContextCompat.registerReceiver(context, systemReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         current = WeakReference(this)
@@ -586,11 +594,28 @@ class RunConditionMonitor(
 
     private fun isWifiOrEthernetConnection() = activeCapabilities()?.isWifiOrEthernet() == true
 
+    @Suppress("DEPRECATION")
     private fun NetworkCapabilities.isWifiOrEthernet() =
-        hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ||
+            vpnUnderlyingType().let { it == ConnectivityManager.TYPE_WIFI || it == ConnectivityManager.TYPE_ETHERNET }
 
+    @Suppress("DEPRECATION")
     private fun NetworkCapabilities.isMobile() =
-        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH)
+        hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) ||
+            vpnUnderlyingType().let { it == ConnectivityManager.TYPE_MOBILE || it == ConnectivityManager.TYPE_BLUETOOTH }
+
+    /**
+     * On Android 8, a VPN carries no transport but its own: Android 9 copies those of the network
+     * below into its capabilities (Vpn.updateCapabilities). The type of that network then comes
+     * from the deprecated NetworkInfo, as the Java code read it. Null in any other case.
+     */
+    @Suppress("DEPRECATION")
+    private fun NetworkCapabilities.vpnUnderlyingType(): Int? =
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P && hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
+            connectivityManager.activeNetworkInfo?.takeIf { it.isConnected }?.type
+        } else {
+            null
+        }
 
     @Suppress("DEPRECATION")
     private fun NetworkCapabilities.isRoaming() =
