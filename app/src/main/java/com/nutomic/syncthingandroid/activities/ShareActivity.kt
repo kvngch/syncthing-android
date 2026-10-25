@@ -299,12 +299,20 @@ class ShareActivity : SyncthingActivity() {
                         ignored++
                         return@forEach
                     }
+                    // Written under a name Syncthing does not scan, then renamed: a failed copy
+                    // leaves no truncated file to sync.
+                    val partial = File(target.parentFile, ".syncthing.${target.name}.tmp")
                     try {
                         val input = contentResolver.openInputStream(uri) ?: throw IOException("No stream for $uri")
-                        input.use { source -> target.outputStream().use { source.copyTo(it) } }
+                        input.use { source -> partial.outputStream().use { source.copyTo(it) } }
+                        if (!partial.renameTo(target)) {
+                            throw IOException("Failed to rename \"$partial\"")
+                        }
                         copied++
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
+                        // IOException, or SecurityException once the sharing app revoked the access.
                         Log.e(TAG, "Failed to copy \"$uri\" to \"$target\"", e)
+                        partial.delete()
                         failed = true
                     }
                 }
@@ -329,11 +337,24 @@ class ShareActivity : SyncthingActivity() {
         }
     }
 
-    private fun sharedUris(): List<Uri> = when (intent.action) {
-        Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
-        Intent.ACTION_SEND_MULTIPLE ->
-            IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty()
-        else -> emptyList()
+    /**
+     * The content other apps share. Other URIs are dropped: through file:// or the app's own
+     * provider, they would reach its private files.
+     */
+    private fun sharedUris(): List<Uri> {
+        val uris = try {
+            when (intent.action) {
+                Intent.ACTION_SEND -> listOfNotNull(IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java))
+                Intent.ACTION_SEND_MULTIPLE ->
+                    IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, Uri::class.java).orEmpty().filterNotNull()
+                else -> emptyList()
+            }
+        } catch (e: RuntimeException) {
+            // BadParcelableException: an extra of a class the app does not know.
+            Log.e(TAG, "Ignored malformed intent", e)
+            emptyList()
+        }
+        return uris.filter { it.scheme == ContentResolver.SCHEME_CONTENT && it.authority != "$packageName.provider" }
     }
 
     /**
@@ -341,9 +362,6 @@ class ShareActivity : SyncthingActivity() {
      * Path separators become dashes.
      */
     private fun displayName(uri: Uri): String? {
-        if (uri.scheme != ContentResolver.SCHEME_CONTENT) {
-            return uri.lastPathSegment?.replace("/", "-")
-        }
         val queried = try {
             contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
