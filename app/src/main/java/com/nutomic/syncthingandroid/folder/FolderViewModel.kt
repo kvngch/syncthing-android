@@ -112,7 +112,9 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
     }
 
     /**
-     * Without write access, Syncthing can only send changes from the folder.
+     * Without write access, Syncthing can only send changes from the folder. The forced type does
+     * not mark the folder as modified, as in the Java screen: opening it is no edit. A "receive
+     * encrypted" folder keeps its type, which Syncthing does not let change.
      */
     private fun checkWriteAccess(path: String?) {
         if (path.isNullOrEmpty()) {
@@ -120,9 +122,18 @@ class FolderViewModel(application: Application, private val savedState: SavedSta
         }
         viewModelScope.launch {
             val canWrite = withContext(Dispatchers.IO) { Util.nativeBinaryCanWriteToPath(app, path) }
-            _form.update { it?.copy(canWrite = canWrite) }
-            if (!canWrite && _form.value?.folder?.type != Constants.FOLDER_TYPE_SEND_ONLY) {
-                editFolder { type = Constants.FOLDER_TYPE_SEND_ONLY }
+            _form.update { form ->
+                val type = form?.folder?.type
+                if (form == null || canWrite || type == Constants.FOLDER_TYPE_SEND_ONLY ||
+                    type == Constants.FOLDER_TYPE_RECEIVE_ENCRYPTED
+                ) {
+                    form?.copy(canWrite = canWrite)
+                } else {
+                    form.copy(
+                        canWrite = false,
+                        folder = form.folder.deepCopy().apply { this.type = Constants.FOLDER_TYPE_SEND_ONLY },
+                    )
+                }
             }
         }
     }

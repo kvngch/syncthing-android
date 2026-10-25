@@ -262,10 +262,18 @@ class DeviceActivity : SyncthingActivity() {
             }
         }
 
-        // One write for all folders, instead of one config send per folder.
-        val folders = viewModel.folders.value.orEmpty()
-        folders.forEach { folder -> applyShare(folder, device, form) }
-        config.updateFolders(api, folders)
+        // The folders as they are now, not as the screen read them: only those whose sharing with
+        // this device the form changes are written, in one config send.
+        val folders = try {
+            config.getFolders(api)
+        } catch (e: ConfigXml.OpenConfigException) {
+            Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show()
+            return
+        }
+        val changed = folders.filter { folder -> applyShare(folder, device, form) }
+        if (changed.isNotEmpty()) {
+            config.updateFolders(api, changed)
+        }
 
         if (form.isCreate) {
             config.updateDevice(api, device)
@@ -289,14 +297,23 @@ class DeviceActivity : SyncthingActivity() {
         finish()
     }
 
-    private fun applyShare(folder: Folder, device: Device, form: DeviceForm) {
-        val share = form.shares[folder.id.orEmpty()]
-        if (share != null && share.shared) {
-            folder.addDevice(device)
-            folder.getDevice(device.deviceID)?.encryptionPassword = share.password
-        } else {
+    /**
+     * Shares [folder] with [device] or not, as the form says. True if that changed the folder; a
+     * folder the screen has not shown is left as it is.
+     */
+    private fun applyShare(folder: Folder, device: Device, form: DeviceForm): Boolean {
+        val share = form.shares[folder.id.orEmpty()] ?: return false
+        val current = folder.getDevice(device.deviceID)
+        if (!share.shared) {
             folder.removeDevice(device.deviceID)
+            return current != null
         }
+        if (current != null && current.encryptionPassword.orEmpty() == share.password) {
+            return false
+        }
+        folder.addDevice(device)
+        folder.getDevice(device.deviceID)?.encryptionPassword = share.password
+        return true
     }
 
     private fun delete() {
