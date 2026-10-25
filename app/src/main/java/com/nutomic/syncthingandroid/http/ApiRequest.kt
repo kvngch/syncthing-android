@@ -76,9 +76,10 @@ abstract class ApiRequest internal constructor(
         listener: OnSuccessListener?,
         errorListener: OnErrorListener?,
     ) {
+        val dispatcher = if (path == PostRequest.URI_SYSTEM_CONFIG) configRequests else network
         scope.launch {
             val result = try {
-                withContext(network) { send(method, URL(uri.toString()), body) }
+                withContext(dispatcher) { send(method, URL(uri.toString()), body) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -167,6 +168,13 @@ abstract class ApiRequest internal constructor(
          * completion query per folder and device, waits its turn.
          */
         private val network = Dispatchers.IO.limitedParallelism(4)
+
+        /**
+         * Requests to /rest/system/config, reads and writes, go one at a time in the order they
+         * were sent. Each POST replaces the whole configuration: the last one sent is the one
+         * Syncthing keeps, and a read sees the writes sent before it.
+         */
+        private val configRequests = Dispatchers.IO.limitedParallelism(1)
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
         @Volatile
