@@ -15,6 +15,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.RandomAccessFile
 import java.net.Inet4Address
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 
 /**
@@ -40,6 +41,11 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
 
     // Example: "/data/app/${applicationId}-8HsN-IsVtZXc8GrE5-Hepw==/lib/x86/libsyncthingnative.so"
     private val syncthingBinary = Constants.getSyncthingBinary(context)
+
+    /**
+     * Tells this run from the others, e.g. the one of a previous instance of the service.
+     */
+    val runId = nextRunId.incrementAndGet()
     private val syncthingLogFile = Constants.getSyncthingLogFile(context)
 
     private val commandLine = listOf(syncthingBinary.path) + when (command) {
@@ -150,7 +156,11 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
 
         // Restart syncthing if it exited unexpectedly while running on a separate thread.
         if (served && restartSyncthingNative && !stopRequested) {
-            context.startService(Intent(context, SyncthingService::class.java).setAction(SyncthingService.ACTION_RESTART))
+            context.startService(
+                Intent(context, SyncthingService::class.java)
+                    .setAction(SyncthingService.ACTION_RESTART)
+                    .putExtra(SyncthingService.EXTRA_RUN_ID, runId)
+            )
         }
 
         // Notify SyncthingService that State.STARTING or State.ACTIVE is no longer valid,
@@ -160,6 +170,7 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
                 Intent(context, SyncthingService::class.java)
                     .setAction(SyncthingService.ACTION_STOP)
                     .putExtra(SyncthingService.EXTRA_STOP_AFTER_CRASHED_NATIVE, true)
+                    .putExtra(SyncthingService.EXTRA_RUN_ID, runId)
             )
         }
         return capturedStdOut
@@ -344,6 +355,7 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
 
     private companion object {
         const val TAG = "SyncthingRunnable"
+        val nextRunId = AtomicInteger()
         const val TAG_NATIVE = "SyncthingNativeCode"
 
         const val LOG_FILE_MAX_LINES = 200000

@@ -64,6 +64,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * Provides functions to interact with the syncthing REST API.
@@ -138,10 +139,11 @@ class RestApi(
     private var rawConfig: JsonObject? = null
 
     /**
-     * Config writes requested while Syncthing is starting, before its config is loaded.
-     * Run by [onReloadConfigComplete].
+     * Config writes requested while Syncthing is starting, before its config is loaded, each with
+     * its config.xml variant. Run by [onReloadConfigComplete], or handed over by
+     * [takeWritesNeverSent].
      */
-    private val pendingUntilConfigLoaded = mutableListOf<Runnable>()
+    private val pendingUntilConfigLoaded = mutableListOf<Pair<Runnable, Runnable?>>()
 
     /**
      * Results cached from the system status.
@@ -288,7 +290,7 @@ class RestApi(
         Log.d(TAG, "onReloadConfigComplete: Successfully parsed configuration.")
 
         val pendingActions = synchronized(configLock) {
-            pendingUntilConfigLoaded.toList().also { pendingUntilConfigLoaded.clear() }
+            pendingUntilConfigLoaded.map { it.first }.also { pendingUntilConfigLoaded.clear() }
         }
         pendingActions.forEach { it.run() }
 
@@ -672,16 +674,25 @@ class RestApi(
     /**
      * Runs action now if the config is loaded. Otherwise Syncthing is starting: it has read
      * config.xml already, so the action waits for the config to be loaded through the API.
+     * [ifNeverLoaded] writes the same change to config.xml, should Syncthing stop before.
      */
-    fun runWhenConfigLoaded(action: Runnable) {
+    fun runWhenConfigLoaded(ifNeverLoaded: Runnable? = null, action: Runnable) {
         synchronized(configLock) {
             if (config == null) {
                 logV("runWhenConfigLoaded: Config not loaded yet, deferring a config change.")
-                pendingUntilConfigLoaded.add(action)
+                pendingUntilConfigLoaded.add(action to ifNeverLoaded)
                 return
             }
         }
         action.run()
+    }
+
+    /**
+     * The config.xml variants of the writes still waiting for the config, which this RestApi
+     * will not send: Syncthing stopped before serving it. To run once the binary is down.
+     */
+    fun takeWritesNeverSent(): List<Runnable> = synchronized(configLock) {
+        pendingUntilConfigLoaded.mapNotNull { it.second }.also { pendingUntilConfigLoaded.clear() }
     }
 
     /**
@@ -857,9 +868,11 @@ class RestApi(
             }
             var lastId = 0L
             for (json in jsonEvents) {
+                // Read on its own: an event the model cannot decode, e.g. a Failure whose data is
+                // text, still counts, or the next poll starts over from 0.
+                ((json as? JsonObject)?.get("id") as? JsonPrimitive)?.longOrNull?.let { lastId = maxOf(lastId, it) }
                 try {
                     val event = SyncthingJson.decodeFromJsonElement<Event>(json)
-                    lastId = maxOf(lastId, event.id.toLong())
                     listener.onEvent(event, json)
                 } catch (e: IllegalArgumentException) {
                     Log.e(TAG, "getEvents: Skipping event due to JsonSyntaxException, raw=[$json]")
