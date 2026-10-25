@@ -8,6 +8,7 @@ import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.edit
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.SyncthingApp
 import com.nutomic.syncthingandroid.http.PollWebGuiAvailableTask
@@ -599,9 +600,17 @@ class SyncthingService : Service() {
         }
     }
 
-    private fun endConfigTransfer() {
+    /**
+     * Ends an import or export, then starts syncthing if the run conditions want it. After an
+     * import, they are read again first, from the imported preferences: here rather than in the
+     * screen, which a theme change in the archive recreates on the way.
+     */
+    private fun endConfigTransfer(reevaluate: Boolean = false) {
         scope.launch {
             configTransferInProgress = false
+            if (reevaluate) {
+                evaluateRunConditions()
+            }
             if (lastDeterminedShouldRun) {
                 launchStartupTask(SyncthingRunnable.Command.main)
             }
@@ -819,6 +828,8 @@ class SyncthingService : Service() {
             success = importConfigSharedPrefs(sharedPreferencesFile)
             sharedPreferencesFile.delete()
         }
+        // Cached from the previous cert.pem: read again from the imported one when next needed.
+        preferences.edit { remove(Constants.PREF_LOCAL_DEVICE_ID) }
 
         try {
             cleanupImportedFolderDatabases()
@@ -827,7 +838,7 @@ class SyncthingService : Service() {
         }
 
         // Start syncthing after import if run conditions apply.
-        endConfigTransfer()
+        endConfigTransfer(reevaluate = true)
         return success
     }
 

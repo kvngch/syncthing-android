@@ -26,6 +26,7 @@ import com.nutomic.syncthingandroid.R
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.Files
 import java.util.Locale
 
 /**
@@ -224,12 +225,19 @@ object FileUtils {
     fun cutTrailingSlash(path: String): String = path.removeSuffix(File.separator)
 
     /**
-     * Deletes a file, or a directory and everything in it.
+     * Deletes a file, or a directory and everything in it. A symbolic link is deleted, not
+     * followed: an extracted archive may hold one to a directory outside.
      */
     @JvmStatic
     @Throws(IOException::class)
     fun deleteDirectoryRecursively(dir: File?): Boolean {
-        if (dir == null || !dir.exists()) {
+        if (dir == null) {
+            return false
+        }
+        if (Files.isSymbolicLink(dir.toPath())) {
+            return dir.delete()
+        }
+        if (!dir.exists()) {
             return false
         }
         if (dir.isFile) {
