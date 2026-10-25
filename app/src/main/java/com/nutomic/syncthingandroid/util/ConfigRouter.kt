@@ -37,12 +37,17 @@ class ConfigRouter(context: Context) {
      */
     private fun write(restApi: RestApi?, toXml: ConfigXml.() -> Unit, toApi: RestApi.() -> Unit) {
         if (restApi == null) {
-            configXml.loadConfig()
-            configXml.toXml()
-            configXml.saveChanges()
+            writeXml(toXml)
             return
         }
-        restApi.runWhenConfigLoaded { restApi.toApi() }
+        // Should Syncthing stop before serving its config, the change goes to config.xml.
+        restApi.runWhenConfigLoaded(Runnable { writeXml(toXml) }) { restApi.toApi() }
+    }
+
+    private fun writeXml(toXml: ConfigXml.() -> Unit) {
+        configXml.loadConfig()
+        configXml.toXml()
+        configXml.saveChanges()
     }
 
     fun getFolders(restApi: RestApi?): List<Folder> = read(restApi, { getFolders() }, { folders })

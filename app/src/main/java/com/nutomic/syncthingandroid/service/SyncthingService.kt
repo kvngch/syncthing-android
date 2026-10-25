@@ -203,12 +203,12 @@ class SyncthingService : Service() {
             return START_STICKY
         }
         val action = intent.action
-        if (action == ACTION_RESTART && currentState == State.ACTIVE) {
+        if (action == ACTION_RESTART && currentState == State.ACTIVE && isFromCurrentBinary(intent)) {
             shutdown(State.INIT)
             launchStartupTask(SyncthingRunnable.Command.main)
         } else if (action == ACTION_STOP) {
             // SyncthingRunnable, the only sender of ACTION_STOP, always sets this extra.
-            if (intent.getBooleanExtra(EXTRA_STOP_AFTER_CRASHED_NATIVE, false)) {
+            if (intent.getBooleanExtra(EXTRA_STOP_AFTER_CRASHED_NATIVE, false) && isFromCurrentBinary(intent)) {
                 // The syncthing native binary crashed. Changing currentState prevents the "defer
                 // until syncthing is started" routine we normally use for clean shutdown to take
                 // place: the crashed instance is shut down forcefully at once.
@@ -269,6 +269,22 @@ class SyncthingService : Service() {
             afterFreshServiceInstanceStart()
         }
         return START_STICKY
+    }
+
+    /**
+     * False for a stop or restart sent by the binary of a previous instance of the service: the
+     * new instance kills it by name at its start, and must not take that exit for its own. True
+     * for the senders that do not name a binary.
+     */
+    private fun isFromCurrentBinary(intent: Intent): Boolean {
+        if (!intent.hasExtra(EXTRA_RUN_ID)) {
+            return true
+        }
+        val fromCurrent = intent.getIntExtra(EXTRA_RUN_ID, 0) == syncthingRunnable?.runId
+        if (!fromCurrent) {
+            Log.w(TAG, "Ignored ${intent.action} sent by a binary this instance did not start")
+        }
+        return fromCurrent
     }
 
     /**
@@ -528,9 +544,13 @@ class SyncthingService : Service() {
         if (syncthingRunnable != null) {
             api?.shutdown()
         }
+        // Changes made while Syncthing started, which it will not get: config.xml takes them,
+        // once the binary is down.
+        val writesNeverSent = api?.takeWritesNeverSent().orEmpty()
         api = null
 
         if (syncthingRunnable == null) {
+            writesNeverSent.forEach { it.run() }
             return
         }
         Util.killProcess(Constants.FILENAME_SYNCTHING_BINARY)
@@ -549,6 +569,7 @@ class SyncthingService : Service() {
             syncthingRunnableThread = null
         }
         syncthingRunnable = null
+        writesNeverSent.forEach { it.run() }
     }
 
     /**
@@ -1327,6 +1348,11 @@ class SyncthingService : Service() {
          * Extra used together with ACTION_STOP.
          */
         const val EXTRA_STOP_AFTER_CRASHED_NATIVE = ".SyncthingService.EXTRA_STOP_AFTER_CRASHED_NATIVE"
+
+        /**
+         * [SyncthingRunnable.runId] of the binary that sends ACTION_STOP or ACTION_RESTART.
+         */
+        const val EXTRA_RUN_ID = ".SyncthingService.EXTRA_RUN_ID"
 
         /**
          * Backstop timeout for verifyRestartAndRollback in case the state machine never reaches
