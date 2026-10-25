@@ -37,9 +37,9 @@ object PermissionUtil {
      * screen granting all files access.
      */
     @JvmStatic
-    fun requestStoragePermission(activity: Activity, launcher: ActivityResultLauncher<String>) {
+    fun requestStoragePermission(activity: Activity, launcher: ActivityResultLauncher<Array<String>>) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            launcher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            launcher.launch(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE))
             return
         }
         val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)

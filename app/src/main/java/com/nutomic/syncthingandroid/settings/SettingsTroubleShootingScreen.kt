@@ -16,11 +16,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.edit
 import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.LogActivity
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingService
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import com.nutomic.syncthingandroid.util.openUrl
 import me.zhanghai.compose.preference.MultiSelectListPreference
 import me.zhanghai.compose.preference.Preference
@@ -124,7 +126,10 @@ private fun VerboseLogPreference() {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        verboseLog.value = !verboseLog.value
+                        val enabled = !verboseLog.value
+                        // Written now: the restart ends the process before the state writes it.
+                        activity?.defaultPreferences?.edit(commit = true) { putBoolean(Constants.PREF_VERBOSE_LOG, enabled) }
+                        verboseLog.value = enabled
                         showAlert = false
                         // restart whole app
                         restartApp(activity)

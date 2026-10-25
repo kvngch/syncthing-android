@@ -81,19 +81,24 @@ class OnboardingActivity : ThemedActivity() {
     private var uiState by mutableStateOf(OnboardingUiState())
 
     /**
-     * Before Android 11 only: see [PermissionUtil.requestStoragePermission].
+     * Before Android 11 only: see [PermissionUtil.requestStoragePermission]. Asked as several
+     * permissions: the result is then empty for a cancelled request, which is no refusal.
      */
     val storagePermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
         refreshPermissionState()
-        if (isGranted) {
-            Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
-            Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
-            advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
-        } else {
-            Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
-            openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
+        when (results[Manifest.permission.WRITE_EXTERNAL_STORAGE]) {
+            true -> {
+                Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show()
+                Log.i(TAG, "User granted WRITE_EXTERNAL_STORAGE permission.")
+                advanceIfCurrentPage(OnboardingPage.STORAGE_PERMISSION)
+            }
+            false -> {
+                Log.i(TAG, "User denied WRITE_EXTERNAL_STORAGE permission.")
+                openSettingsIfPermanentlyDenied(Manifest.permission.WRITE_EXTERNAL_STORAGE, appDetailsSettingsIntent())
+            }
+            null -> Log.i(TAG, "WRITE_EXTERNAL_STORAGE request cancelled.")
         }
     }
 
