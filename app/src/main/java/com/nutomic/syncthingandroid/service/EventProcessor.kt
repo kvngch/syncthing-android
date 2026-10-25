@@ -62,7 +62,8 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
         // First check if the event number ran backwards.
         // If that's the case we've to start at zero because syncthing was restarted.
         restApi.getEvents(0, 1, object : RestApi.OnReceiveEventListener {
-            override fun onError() {}
+            // A failed probe, e.g. while Syncthing restarts its web interface, is retried as a failed read.
+            override fun onError() = this@EventProcessor.onError()
 
             override fun onEvent(event: Event, json: JsonElement) {}
 
