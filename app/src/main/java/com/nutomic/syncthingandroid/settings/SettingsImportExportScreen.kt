@@ -293,10 +293,6 @@ private fun ImportConfigPreference(transferRunning: Boolean, onTransferRunning: 
                                                 R.string.config_imported_successful,
                                                 Toast.LENGTH_LONG
                                             ).show()
-
-                                            // ThemedActivity recreates the activities if the theme changed.
-                                            service.evaluateRunConditions()
-
                                             navigator.navigateUp()
                                         } else {
                                             Toast.makeText(

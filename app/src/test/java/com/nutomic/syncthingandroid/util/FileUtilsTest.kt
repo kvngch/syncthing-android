@@ -2,6 +2,7 @@ package com.nutomic.syncthingandroid.util
 
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
@@ -14,6 +15,20 @@ class FileUtilsTest {
 
     @get:Rule
     val tmp = TemporaryFolder()
+
+    @Test
+    fun deleteDirectoryRecursivelyDoesNotFollowSymbolicLinks() {
+        val outside = tmp.newFolder("outside")
+        val kept = File(outside, "kept.txt").apply { writeText("data") }
+        val staging = tmp.newFolder("staging")
+        Files.createSymbolicLink(File(staging, "link").toPath(), outside.toPath())
+        Files.createSymbolicLink(File(staging, "broken").toPath(), File(tmp.root, "missing").toPath())
+
+        assertTrue(FileUtils.deleteDirectoryRecursively(staging))
+
+        assertFalse(staging.exists())
+        assertTrue(kept.exists())
+    }
 
     @Test
     fun writeBytesAtomicReplacesTarget() {
