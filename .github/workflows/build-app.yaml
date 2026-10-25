@@ -27,9 +27,9 @@ jobs:
       buildType: "debug"
       environmentName: "dev-sign-untrusted"
 
-  # Smoke test on an Android 15 emulator: onboarding, Syncthing start, location of a photo sent to
-  # a Syncthing on the runner, one screenshot per screen.
-  # Fails if the app crashes, if Syncthing never answers or if the photo loses its location.
+  # Smoke test on an Android 15 emulator: onboarding, Syncthing start, a photo sent to a Syncthing
+  # on the runner, one screenshot per screen. Fails if the app crashes, if Syncthing never answers
+  # or if the photo does not arrive untouched.
   captures:
     name: Captures
     needs: sign

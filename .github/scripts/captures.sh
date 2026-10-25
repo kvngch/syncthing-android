@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke test and screenshots on the CI emulator: the debug APK is installed, the onboarding is
-# passed, Syncthing must start, a synced photo must keep its location, then one screenshot per screen.
-# Fails if the app crashed, if Syncthing never answered or if the photo lost its location.
+# passed, Syncthing must start, a photo must reach a Syncthing on the runner untouched, then one
+# screenshot per screen. Fails if the app crashed, if Syncthing never answered or if the photo did not
+# arrive untouched.
 # Usage: captures.sh <directory of the APK>
 set -uo pipefail
 PAQUET=fr.kvngch.synchro.debug
@@ -65,7 +66,7 @@ attendre_anr() { touche "Wait" >/dev/null && sleep 2; }
 retour() { adb shell input keyevent KEYCODE_BACK; sleep 2; }
 
 # Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up,
-# or the media location dialog it opens (#236).
+# or the media location dialog it opens.
 adb shell monkey -p $PAQUET -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 sleep 10
 photo 00-onboarding
@@ -85,16 +86,11 @@ for _ in $(seq 1 60); do
 done
 sleep 5
 
-# Location of a synced photo (#236). A Syncthing on the runner, which the emulator reaches at
-# 10.0.2.2, receives DCIM/Camera. A photo sent while the media location dialog is still open must
-# arrive with its location hidden by Android, which shows the emulator hides it. A photo sent
-# after "Allow all" must arrive untouched.
+# Sync of a photo: a Syncthing on the runner, which the emulator reaches at 10.0.2.2, receives
+# DCIM/Camera, and the photo must arrive untouched, location included. It leaves while the media
+# location dialog is still open: MediaProvider hides nothing from an app with all files access
+# (shouldBypassFuseRestrictions), ACCESS_MEDIA_LOCATION or not.
 PHOTO=.github/scripts/photo-localisee.jpg
-recue() {
-  for _ in $(seq 1 60); do [ -f "hote/recu/$1" ] && return 0; sleep 2; done
-  echo "jamais recue : $1"
-  return 1
-}
 (
   set -e
   mkdir -p hote
@@ -119,31 +115,15 @@ print(g.findtext("apikey"), g.findtext("address").rsplit(":", 1)[1])')
   hote config/devices -X POST -d "{\"deviceID\":\"$ID_EMU\",\"name\":\"emulateur\"}"
   hote config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"$PWD/hote/recu\",\"type\":\"receiveonly\",\"devices\":[{\"deviceID\":\"$ID_EMU\"}]}"
   emu config/devices -X POST -d "{\"deviceID\":\"$ID_HOTE\",\"name\":\"runner\",\"addresses\":[\"tcp://10.0.2.2:22000\"]}"
+  adb shell dumpsys package $PAQUET | grep "ACCESS_MEDIA_LOCATION" || true
   adb shell mkdir -p /sdcard/DCIM/Camera
-  adb push $PHOTO /sdcard/DCIM/Camera/avant.jpg
+  adb push $PHOTO /sdcard/DCIM/Camera/photo.jpg
   emu config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"/storage/emulated/0/DCIM/Camera\",\"type\":\"sendonly\",\"devices\":[{\"deviceID\":\"$ID_HOTE\"}]}"
-  recue avant.jpg
-  if cmp -s $PHOTO hote/recu/avant.jpg; then
-    echo "temoin : localisation intacte sans la permission, le test ne prouve rien sur cet emulateur"
-    exit 1
-  fi
-  echo "temoin : $(cmp -l $PHOTO hote/recu/avant.jpg | wc -l) octets masques sans la permission"
-  # Called in a || list, touche runs without set -e: a failed uiautomator dump does not stop it.
-  touche "Allow all" || { echo "demande de localisation introuvable"; exit 1; }
-  sleep 3
-  adb shell dumpsys package $PAQUET | grep "ACCESS_MEDIA_LOCATION: granted" || true
-  adb push $PHOTO /sdcard/DCIM/Camera/apres.jpg
-  emu "db/scan?folder=photos" -X POST
-  recue apres.jpg
-  if ! cmp $PHOTO hote/recu/apres.jpg; then
-    echo "apres : localisation perdue malgre la permission"
-    exit 1
-  fi
-  echo "apres : photo identique a l'original"
+  for _ in $(seq 1 60); do [ -f hote/recu/photo.jpg ] && break; sleep 2; done
+  cmp $PHOTO hote/recu/photo.jpg
 )
-LOCALISATION=$?
-cp hote/recu/*.jpg captures/ 2>/dev/null
-# A test stopped early leaves the dialog over the main screen.
+ENVOI=$?
+cp hote/recu/photo.jpg captures/ 2>/dev/null
 ecran_actif | grep -q GrantPermissionsActivity && touche "Allow all" >/dev/null
 
 photo 01-dossiers
@@ -195,8 +175,8 @@ if [ "$EN_LIGNE" != 1 ]; then
   echo "ECHEC : l'interface web de Syncthing n'a jamais repondu, voir captures/syncthing.txt"
   ECHEC=1
 fi
-if [ "$LOCALISATION" != 0 ]; then
-  echo "ECHEC : localisation des photos, voir le journal du job et captures/syncthing-hote.txt"
+if [ "$ENVOI" != 0 ]; then
+  echo "ECHEC : la photo n'est pas arrivee intacte sur le runner, voir captures/syncthing-hote.txt"
   ECHEC=1
 fi
 exit $ECHEC
