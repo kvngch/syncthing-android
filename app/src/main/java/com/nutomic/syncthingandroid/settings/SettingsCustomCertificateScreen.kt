@@ -1,8 +1,6 @@
 package com.nutomic.syncthingandroid.settings
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
@@ -41,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -51,13 +50,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.util.CertificateValidator
+import com.nutomic.syncthingandroid.util.openUrl
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.PreferenceCategory
@@ -119,14 +119,19 @@ fun SettingsCustomCertificateScreen() {
             null
     }
 
+    val pickScope = rememberCoroutineScope()
     val certPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        readPicked(context, uri)?.let { (name, bytes) ->
-            certName = name; certBytes = bytes; applyFailure = null
+        pickScope.launch {
+            readPicked(context, uri)?.let { (name, bytes) ->
+                certName = name; certBytes = bytes; applyFailure = null
+            }
         }
     }
     val keyPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        readPicked(context, uri)?.let { (name, bytes) ->
-            keyName = name; keyBytes = bytes; applyFailure = null
+        pickScope.launch {
+            readPicked(context, uri)?.let { (name, bytes) ->
+                keyName = name; keyBytes = bytes; applyFailure = null
+            }
         }
     }
 
@@ -460,35 +465,40 @@ private fun HelpRow() {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
-        onClick = {
-            try {
-                context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-            } catch (_: ActivityNotFoundException) {
-                toast(context, R.string.no_app_to_open_link)
-            }
-        },
+        onClick = { context.openUrl(url) },
     )
 }
 
-private fun readPicked(context: Context, uri: Uri?): Pair<String, ByteArray>? {
+/**
+ * Reads the picked file off the main thread, at most one byte past [MAX_PEM_BYTES]: a provider
+ * can be slow, a file huge.
+ */
+private suspend fun readPicked(context: Context, uri: Uri?): Pair<String, ByteArray>? {
     if (uri == null) {
         return null
     }
-    return try {
-        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-        if (bytes == null) {
-            toast(context, R.string.custom_cert_read_failed)
+    val picked = withContext(Dispatchers.IO) {
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val buffer = ByteArray(MAX_PEM_BYTES + 1)
+                var size = 0
+                while (size < buffer.size) {
+                    val read = input.read(buffer, size, buffer.size - size)
+                    if (read < 0) break
+                    size += read
+                }
+                (queryDisplayName(context, uri) ?: "selected file") to buffer.copyOf(size)
+            }
+        } catch (_: Exception) {
             null
-        } else if (bytes.size > MAX_PEM_BYTES) {
-            toast(context, R.string.custom_cert_file_too_large)
-            null
-        } else {
-            (queryDisplayName(context, uri) ?: "selected file") to bytes
         }
-    } catch (_: Exception) {
-        toast(context, R.string.custom_cert_read_failed)
-        null
     }
+    when {
+        picked == null -> toast(context, R.string.custom_cert_read_failed)
+        picked.second.size > MAX_PEM_BYTES -> toast(context, R.string.custom_cert_file_too_large)
+        else -> return picked
+    }
+    return null
 }
 
 private fun queryDisplayName(context: Context, uri: Uri): String? {

@@ -422,18 +422,21 @@ private fun ClearStVersionPreference(
                 TextButton(
                     onClick = {
                         stService?.api?.let { api ->
-                            scope.launch(Dispatchers.IO) {
-                                val folders = api.folders
-                                if (clearStVersions(folders)) {
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(
-                                            context,
-                                            R.string.clear_stversions_done,
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                            // The dialog outlives a restart of Syncthing: wait for its config.
+                            api.runWhenConfigLoaded {
+                                scope.launch(Dispatchers.IO) {
+                                    val folders = api.folders
+                                    if (clearStVersions(folders)) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(
+                                                context,
+                                                R.string.clear_stversions_done,
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     }
+                                    showAlert = false
                                 }
-                                showAlert = false
                             }
                         }
                     },
@@ -476,17 +479,20 @@ private fun UndoIgnoredDevicesFoldersPreference(
                 TextButton(
                     onClick = {
                         stService?.api?.let { api ->
-                            scope.launch(Dispatchers.IO) {
-                                api.undoIgnoredDevicesAndFolders()
-                                api.sendConfig()
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(
-                                        context,
-                                        R.string.undo_ignored_devices_folders_done,
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                            // The dialog outlives a restart of Syncthing: wait for its config.
+                            api.runWhenConfigLoaded {
+                                scope.launch(Dispatchers.IO) {
+                                    api.undoIgnoredDevicesAndFolders()
+                                    api.sendConfig()
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            context,
+                                            R.string.undo_ignored_devices_folders_done,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    showAlert = false
                                 }
-                                showAlert = false
                             }
                         }
                     },

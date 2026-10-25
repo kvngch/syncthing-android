@@ -15,13 +15,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.activities.LogActivity
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.SyncthingService
+import com.nutomic.syncthingandroid.util.openUrl
 import me.zhanghai.compose.preference.MultiSelectListPreference
 import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.SwitchPreference
@@ -40,7 +40,6 @@ fun EntryProviderScope<SettingsRoute>.settingsTroubleshootingEntry() {
 @Composable
 fun SettingsTroubleshootingScreen() {
     val context = LocalContext.current
-    val uriHandler = LocalUriHandler.current
 
     val issueTrackerUrl = stringResource(R.string.issue_tracker_url)
 
@@ -55,7 +54,7 @@ fun SettingsTroubleshootingScreen() {
             Preference(
                 title = { Text(stringResource(R.string.report_issue_title)) },
                 summary = { Text(stringResource(R.string.open_issue_tracker_summary, issueTrackerUrl)) },
-                onClick = { uriHandler.openUri(issueTrackerUrl) }
+                onClick = { context.openUrl(issueTrackerUrl) }
             )
         }
         item {
