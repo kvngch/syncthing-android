@@ -240,10 +240,7 @@ class SyncthingService : Service() {
                     shutdown(State.DISABLED)
                 }
                 launchStartupTask(SyncthingRunnable.Command.resetdeltas)
-                if (!lastDeterminedShouldRun) {
-                    // Shutdown if syncthing was not running before the UI action was raised.
-                    shutdown(State.DISABLED)
-                }
+                stopUnlessShouldRun()
             }
         } else if (action == ACTION_REFRESH_NETWORK_INFO) {
             runConditionMonitor?.updateShouldRunDecision()
@@ -316,9 +313,20 @@ class SyncthingService : Service() {
             if (currentState == State.DISABLED || currentState == State.INIT) {
                 launchStartupTask(SyncthingRunnable.Command.main)
             }
-        } else if (currentState != State.DISABLED) {
-            // Stop syncthing.
-            shutdown(State.DISABLED)
+        } else {
+            stopUnlessShouldRun()
+        }
+    }
+
+    /**
+     * Stops syncthing once it left State.STARTING, unless the run conditions want it again by
+     * then: in State.STARTING, a start request does nothing, and the stop must not undo it.
+     */
+    private fun stopUnlessShouldRun() {
+        runWhenNotStarting {
+            if (!lastDeterminedShouldRun && currentState != State.DISABLED) {
+                shutdown(State.DISABLED)
+            }
         }
     }
 
