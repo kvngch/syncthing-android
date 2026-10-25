@@ -771,13 +771,13 @@ class RestApi(
         get() = previousConnections?.total?.deepCopy() ?: Connection()
 
     /**
-     * Calculate transfer rates for each remote device connection and the "total device" stats.
-     * Within REST_UPDATE_INTERVAL of the previous result, the previous rates are kept.
+     * Calculate transfer rates for each remote device connection and the "total device" stats,
+     * over the time since the previous result.
      */
     private fun calculateConnectionStats(connections: Connections) {
         val now = System.currentTimeMillis()
         val msElapsed = now - previousConnectionTime
-        if (msElapsed < Constants.REST_UPDATE_INTERVAL) {
+        if (msElapsed <= 0) {
             return
         }
         previousConnectionTime = now

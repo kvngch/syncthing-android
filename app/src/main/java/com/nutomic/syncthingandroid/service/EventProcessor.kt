@@ -222,7 +222,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
         }
         for (error in errors.filterIsInstance<JsonObject>()) {
             val path = error.string("path")
-            if (!path.isNullOrEmpty() && error.string("error")?.contains("insufficient space in basic") == true) {
+            if (!path.isNullOrEmpty() && error.string("error")?.contains("insufficient space in folder") == true) {
                 notificationHandler.showCrashedNotification(R.string.notification_out_of_disk_space, shortened(path))
             }
         }

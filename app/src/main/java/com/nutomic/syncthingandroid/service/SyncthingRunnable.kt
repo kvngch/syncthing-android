@@ -280,7 +280,7 @@ class SyncthingRunnable(private val context: Context, command: Command) : Runnab
 
         // Set config, key and database directory.
         env["STHOMEDIR"] = context.filesDir.toString()
-        env["STTRACE"] = preferences.getStringSet(Constants.PREF_DEBUG_FACILITIES_ENABLED, null).orEmpty().joinToString(" ")
+        env["STTRACE"] = preferences.getStringSet(Constants.PREF_DEBUG_FACILITIES_ENABLED, null).orEmpty().joinToString(",")
         env["STMONITORED"] = "1"
         env["STNOUPGRADE"] = "1"
         env["STVERSIONEXTRA"] = context.getString(R.string.app_name)

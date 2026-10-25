@@ -166,7 +166,8 @@ class LogActivity : ThemedActivity() {
             Toast.makeText(this, R.string.share_log_file_missing, Toast.LENGTH_SHORT).show()
             return
         }
-        val maskedLog = File(cacheDir, logFile.name)
+        // The Android log is in cacheDir already: the copy needs a name of its own.
+        val maskedLog = File(cacheDir, "masked-${logFile.name}")
         lifecycleScope.launch {
             val written = withContext(Dispatchers.IO) {
                 try {

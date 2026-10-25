@@ -69,7 +69,7 @@ class NotificationHandler(private val context: Context) {
     /**
      * Shows, updates or hides the notification, keeping the previous details.
      */
-    fun updatePersistentNotification(service: SyncthingService) = updatePersistentNotification(service, true, 0, 0)
+    fun updatePersistentNotification(service: SyncthingService) = updatePersistentNotification(service, true, 0, -1)
 
     fun updatePersistentNotification(
         service: SyncthingService,
@@ -88,6 +88,10 @@ class NotificationHandler(private val context: Context) {
             service.stopForeground(Service.STOP_FOREGROUND_DETACH)
         }
 
+        if (currentState != State.ACTIVE) {
+            // The next session starts without details, as its RestApi does.
+            lastNotificationText = null
+        }
         val text = when (currentState) {
             State.DISABLED -> context.getString(R.string.syncthing_disabled)
             State.STARTING -> context.getString(R.string.syncthing_starting)
