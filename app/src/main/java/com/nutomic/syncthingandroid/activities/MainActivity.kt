@@ -45,14 +45,14 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
     private val menuKeyPresses = Channel<Unit>(Channel.CONFLATED)
 
     /**
-     * Without ACCESS_MEDIA_LOCATION, Android hides the location in the photos the binary reads,
-     * all files access or not, and Syncthing sends them without it. Asked once: the system
-     * settings change it afterwards.
+     * Without ACCESS_MEDIA_LOCATION, Android 10 to 13 hide the location in the photos ShareActivity
+     * reads; Android 14 exempts all files access. The binary needs none: its reads are never
+     * redacted. Asked once: the system settings change it afterwards.
      */
     private val requestMediaLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
     private fun askMediaLocationOnce() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Build.VERSION.SDK_INT > Build.VERSION_CODES.TIRAMISU) {
             return
         }
         if (sharedPreferences.getBoolean(Constants.PREF_MEDIA_LOCATION_ASKED, false) ||

@@ -41,8 +41,9 @@
         tools:ignore="ProtectedPermissions" />
     <!-- Android 17+ blocks local network traffic without this runtime permission. -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
-    <!-- ACCESS_MEDIA_LOCATION keeps the location in the photos the binary reads, since Android 10 -->
-    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    <!-- ACCESS_MEDIA_LOCATION keeps the location in the photos ShareActivity reads. From Android 14,
+         all files access is enough. The binary needs none: Android never redacts its reads. -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" android:maxSdkVersion="33" />
 
     <!--
         Apps can listen to our notifications about sync progress by subscribing to ACTION_NOTIFY_FOLDER_SYNC_COMPLETE,

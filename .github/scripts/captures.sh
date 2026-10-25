@@ -65,13 +65,12 @@ attendre_anr() { touche "Wait" >/dev/null && sleep 2; }
 
 retour() { adb shell input keyevent KEYCODE_BACK; sleep 2; }
 
-# Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up,
-# or the media location dialog it opens.
+# Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up.
 adb shell monkey -p $PAQUET -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 sleep 10
 photo 00-onboarding
 for _ in $(seq 1 30); do
-  ecran_actif | grep -q -E 'MainActivity|GrantPermissionsActivity' && break
+  ecran_actif | grep -q MainActivity && break
   attendre_anr
   touche "Continue" >/dev/null || touche "Finish" >/dev/null
   sleep 5
@@ -87,9 +86,9 @@ done
 sleep 5
 
 # Sync of a photo: a Syncthing on the runner, which the emulator reaches at 10.0.2.2, receives
-# DCIM/Camera, and the photo must arrive untouched, location included. It leaves while the media
-# location dialog is still open: MediaProvider hides nothing from an app with all files access
-# (shouldBypassFuseRestrictions), ACCESS_MEDIA_LOCATION or not.
+# DCIM/Camera, and the photo must arrive untouched, location included. ACCESS_MEDIA_LOCATION is not
+# declared on this Android 15: MediaProvider hides nothing from an app with all files access
+# (shouldBypassFuseRestrictions).
 PHOTO=.github/scripts/photo-localisee.jpg
 (
   set -e
@@ -115,7 +114,6 @@ print(g.findtext("apikey"), g.findtext("address").rsplit(":", 1)[1])')
   hote config/devices -X POST -d "{\"deviceID\":\"$ID_EMU\",\"name\":\"emulateur\"}"
   hote config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"$PWD/hote/recu\",\"type\":\"receiveonly\",\"devices\":[{\"deviceID\":\"$ID_EMU\"}]}"
   emu config/devices -X POST -d "{\"deviceID\":\"$ID_HOTE\",\"name\":\"runner\",\"addresses\":[\"tcp://10.0.2.2:22000\"]}"
-  adb shell dumpsys package $PAQUET | grep "ACCESS_MEDIA_LOCATION" || true
   adb shell mkdir -p /sdcard/DCIM/Camera
   adb push $PHOTO /sdcard/DCIM/Camera/photo.jpg
   emu config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"/storage/emulated/0/DCIM/Camera\",\"type\":\"sendonly\",\"devices\":[{\"deviceID\":\"$ID_HOTE\"}]}"
@@ -124,7 +122,6 @@ print(g.findtext("apikey"), g.findtext("address").rsplit(":", 1)[1])')
 )
 ENVOI=$?
 cp hote/recu/photo.jpg captures/ 2>/dev/null
-ecran_actif | grep -q GrantPermissionsActivity && touche "Allow all" >/dev/null
 
 photo 01-dossiers
 touche "Devices" && sleep 3 && photo 02-appareils
