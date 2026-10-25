@@ -234,14 +234,14 @@ internal fun VersioningDialog(
                         } else {
                             val result = this ?: Folder.Versioning()
                             when (type) {
-                                "trashcan" -> result.params["cleanoutDays"] = clamp(cleanoutDays, 0, 100)
+                                "trashcan" -> result.params["cleanoutDays"] = clamp(cleanoutDays, 0)
                                 "simple" -> {
                                     result.params["keep"] = clamp(keep, 1, 100000)
-                                    result.params["cleanoutDays"] = clamp(cleanoutDays, 0, 100)
+                                    result.params["cleanoutDays"] = clamp(cleanoutDays, 0)
                                 }
                                 "staggered" -> {
                                     result.params["maxAge"] =
-                                        TimeUnit.DAYS.toSeconds(clamp(maxAgeDays, 0, 100).toLong()).toString()
+                                        TimeUnit.DAYS.toSeconds(clamp(maxAgeDays, 0).toLong()).toString()
                                     result.fsPath = versionsPath
                                 }
                                 "external" -> result.params["command"] = command
@@ -269,7 +269,11 @@ internal fun VersioningDialog(
     )
 }
 
-private fun clamp(value: String, min: Int, max: Int): String =
+/**
+ * No upper bound on the days kept: OK writes every field, changed or not, and Syncthing deletes
+ * the versions older than what it gets. [NumberField] takes six digits at most.
+ */
+private fun clamp(value: String, min: Int, max: Int = Int.MAX_VALUE): String =
     (value.toIntOrNull() ?: min).coerceIn(min, max).toString()
 
 @Composable
