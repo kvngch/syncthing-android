@@ -1378,6 +1378,8 @@ class SyncthingService : Service() {
             Constants.PREF_LAST_BINARY_VERSION,
             Constants.PREF_LOCAL_DEVICE_ID,
             Constants.PREF_LAST_RUN_TIME,
+            // The permission belongs to this phone: asked again on the one an archive goes to.
+            Constants.PREF_MEDIA_LOCATION_ASKED,
         )
     }
 }

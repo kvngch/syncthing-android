@@ -1,8 +1,11 @@
 package com.nutomic.syncthingandroid.activities
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
@@ -10,10 +13,13 @@ import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.device.DeviceIdDialog
 import com.nutomic.syncthingandroid.main.MainScreen
@@ -37,6 +43,26 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
     private var serviceState by mutableStateOf(SyncthingService.State.INIT)
     private var runAsService by mutableStateOf(false)
     private val menuKeyPresses = Channel<Unit>(Channel.CONFLATED)
+
+    /**
+     * Without ACCESS_MEDIA_LOCATION, Android hides the location in the photos the binary reads,
+     * all files access or not, and Syncthing sends them without it. Asked once: the system
+     * settings change it afterwards.
+     */
+    private val requestMediaLocation = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    private fun askMediaLocationOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return
+        }
+        if (sharedPreferences.getBoolean(Constants.PREF_MEDIA_LOCATION_ASKED, false) ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_MEDIA_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        sharedPreferences.edit { putBoolean(Constants.PREF_MEDIA_LOCATION_ASKED, true) }
+        requestMediaLocation.launch(Manifest.permission.ACCESS_MEDIA_LOCATION)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +108,7 @@ class MainActivity : SyncthingActivity(), SyncthingService.OnServiceStateChangeL
             finish()
             return
         }
+        askMediaLocationOnce()
 
         // Picks up changes made to the metered wifi flags.
         service?.evaluateRunConditions()
