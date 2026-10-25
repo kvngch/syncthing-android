@@ -307,6 +307,8 @@ class ShareActivity : SyncthingActivity() {
             var ignored = 0
             var failed = false
             withContext(Dispatchers.IO) {
+                // The remembered sub directory may have been deleted since.
+                directory.mkdirs()
                 toCopy.forEach { (uri, name) ->
                     val target = File(directory, name)
                     if (target.isFile && !allowOverwrite) {

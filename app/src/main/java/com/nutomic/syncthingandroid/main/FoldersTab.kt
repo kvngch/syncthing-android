@@ -248,7 +248,7 @@ private fun FolderStatusDetails(
         val count = pluralStringResource(R.plurals.conflicts, conflicts.size, conflicts.size)
         val more = if (conflicts.size > 1) "\n…" else ""
         Text(
-            "⚠ $count\n⤮ ${conflicts[0]}$more",
+            "\u26A0 $count\n⤮ ${conflicts[0]}$more",
             color = colorResource(R.color.text_orange),
             style = MaterialTheme.typography.bodySmall,
         )
@@ -313,10 +313,10 @@ private fun lastItemFinishedText(cached: CachedFolderStatus): Pair<String, Strin
     val action = when (cached.lastItemFinishedAction) {
         "delete" -> "⊗"
         "update" -> "⊛"
-        else -> "⁉"
+        else -> "\u2049"
     }
     val item = "⇌ $action ${Util.getPathEllipsis(cached.lastItemFinishedItem)}"
-    val time = "⇌⌚" + Util.formatTime(cached.lastItemFinishedTime)
+    val time = "⇌\u231A" + Util.formatTime(cached.lastItemFinishedTime)
     return item to time
 }
 

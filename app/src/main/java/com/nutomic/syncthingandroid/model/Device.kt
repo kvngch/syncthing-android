@@ -34,12 +34,17 @@ class Device {
         get() = if (name.isNullOrEmpty()) deviceID.orEmpty().take(7) else name
 
     /**
-     * Whether the device ID is well formed, the way Syncthing reads it: case, separators and
-     * the digits that look like letters do not matter, and the optional check characters must
-     * match. See https://github.com/syncthing/syncthing/blob/main/lib/protocol/deviceid.go
+     * Whether the device ID is well formed, the way Syncthing reads it.
      */
-    fun checkDeviceID(): Boolean {
-        var id = (deviceID ?: return false)
+    fun checkDeviceID(): Boolean = normalizedDeviceID() != null
+
+    /**
+     * The 52 characters Syncthing compares device IDs by: case, separators and the digits that
+     * look like letters do not matter, and the optional check characters must match. Null if the
+     * ID is not well formed. See https://github.com/syncthing/syncthing/blob/main/lib/protocol/deviceid.go
+     */
+    fun normalizedDeviceID(): String? {
+        var id = (deviceID ?: return null)
             .replace("=", "")
             .uppercase(Locale.ROOT)
             .replace('1', 'I')
@@ -53,19 +58,19 @@ class Device {
                 val stripped = StringBuilder()
                 for (i in 0 until 4) {
                     val group = id.substring(i * 14, i * 14 + 13)
-                    val check = Luhn().generate(group.toByteArray()) ?: return false
+                    val check = Luhn().generate(group.toByteArray()) ?: return null
                     if (id.substring(i * 14 + 13, i * 14 + 14) != check) {
-                        return false
+                        return null
                     }
                     stripped.append(group)
                 }
                 id = stripped.toString()
             }
             52 -> Unit
-            else -> return false
+            else -> return null
         }
         // 52 characters of the base 32 alphabet.
-        return id.all { it in 'A'..'Z' || it in '2'..'7' }
+        return id.takeIf { it.all { c -> c in 'A'..'Z' || c in '2'..'7' } }
     }
 
     /**

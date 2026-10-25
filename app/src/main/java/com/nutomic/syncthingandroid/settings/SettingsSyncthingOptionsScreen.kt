@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isSensitiveData
 import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
+import androidx.core.content.edit
 import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.model.Folder
@@ -34,7 +35,9 @@ import com.nutomic.syncthingandroid.service.RestApi
 import com.nutomic.syncthingandroid.service.SyncthingService
 import com.nutomic.syncthingandroid.util.FileUtils
 import com.nutomic.syncthingandroid.util.LocalActivityScope
+import com.nutomic.syncthingandroid.util.defaultPreferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
@@ -117,13 +120,15 @@ fun SettingsSyncthingOptionsScreen() {
                     val previous = applied
                     applied = prefs
                     // Applied at once: a delayed write was lost when leaving the screen meanwhile.
-                    // Off the main thread, bcrypt hashing of the GUI password takes a while.
-                    val passwordChanged = withContext(Dispatchers.IO) {
-                        currentApi.applyChangedPreferences(previous, prefs)
-                    }
-                    if (passwordChanged) {
-                        // WebGuiActivity authenticates with this copy: update it once the config has the new hash.
-                        sharedPrefWebGuiPassword.value = prefs.asMap()[Keys.WEB_GUI_PASSWORD] as String
+                    // Off the main thread, bcrypt hashing of the GUI password takes a while, and not
+                    // cancellable: the screen may leave meanwhile, and the copy below must follow.
+                    withContext(NonCancellable + Dispatchers.IO) {
+                        if (currentApi.applyChangedPreferences(previous, prefs)) {
+                            // WebGuiActivity authenticates with this copy: written once the config has the new hash.
+                            context.defaultPreferences.edit {
+                                putString(Constants.PREF_WEBUI_PASSWORD, prefs.asMap()[Keys.WEB_GUI_PASSWORD] as String)
+                            }
+                        }
                     }
                 }
         }
@@ -426,14 +431,13 @@ private fun ClearStVersionPreference(
                             api.runWhenConfigLoaded {
                                 scope.launch(Dispatchers.IO) {
                                     val folders = api.folders
-                                    if (clearStVersions(folders)) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(
-                                                context,
-                                                R.string.clear_stversions_done,
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                                    val cleared = clearStVersions(folders)
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            context,
+                                            if (cleared) R.string.clear_stversions_done else R.string.clear_stversions_failed,
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
                                     showAlert = false
                                 }
@@ -675,25 +679,20 @@ private fun RestApi.applyChangedPreferences(old: Preferences, new: Preferences):
     return Keys.WEB_GUI_PASSWORD in changed
 }
 
+/**
+ * Empties the .stversions directory of each folder. False if something could not be deleted.
+ */
 private fun clearStVersions(folders: List<Folder>): Boolean {
+    var cleared = true
     for (folder in folders) {
         val dir = File(folder.path + "/" + Constants.FOLDER_NAME_STVERSIONS)
-        if (dir.exists() && dir.isDirectory) {
-            Log.d(TAG, "Delete dir: $dir")
-            deleteContents(dir)
-        }
-    }
-    return true
-}
-
-private fun deleteContents(dir: File) {
-    val files = dir.listFiles()
-    files?.let {
-        for (file in it) {
-            if (file.isDirectory) {
-                deleteContents(file)
+        dir.listFiles()?.forEach { entry ->
+            Log.d(TAG, "Delete: $entry")
+            // Does not follow symbolic links.
+            if (!FileUtils.deleteDirectoryRecursively(entry)) {
+                cleared = false
             }
-            file.delete()
         }
     }
+    return cleared
 }

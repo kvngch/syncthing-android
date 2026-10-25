@@ -82,13 +82,13 @@ class RecentChangesActivity : SyncthingActivity(), SyncthingService.OnServiceSta
 
     /**
      * Keeps the list current while the screen is in the foreground, without ever showing the refresh
-     * indicator — new changes just appear.
+     * indicator: new changes just appear.
      *
      * This polls on an interval rather than holding a long-poll open (which is how the web GUI stays
      * live). Two things make a subscription impractical here: `RestApi.getDiskEvents` has no `since`
      * parameter, so a loop would re-fetch the same buffered events and spin as fast as the server
      * could answer; and `ApiRequest` uses a 5s socket timeout, so it abandons and retries a blocked
-     * long-poll several times per call — the server explicitly notes such requests "should not be
+     * long-poll several times per call; the server explicitly notes such requests "should not be
      * retried". Short `timeout=1` queries on a timer are far more predictable.
      *
      * `repeatOnLifecycle(STARTED)` stops polling when the screen is not visible.
@@ -344,9 +344,9 @@ internal fun List<DiskEvent>.withoutUselessEvents(): List<DiskEvent> {
     val lastDirDeletedAt = HashMap<String, Long>()
     for (event in valid) {
         if (ChangeAction.of(event.data.action) != ChangeAction.DELETED) continue
-        lastDeletedAt.keepHighest(key(event.data.folderID, event.data.path), event.id)
+        lastDeletedAt.merge(key(event.data.folderID, event.data.path), event.id) { a, b -> maxOf(a, b) }
         if (ChangeType.of(event.data.type) == ChangeType.DIR) {
-            lastDirDeletedAt.keepHighest(key(event.data.folderID, event.data.path), event.id)
+            lastDirDeletedAt.merge(key(event.data.folderID, event.data.path), event.id) { a, b -> maxOf(a, b) }
         }
     }
     if (lastDeletedAt.isEmpty()) return valid
@@ -358,19 +358,6 @@ internal fun List<DiskEvent>.withoutUselessEvents(): List<DiskEvent> {
         val path = event.data.path
         deletedAfter(lastDeletedAt, key(folderId, path), event.id) ||
             path.ancestorPaths().any { deletedAfter(lastDirDeletedAt, key(folderId, it), event.id) }
-    }
-}
-
-/**
- * Stores [value] under [key] unless a higher value is already recorded.
- *
- * Hand-rolled because the obvious alternatives — `merge`, `compute`, `putIfAbsent`, `getOrDefault` —
- * are all Java 8 default methods that require API 24, and minSdk is 23.
- */
-private fun MutableMap<String, Long>.keepHighest(key: String, value: Long) {
-    val current = this[key]
-    if (current == null || value > current) {
-        this[key] = value
     }
 }
 

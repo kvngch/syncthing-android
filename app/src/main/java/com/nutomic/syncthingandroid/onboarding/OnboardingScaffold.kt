@@ -66,7 +66,7 @@ private val focusIndicatorGap = 2.dp
 private val focusIndicatorPadding = focusIndicatorStrokeWidth + focusIndicatorGap
 
 /**
- * Icon type for the onboarding scaffold — either a Material vector icon or app logo.
+ * Icon type for the onboarding scaffold: either a Material vector icon or the app logo.
  */
 sealed interface OnboardingIcon {
     data class Vector(val imageVector: ImageVector) : OnboardingIcon

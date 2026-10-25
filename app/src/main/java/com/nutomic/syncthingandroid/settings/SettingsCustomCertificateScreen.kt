@@ -63,7 +63,7 @@ import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.PreferenceCategory
 
 /**
- * Upper bound on a picked certificate or key file. Generous for PEM — a full chain is a few KiB — while
+ * Upper bound on a picked certificate or key file. Generous for PEM (a full chain is a few KiB) while
  * keeping both files small enough to sit in the saved-instance-state Bundle, which travels over a
  * Binder transaction with a hard size limit shared process-wide.
  */
@@ -185,7 +185,7 @@ fun SettingsCustomCertificateScreen() {
             item { ApplyFailureCard(applyFailureMessage(failure)) }
         }
 
-        // Offered whenever the user is stuck — a rejected file or a failed apply. Both are cases where
+        // Offered whenever the user is stuck: a rejected file or a failed apply. Both are cases where
         // the wiki page (root CA installation, full chain, matching key) is the actual answer.
         val blockedByChecks = validation?.let { result ->
             result.parseError != null ||
@@ -348,9 +348,9 @@ private fun checkTitle(check: CertificateValidator.Check): Int = when (check) {
 }
 
 /**
- * A failed apply, kept on screen rather than shown as a toast. The reason matters here — "Syncthing
+ * A failed apply, kept on screen rather than shown as a toast. The reason matters here: "Syncthing
  * generated its own certificate instead" tells the user something actionable that a disappearing
- * "Could not apply the certificate" does not — and a toast cannot carry the help link.
+ * "Could not apply the certificate" does not, and a toast cannot carry the help link.
  */
 private data class ApplyFailure(
     val outcome: SyncthingService.HttpsCertReplaceResult,
@@ -359,7 +359,7 @@ private data class ApplyFailure(
 
 /**
  * Stores an [ApplyFailure] as two plain strings so it survives a configuration change. The enum is
- * saved by name and looked up defensively — a name that no longer exists after an app update restores
+ * saved by name and looked up defensively: a name that no longer exists after an app update restores
  * as "no failure" rather than throwing during state restoration.
  */
 private val ApplyFailureSaver = listSaver<ApplyFailure?, String>(
@@ -410,7 +410,7 @@ private fun onApplyOutcome(
 }
 
 /**
- * The outcome of an apply, which is a different kind of thing from the validation checks above it —
+ * The outcome of an apply, which is a different kind of thing from the validation checks above it,
  * hence a card rather than another [CheckRow]. It also has to carry more text than a check detail, so
  * it needs the room.
  */
@@ -448,8 +448,8 @@ private fun ApplyFailureCard(message: String) {
  * Links to the wiki page for this feature, following the `wiki_url` + relative path convention.
  *
  * Deliberately an ordinary preference row rather than a button: it is a secondary action sitting just
- * above "Apply certificate", and a second filled button competes with — and when Apply is disabled,
- * visually outranks — the primary one.
+ * above "Apply certificate", and a second filled button competes with (and, when Apply is disabled,
+ * visually outranks) the primary one.
  */
 @Composable
 private fun HelpRow() {

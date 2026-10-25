@@ -1,6 +1,8 @@
 package com.nutomic.syncthingandroid.model
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -14,6 +16,18 @@ class DeviceTest {
         assertTrue(idIsValid("P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2"))
         assertTrue(idIsValid("p56ioi7mzjnu2yiqgdreydm2mgtimgl3bxnpq6w5bmtbbz4tjxzwicq2"))
         assertTrue(idIsValid("P56IOI7 MZJNU2Y IQGDREY DM2MGTI MGL3BXN PQ6W5BM TBBZ4TJ XZWICQ2"))
+    }
+
+    @Test
+    fun deviceIdsInDifferentFormsNormalizeTheSame() {
+        val normalized = listOf(
+            "P56IOI7-MZJNU2Y-IQGDREY-DM2MGTI-MGL3BXN-PQ6W5BM-TBBZ4TJ-XZWICQ2",
+            "p56ioi7mzjnu2yiqgdreydm2mgtimgl3bxnpq6w5bmtbbz4tjxzwicq2",
+            "P56IOI7MZJNU2IQGDREYDM2MGTMGL3BXNPQ6W5BTBBZ4TJXZWICQ",
+        ).map { Device().apply { deviceID = it }.normalizedDeviceID() }
+        assertEquals(1, normalized.toSet().size)
+        assertEquals(52, normalized[0]?.length)
+        assertNull(Device().apply { deviceID = "P56IOI7-MZJNU2Y" }.normalizedDeviceID())
     }
 
     @Test
