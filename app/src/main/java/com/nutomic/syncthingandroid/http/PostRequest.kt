@@ -27,6 +27,5 @@ class PostRequest @JvmOverloads constructor(
         const val URI_DB_REVERT = "/rest/db/revert"
         const val URI_DB_SCAN = "/rest/db/scan"
         const val URI_SYSTEM_CONFIG = "/rest/system/config"
-        const val URI_SYSTEM_SHUTDOWN = "/rest/system/shutdown"
     }
 }

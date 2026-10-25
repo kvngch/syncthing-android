@@ -197,10 +197,6 @@ class NotificationHandler(private val context: Context) {
         notificationManager.notify(ID_MISSING_PERM, notification)
     }
 
-    fun cancelRestartNotification() {
-        notificationManager.cancel(ID_RESTART)
-    }
-
     fun showDeviceConnectNotification(deviceId: String?, deviceName: String?, deviceAddress: String?) {
         if (deviceId == null) {
             Log.e(TAG, "showDeviceConnectNotification: deviceId == null")
@@ -293,7 +289,6 @@ class NotificationHandler(private val context: Context) {
         const val TAG = "NotificationHandler"
         const val ID_PERSISTENT = 1
         const val ID_PERSISTENT_WAITING = 4
-        const val ID_RESTART = 2
         const val ID_CRASH = 9
         const val ID_MISSING_PERM = 10
         const val CHANNEL_PERSISTENT = "01_syncthing_persistent"

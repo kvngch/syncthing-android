@@ -365,28 +365,18 @@ class SyncthingService : Service() {
         val configXml = loadConfigOrStop("applyCustomRunConditions") ?: return
         var configChanged = false
         for (folder in configXml.getFolders()) {
-            val prefix = Constants.PREF_OBJECT_PREFIX_FOLDER + folder.id
-            if (!preferences.getBoolean(Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(prefix), false)) {
-                continue
-            }
-            val syncConditionsMet = runConditionMonitor.checkObjectSyncConditions(prefix)
-            logV("applyCustomRunConditions: f(${folder.label})=${if (syncConditionsMet) "1" else "0"}")
-            if (folder.paused == syncConditionsMet) {
-                configXml.setFolderPause(folder.id, !syncConditionsMet)
-                Log.d(TAG, "applyCustomRunConditions: f(${folder.label})=${if (syncConditionsMet) ">1" else ">0"}")
+            val paused = runConditionMonitor.pausedByOwnConditions(Constants.PREF_OBJECT_PREFIX_FOLDER + folder.id) ?: continue
+            if (folder.paused != paused) {
+                configXml.setFolderPause(folder.id, paused)
+                Log.d(TAG, "applyCustomRunConditions: folder ${folder.label} paused=$paused")
                 configChanged = true
             }
         }
         for (device in configXml.getDevices(false)) {
-            val prefix = Constants.PREF_OBJECT_PREFIX_DEVICE + device.deviceID
-            if (!preferences.getBoolean(Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(prefix), false)) {
-                continue
-            }
-            val syncConditionsMet = runConditionMonitor.checkObjectSyncConditions(prefix)
-            logV("applyCustomRunConditions: d(${device.name})=${if (syncConditionsMet) "1" else "0"}")
-            if (device.paused == syncConditionsMet) {
-                configXml.setDevicePause(device.deviceID, !syncConditionsMet)
-                Log.d(TAG, "applyCustomRunConditions: d(${device.name})=${if (syncConditionsMet) ">1" else ">0"}")
+            val paused = runConditionMonitor.pausedByOwnConditions(Constants.PREF_OBJECT_PREFIX_DEVICE + device.deviceID) ?: continue
+            if (device.paused != paused) {
+                configXml.setDevicePause(device.deviceID, paused)
+                Log.d(TAG, "applyCustomRunConditions: device ${device.name} paused=$paused")
                 configChanged = true
             }
         }
@@ -430,7 +420,7 @@ class SyncthingService : Service() {
         onServiceStateChange(State.STARTING)
 
         if (api == null) {
-            api = RestApi(this, config.webGuiUrl, config.apiKey, { onApiAvailable() }, { onServiceStateChange(currentState) })
+            api = RestApi(this, config.webGuiUrl, config.apiKey) { onApiAvailable() }
             Log.i(TAG, "Web GUI will be available at " + config.webGuiUrl)
         }
 
@@ -539,7 +529,6 @@ class SyncthingService : Service() {
         eventProcessor?.stop()
         eventProcessor = null
 
-        notificationHandler.cancelRestartNotification()
 
         if (syncthingRunnable != null) {
             api?.shutdown()
@@ -1036,8 +1025,11 @@ class SyncthingService : Service() {
                 }
                 restoreFile(certBak, certFile)
                 restoreFile(keyBak, keyFile)
-                // Bring the previous, known-good certificate back online.
-                launchStartupTask(SyncthingRunnable.Command.main)
+                // Bring the previous, known-good certificate back online, unless the run conditions
+                // stopped Syncthing meanwhile: that stop may be the "failure".
+                if (lastDeterminedShouldRun) {
+                    launchStartupTask(SyncthingRunnable.Command.main)
+                }
                 listener.onResult(failureReason, null)
             }
         }

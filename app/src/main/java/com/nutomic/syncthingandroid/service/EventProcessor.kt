@@ -211,7 +211,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
             folderLabel,
             added.boolean("receiveEncrypted"),
             added.boolean("remoteEncrypted"),
-            restApi.folders.none { it.id == folderId },
+            restApi.getFolderByID(folderId) == null,
         )
     }
 
@@ -246,7 +246,7 @@ class EventProcessor(private val context: Context, private val restApi: RestApi)
     }
 
     private fun onItemFinished(action: String?, error: String?, folderId: String?, relativeFilePath: String?, time: String?) {
-        val folder = restApi.folders.firstOrNull { it.id == folderId }
+        val folder = restApi.getFolderByID(folderId)
         if (action.isNullOrEmpty() || folderId.isNullOrEmpty() || relativeFilePath.isNullOrEmpty() || folder == null) {
             Log.w(TAG, "ItemFinished: Failed to determine folder.path for folder.id=\"${folderId.orEmpty()}\"")
             return

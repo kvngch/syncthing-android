@@ -37,7 +37,6 @@ import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RestApi
 import com.nutomic.syncthingandroid.service.SyncthingService
-import com.nutomic.syncthingandroid.util.ConfigRouter
 import com.nutomic.syncthingandroid.util.ConfigXml
 import com.nutomic.syncthingandroid.util.Util
 import kotlinx.coroutines.Dispatchers
@@ -76,13 +75,20 @@ private suspend fun readDevices(
 ): List<DeviceRow>? {
     val loaded = api != null && api.isConfigLoaded
     val read = {
-        val router = ConfigRouter(context)
-        val folders = router.getFolders(api)
+        // One parse of config.xml for both lists while Syncthing is stopped: the tab polls each second.
+        val (folders, devices) = if (loaded) {
+            api!!.folders to api.getDevices(false)
+        } else {
+            ConfigXml(context).run {
+                loadConfigReadOnly()
+                getFolders() to getDevices(false)
+            }
+        }
         if (loaded && serviceState == SyncthingService.State.ACTIVE) {
             // Force a cache miss to query the status of all devices asynchronously.
             api!!.getRemoteDeviceStatus("")
         }
-        router.getDevices(api, false)
+        devices
             .sortedBy { if (it.name.isNullOrEmpty()) it.deviceID else it.name }
             .map { device ->
                 DeviceRow(
