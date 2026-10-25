@@ -2,11 +2,14 @@ package com.nutomic.syncthingandroid.util
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
+import com.nutomic.syncthingandroid.activities.ShareActivity
 import com.nutomic.syncthingandroid.model.Device
 import com.nutomic.syncthingandroid.model.Folder
 import com.nutomic.syncthingandroid.model.FolderIgnoreList
 import com.nutomic.syncthingandroid.model.Gui
 import com.nutomic.syncthingandroid.model.Options
+import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.service.RestApi
 
 /**
@@ -15,6 +18,7 @@ import com.nutomic.syncthingandroid.service.RestApi
 class ConfigRouter(context: Context) {
 
     private val configXml = ConfigXml(context)
+    private val preferences = context.defaultPreferences
 
     /**
      * Reads config.xml while the REST API has no config yet.
@@ -57,8 +61,14 @@ class ConfigRouter(context: Context) {
         }
     }
 
-    fun removeFolder(restApi: RestApi?, folderId: String?) =
+    fun removeFolder(restApi: RestApi?, folderId: String?) {
         write(restApi, { removeFolder(folderId) }, { removeFolder(folderId) })
+        removeObjectPreferences(
+            Constants.PREF_OBJECT_PREFIX_FOLDER + folderId,
+            Constants.DYN_PREF_OBJECT_FOLDER_RUN_SCRIPT(folderId),
+            ShareActivity.PREF_FOLDER_SAVED_SUBDIRECTORY + folderId,
+        )
+    }
 
     fun ignoreFolder(restApi: RestApi?, deviceId: String?, folderId: String?, folderLabel: String?) {
         if (restApi == null) {
@@ -92,8 +102,28 @@ class ConfigRouter(context: Context) {
     fun updateDevice(restApi: RestApi?, device: Device) =
         write(restApi, { updateDevice(device) }, { updateDevice(device) })
 
-    fun removeDevice(restApi: RestApi?, deviceID: String?) =
+    fun removeDevice(restApi: RestApi?, deviceID: String?) {
         write(restApi, { removeDevice(deviceID) }, { removeDevice(deviceID) })
+        removeObjectPreferences(Constants.PREF_OBJECT_PREFIX_DEVICE + deviceID)
+    }
+
+    /**
+     * Removes the preferences of a deleted folder or device: one created again with the same ID
+     * would follow its run conditions, which its screen does not show.
+     */
+    private fun removeObjectPreferences(objectPrefixAndId: String, vararg others: String) {
+        preferences.edit {
+            listOf(
+                Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_SYNC_ON_WIFI(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_USE_WIFI_SSID_WHITELIST(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_SELECTED_WHITELIST_SSID(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_SYNC_ON_METERED_WIFI(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_SYNC_ON_MOBILE_DATA(objectPrefixAndId),
+                Constants.DYN_PREF_OBJECT_SYNC_ON_POWER_SOURCE(objectPrefixAndId),
+            ).plus(others).forEach { remove(it) }
+        }
+    }
 
     fun ignoreDevice(restApi: RestApi?, deviceID: String?, deviceName: String?, deviceAddress: String?) {
         if (restApi == null) {

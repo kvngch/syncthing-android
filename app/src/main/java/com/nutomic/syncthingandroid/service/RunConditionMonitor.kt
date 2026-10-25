@@ -301,8 +301,8 @@ class RunConditionMonitor(
     /**
      * Constants.PREF_RUN_ON_WIFI
      */
-    private fun checkConditionSyncOnWifi(prefNameSyncOnWifi: String): Condition {
-        if (!preferences.getBoolean(prefNameSyncOnWifi, true)) {
+    private fun checkConditionSyncOnWifi(prefNameSyncOnWifi: String, default: Boolean = true): Condition {
+        if (!preferences.getBoolean(prefNameSyncOnWifi, default)) {
             return Condition(false, "\n" + res.getString(R.string.reason_wifi_disallowed))
         }
         if (isWifiOrEthernetConnection()) {
@@ -328,12 +328,14 @@ class RunConditionMonitor(
     private fun checkConditionSyncOnWhitelistedWifi(
         prefNameUseWifiWhitelist: String,
         prefNameSelectedWhitelistSsid: String,
+        defaultUse: Boolean = false,
+        defaultSelected: Set<String>? = null,
     ): Condition {
-        if (!preferences.getBoolean(prefNameUseWifiWhitelist, false)) {
+        if (!preferences.getBoolean(prefNameUseWifiWhitelist, defaultUse)) {
             logV("handleWifiWhitelist: !prefWifiWhitelistEnabled")
             return Condition(true, "\n" + res.getString(R.string.reason_on_whitelisted_wifi))
         }
-        val whitelistedWifiSsids = preferences.getStringSet(prefNameSelectedWhitelistSsid, null).orEmpty()
+        val whitelistedWifiSsids = preferences.getStringSet(prefNameSelectedWhitelistSsid, defaultSelected).orEmpty()
         return try {
             if (isWifiConnectionWhitelisted(whitelistedWifiSsids)) {
                 logV("handleWifiWhitelist: isWifiConnectionWhitelisted")
@@ -349,9 +351,9 @@ class RunConditionMonitor(
     /**
      * Constants.PREF_RUN_ON_METERED_WIFI
      */
-    private fun checkConditionSyncOnMeteredWifi(prefNameSyncOnMeteredWifi: String): Condition = when {
+    private fun checkConditionSyncOnMeteredWifi(prefNameSyncOnMeteredWifi: String, default: Boolean = false): Condition = when {
         // Condition is always met as we allow both types of wifi - metered and non-metered.
-        preferences.getBoolean(prefNameSyncOnMeteredWifi, false) ->
+        preferences.getBoolean(prefNameSyncOnMeteredWifi, default) ->
             Condition(true, "\n" + res.getString(R.string.reason_on_metered_nonmetered_wifi))
         !isMeteredNetworkConnection() -> Condition(true, "\n" + res.getString(R.string.reason_on_nonmetered_wifi))
         // We disallowed non-metered wifi and are connected to metered wifi.
@@ -361,8 +363,8 @@ class RunConditionMonitor(
     /**
      * Constants.PREF_RUN_ON_MOBILE_DATA
      */
-    private fun checkConditionSyncOnMobileData(prefNameSyncOnMobileData: String): Condition = when {
-        !preferences.getBoolean(prefNameSyncOnMobileData, false) ->
+    private fun checkConditionSyncOnMobileData(prefNameSyncOnMobileData: String, default: Boolean = false): Condition = when {
+        !preferences.getBoolean(prefNameSyncOnMobileData, default) ->
             Condition(false, res.getString(R.string.reason_mobile_data_disallowed))
         isMobileDataConnection() -> Condition(true, res.getString(R.string.reason_on_mobile_data))
         else -> Condition(false, res.getString(R.string.reason_not_on_mobile_data))
@@ -491,15 +493,29 @@ class RunConditionMonitor(
             logV("checkObjectSyncConditions($objectPrefixAndId): checkConditionSyncOnPowerSource")
             return false
         }
-        if (checkConditionSyncOnMobileData(Constants.DYN_PREF_OBJECT_SYNC_ON_MOBILE_DATA(objectPrefixAndId)).met) {
+        // A condition of the object never set follows the global one, as the conditions screen
+        // shows it. The defaults below are those of the global checks.
+        val mobileData = checkConditionSyncOnMobileData(
+            Constants.DYN_PREF_OBJECT_SYNC_ON_MOBILE_DATA(objectPrefixAndId),
+            preferences.getBoolean(Constants.PREF_RUN_ON_MOBILE_DATA, false),
+        )
+        if (mobileData.met) {
             logV("checkObjectSyncConditions($objectPrefixAndId): checkConditionSyncOnMobileData")
             return true
         }
-        val onAllowedWifi = checkConditionSyncOnWifi(Constants.DYN_PREF_OBJECT_SYNC_ON_WIFI(objectPrefixAndId)).met &&
-            checkConditionSyncOnMeteredWifi(Constants.DYN_PREF_OBJECT_SYNC_ON_METERED_WIFI(objectPrefixAndId)).met &&
+        val onAllowedWifi = checkConditionSyncOnWifi(
+            Constants.DYN_PREF_OBJECT_SYNC_ON_WIFI(objectPrefixAndId),
+            preferences.getBoolean(Constants.PREF_RUN_ON_WIFI, true),
+        ).met &&
+            checkConditionSyncOnMeteredWifi(
+                Constants.DYN_PREF_OBJECT_SYNC_ON_METERED_WIFI(objectPrefixAndId),
+                preferences.getBoolean(Constants.PREF_RUN_ON_METERED_WIFI, false),
+            ).met &&
             checkConditionSyncOnWhitelistedWifi(
                 Constants.DYN_PREF_OBJECT_USE_WIFI_SSID_WHITELIST(objectPrefixAndId),
                 Constants.DYN_PREF_OBJECT_SELECTED_WHITELIST_SSID(objectPrefixAndId),
+                preferences.getBoolean(Constants.PREF_USE_WIFI_SSID_WHITELIST, false),
+                preferences.getStringSet(Constants.PREF_WIFI_SSID_WHITELIST, null),
             ).met
         if (onAllowedWifi) {
             logV("checkObjectSyncConditions($objectPrefixAndId): checkConditionSyncOnWifi && checkConditionSyncOnMeteredWifi && checkConditionSyncOnWhitelistedWifi")
