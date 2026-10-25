@@ -579,6 +579,43 @@ class ConfigXml(private val context: Context) {
         removeChildElementFromTextNode(root, r)
     }
 
+    /**
+     * Ignores the device's request to connect, as [com.nutomic.syncthingandroid.service.RestApi.ignoreDevice]
+     * does through the API: a "<remoteIgnoredDevice>" entry.
+     */
+    fun ignoreDevice(deviceID: String?, deviceName: String?, deviceAddress: String?) {
+        if (deviceID.isNullOrEmpty() || root.children("remoteIgnoredDevice").any { it.attr("id") == deviceID }) {
+            return
+        }
+        root.appendChild(
+            config.createElement("remoteIgnoredDevice").apply {
+                setAttribute("time", Util.getLocalZonedDateTime())
+                setAttribute("id", deviceID)
+                setAttribute("name", deviceName.orEmpty())
+                setAttribute("address", deviceAddress.orEmpty())
+            }
+        )
+    }
+
+    /**
+     * Ignores the folder the device offers, as [com.nutomic.syncthingandroid.service.RestApi.ignoreFolder]
+     * does through the API: an "<ignoredFolder>" entry in the device.
+     */
+    fun ignoreFolder(deviceID: String?, folderID: String?, folderLabel: String?) {
+        // Direct children only: each "<folder>" holds "<device>" nodes too.
+        val device = root.children("device").firstOrNull { it.attr("id").orEmpty() == deviceID } ?: return
+        if (folderID.isNullOrEmpty() || device.children("ignoredFolder").any { it.attr("id") == folderID }) {
+            return
+        }
+        device.appendChild(
+            config.createElement("ignoredFolder").apply {
+                setAttribute("time", Util.getLocalZonedDateTime())
+                setAttribute("id", folderID)
+                setAttribute("label", folderLabel.orEmpty())
+            }
+        )
+    }
+
     fun getGui(): Gui {
         val gui = Gui()
         val elementGui = guiElement

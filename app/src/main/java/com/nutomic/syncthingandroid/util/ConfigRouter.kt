@@ -1,7 +1,6 @@
 package com.nutomic.syncthingandroid.util
 
 import android.content.Context
-import android.util.Log
 import androidx.core.content.edit
 import com.nutomic.syncthingandroid.activities.ShareActivity
 import com.nutomic.syncthingandroid.model.Device
@@ -75,13 +74,12 @@ class ConfigRouter(context: Context) {
         )
     }
 
-    fun ignoreFolder(restApi: RestApi?, deviceId: String?, folderId: String?, folderLabel: String?) {
-        if (restApi == null) {
-            Log.e(TAG, "ignoreFolder failed, Syncthing is not running.")
-            return
-        }
-        restApi.runWhenConfigLoaded { restApi.ignoreFolder(deviceId, folderId, folderLabel) }
-    }
+    fun ignoreFolder(restApi: RestApi?, deviceId: String?, folderId: String?, folderLabel: String?) =
+        write(
+            restApi,
+            { ignoreFolder(deviceId, folderId, folderLabel) },
+            { ignoreFolder(deviceId, folderId, folderLabel) },
+        )
 
     /**
      * Gets ignore list for given folder.
@@ -93,12 +91,16 @@ class ConfigRouter(context: Context) {
      * Stores ignore list for given folder. The .stignore file is not part of config.xml.
      */
     fun postFolderIgnoreList(restApi: RestApi?, folder: Folder, ignore: Array<String>) {
-        if (restApi == null) {
+        val toFile = Runnable {
             configXml.loadConfig()
             configXml.postFolderIgnoreList(folder, ignore)
+        }
+        if (restApi == null) {
+            toFile.run()
             return
         }
-        restApi.runWhenConfigLoaded { restApi.postFolderIgnoreList(folder.id, ignore) }
+        // Should Syncthing stop before serving its config, the file is written directly.
+        restApi.runWhenConfigLoaded(toFile) { restApi.postFolderIgnoreList(folder.id, ignore) }
     }
 
     fun getDevices(restApi: RestApi?, includeLocal: Boolean): List<Device> =
@@ -130,21 +132,16 @@ class ConfigRouter(context: Context) {
         }
     }
 
-    fun ignoreDevice(restApi: RestApi?, deviceID: String?, deviceName: String?, deviceAddress: String?) {
-        if (restApi == null) {
-            Log.e(TAG, "ignoreDevice failed, Syncthing is not running.")
-            return
-        }
-        restApi.runWhenConfigLoaded { restApi.ignoreDevice(deviceID, deviceName, deviceAddress) }
-    }
+    fun ignoreDevice(restApi: RestApi?, deviceID: String?, deviceName: String?, deviceAddress: String?) =
+        write(
+            restApi,
+            { ignoreDevice(deviceID, deviceName, deviceAddress) },
+            { ignoreDevice(deviceID, deviceName, deviceAddress) },
+        )
 
     fun getGui(restApi: RestApi?): Gui = read(restApi, { getGui() }, { gui })
 
     fun updateGui(restApi: RestApi?, gui: Gui) = write(restApi, { updateGui(gui) }, { updateGui(gui) })
 
     fun getOptions(restApi: RestApi?): Options = read(restApi, { getOptions() }, { options })
-
-    private companion object {
-        const val TAG = "ConfigRouter"
-    }
 }
