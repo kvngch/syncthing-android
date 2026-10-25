@@ -8,12 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.navigation3.runtime.EntryProviderScope
 import com.nutomic.syncthingandroid.R
 import com.nutomic.syncthingandroid.service.Constants
 import com.nutomic.syncthingandroid.util.Util
+import com.nutomic.syncthingandroid.util.openUrl
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,6 @@ fun EntryProviderScope<SettingsRoute>.settingsAboutEntry() {
 fun SettingsAboutScreen() {
     val context = LocalContext.current
     val navigator = LocalSettingsNavigator.current
-    val uriHandler = LocalUriHandler.current
     val stService = LocalSyncthingService.current
     val stServiceTick = LocalServiceUpdateTick.current
 
@@ -89,7 +88,7 @@ fun SettingsAboutScreen() {
             Preference(
                 title = { Text(stringResource(R.string.syncthing_forum_title)) },
                 summary = { Text(stringResource(R.string.syncthing_forum_summary)) },
-                onClick = { uriHandler.openUri(stForumUri) },
+                onClick = { context.openUrl(stForumUri) },
             )
         }
         item {
@@ -97,7 +96,7 @@ fun SettingsAboutScreen() {
             Preference(
                 title = { Text(stringResource(R.string.privacy_title)) },
                 summary = { Text(stringResource(R.string.privacy_summary)) },
-                onClick = { uriHandler.openUri(stPrivacyPolicyUri) },
+                onClick = { context.openUrl(stPrivacyPolicyUri) },
             )
         }
         item {

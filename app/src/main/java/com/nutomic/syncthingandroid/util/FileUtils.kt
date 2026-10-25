@@ -479,9 +479,7 @@ fun SuggestFileManagerDialog(onDismiss: () -> Unit) {
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW, "market://details?id=$appPackageName".toUri()))
                     } catch (e: ActivityNotFoundException) {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$appPackageName".toUri())
-                        )
+                        context.openUrl("https://play.google.com/store/apps/details?id=$appPackageName")
                     }
                 },
             ) {

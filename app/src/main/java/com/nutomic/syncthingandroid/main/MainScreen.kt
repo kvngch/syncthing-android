@@ -292,8 +292,13 @@ private fun UsageReportingDialog(api: RestApi?, serviceState: SyncthingService.S
     val shownReport = report ?: return
     val usageStatsUrl = stringResource(R.string.syncthing_usage_stats_url)
     fun answer(accept: Boolean) {
-        api?.setUsageReporting(accept)
-        api?.sendConfig()
+        // The dialog outlives a restart of Syncthing: the answer then waits for its config.
+        api?.let { restApi ->
+            restApi.runWhenConfigLoaded {
+                restApi.setUsageReporting(accept)
+                restApi.sendConfig()
+            }
+        }
         report = null
     }
     AlertDialog(
