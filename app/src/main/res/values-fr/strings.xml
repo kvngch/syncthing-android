@@ -621,6 +621,7 @@
     <string name="clear_stversions_question">Ceci va purger toutes les corbeilles gérées par Syncthing. Continuer ?</string>
     <string name="privacy_title">Politique de confidentialité</string>
     <string name="clear_stversions_done">Toutes les corbeilles .stversions ont été vidées avec succès.</string>
+    <string name="clear_stversions_failed">Des fichiers des corbeilles .stversions n\'ont pas pu être supprimés.</string>
     <string name="share_log_file">Journal de partage</string>
     <string name="share_log_file_missing">Le fichier journal à partager est absent.</string>
     <string name="backup_rel_path_to_zip">Chemin relatif à l\'archive de configuration</string>
@@ -646,4 +647,5 @@
     <string name="category_connections">Connexions</string>
     <string name="category_advanced">Avancé</string>
     <string name="state_loading">Chargement…</string>
+    <string name="no_app_to_open_link">Aucune application ne peut ouvrir ce lien.</string>
 </resources>

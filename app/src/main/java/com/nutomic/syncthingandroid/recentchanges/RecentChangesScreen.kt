@@ -146,8 +146,10 @@ internal fun RecentChangesScreen(
         },
     ) { paddingValues ->
         // Relative times ("2 minutes ago") follow this clock. A poll returning the same events
-        // does not recompose the list, so the clock ticks on its own.
-        val now by produceState(System.currentTimeMillis()) {
+        // does not recompose the list, so the clock ticks on its own. It is read again with each
+        // new list: a change newer than the clock would read as one in the future.
+        val now by produceState(System.currentTimeMillis(), changes) {
+            value = System.currentTimeMillis()
             while (true) {
                 delay(30_000)
                 value = System.currentTimeMillis()
@@ -201,7 +203,7 @@ internal fun RecentChangeItem(
     now: Long = System.currentTimeMillis(),
     onClick: () -> Unit = {},
 ) {
-    // Deleted entries no longer exist on disk, so they are not actionable — but they must still be
+    // Deleted entries no longer exist on disk, so they are not actionable, but they must still be
     // focusable. `clickable(enabled = false)` also drops focusability, which made D-pad navigation
     // skip them: focus jumped over a run of deleted rows, and because focus movement is what scrolls
     // a LazyColumn on TV, the rows in the middle of a long run could never be brought into view.

@@ -78,8 +78,8 @@ object CertificateValidator {
         when {
             aIsCert && bIsKey -> { certBytes = certSlot; keyBytes = keySlot }
             bIsCert && aIsKey -> { certBytes = keySlot; keyBytes = certSlot } // swapped
-            aIsCert && bIsCert -> return fail("Both files are certificates — one must be the private key.", certSlot, keySlot)
-            aIsKey && bIsKey -> return fail("Both files are private keys — one must be the certificate.", certSlot, keySlot)
+            aIsCert && bIsCert -> return fail("Both files are certificates: one must be the private key.", certSlot, keySlot)
+            aIsKey && bIsKey -> return fail("Both files are private keys: one must be the certificate.", certSlot, keySlot)
             !aIsCert && !bIsCert -> return fail("No PEM certificate found in the selected files.", certSlot, keySlot)
             aIsCert -> { certBytes = certSlot; keyBytes = keySlot }
             else -> { certBytes = keySlot; keyBytes = certSlot }
@@ -146,7 +146,7 @@ object CertificateValidator {
             else
                 CheckResult(
                     Check.CHAIN, Status.WARN,
-                    "Only the leaf certificate is present — include the intermediate(s) so the chain is complete."
+                    "Only the leaf certificate is present: include the intermediate(s) so the chain is complete."
                 )
         }
         for (i in 0 until chain.size - 1) {
@@ -167,9 +167,9 @@ object CertificateValidator {
         leaf: X509Certificate,
         osTrustManager: X509TrustManager?,
     ): CheckResult {
-        // Self-signed pin path — mirrors SyncthingTrustManager.verifyAgainstPinnedCert.
+        // Self-signed pin path: mirrors SyncthingTrustManager.verifyAgainstPinnedCert.
         if (isSelfSigned(leaf)) {
-            return CheckResult(Check.TRUST, Status.PASS, "Self-signed — the app will pin this certificate.")
+            return CheckResult(Check.TRUST, Status.PASS, "Self-signed: the app will pin this certificate.")
         }
         val tm = osTrustManager
             ?: return CheckResult(Check.TRUST, Status.FAIL, "The Android trust store is unavailable.")
@@ -182,7 +182,7 @@ object CertificateValidator {
         } catch (e: Exception) {
             CheckResult(
                 Check.TRUST, Status.FAIL,
-                "Not trusted by Android — install your root CA on the device and include the full chain."
+                "Not trusted by Android: install your root CA on the device and include the full chain."
             )
         }
     }
@@ -206,11 +206,11 @@ object CertificateValidator {
     /**
      * Mirrors what Syncthing's `tls.LoadX509KeyPair` will do with the key, because the consequence of
      * getting it wrong is severe and silent: when the key pair fails to load, Syncthing does not
-     * refuse to start — it generates a fresh self-signed certificate, overwriting the file we just
+     * refuse to start: it generates a fresh self-signed certificate, overwriting the file we just
      * wrote (`lib/api/api.go` `getListener`). So anything Syncthing definitely cannot read has to be
      * a [Status.FAIL] here rather than an optimistic [Status.WARN].
      *
-     * [Status.WARN] is reserved for "Syncthing can read this, but we cannot check it here" — a legacy
+     * [Status.WARN] is reserved for "Syncthing can read this, but we cannot check it here": a legacy
      * PKCS#1/SEC1 block, or a key of an algorithm this device's providers do not implement. Those stay
      * applyable, and the post-restart fingerprint check in
      * [com.nutomic.syncthingandroid.service.SyncthingService] is the backstop.
@@ -224,13 +224,13 @@ object CertificateValidator {
         if (text.contains("BEGIN ENCRYPTED PRIVATE KEY") || text.contains("DEK-Info:")) {
             return CheckResult(
                 Check.KEY, Status.FAIL,
-                "The private key is encrypted. Syncthing cannot read encrypted keys — decrypt it first.",
+                "The private key is encrypted. Syncthing cannot read encrypted keys: decrypt it first.",
             )
         }
         if (text.contains("BEGIN RSA PRIVATE KEY") || text.contains("BEGIN EC PRIVATE KEY")) {
             return CheckResult(
                 Check.KEY, Status.WARN,
-                "Legacy key format — Syncthing accepts it, but it cannot be checked against the certificate here.",
+                "Legacy key format: Syncthing accepts it, but it cannot be checked against the certificate here.",
             )
         }
         if (!text.contains("BEGIN PRIVATE KEY")) {
@@ -244,7 +244,7 @@ object CertificateValidator {
             return CheckResult(Check.KEY, Status.FAIL, "The private key could not be decoded.")
         }
         val privateKey = loadPkcs8(der)
-            // Well-formed PKCS#8 that no installed provider understands — possibly a valid key of an
+            // Well-formed PKCS#8 that no installed provider understands: possibly a valid key of an
             // algorithm Syncthing supports and this device does not. Not ours to reject.
             ?: return CheckResult(
                 Check.KEY, Status.WARN,
@@ -285,7 +285,7 @@ object CertificateValidator {
     }
 
     /**
-     * `authType` names the TLS key exchange, which only exists during a handshake — here we are
+     * `authType` names the TLS key exchange, which only exists during a handshake; here we are
      * pre-validating a certificate, so there is nothing to name. `"UNKNOWN"` asks the trust manager
      * for chain validation without tying it to a key-exchange method.
      *
@@ -311,7 +311,7 @@ object CertificateValidator {
             try {
                 return KeyFactory.getInstance(algorithm).generatePrivate(spec)
             } catch (e: Exception) {
-                // Wrong algorithm for this key, or unsupported on this device — try the next.
+                // Wrong algorithm for this key, or unsupported on this device: try the next.
             }
         }
         return null
@@ -323,7 +323,7 @@ object CertificateValidator {
      * Signs a probe with the private key and verifies it with the certificate's public key.
      *
      * [KeyMatch.UNKNOWN] and [KeyMatch.MISMATCH] must stay distinct: conflating them meant a valid
-     * Ed25519 pair — which Syncthing accepts — was reported as a mismatch and could not be applied,
+     * Ed25519 pair (which Syncthing accepts) was reported as a mismatch and could not be applied,
      * because the signature algorithm was simply unknown to this function. Anything we cannot verify
      * is UNKNOWN, never a mismatch.
      */

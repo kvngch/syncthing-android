@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -169,6 +170,8 @@ fun DeviceScreen(
                 },
                 // The ID of a configured device cannot change.
                 readOnly = !form.isCreate,
+                // No correction: the keyboard would rewrite the ID while it is typed.
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, autoCorrectEnabled = false),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -185,6 +188,7 @@ fun DeviceScreen(
                 label = { Text(stringResource(R.string.name)) },
                 leadingIcon = { Icon(Icons.Outlined.SortByAlpha, contentDescription = null) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -194,6 +198,8 @@ fun DeviceScreen(
                 onValueChange = { value -> onEdit { it.copy(addresses = value) } },
                 label = { Text(stringResource(R.string.addresses)) },
                 leadingIcon = { Icon(Icons.Outlined.Link, contentDescription = null) },
+                // No correction: "tcp" would become "top".
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),

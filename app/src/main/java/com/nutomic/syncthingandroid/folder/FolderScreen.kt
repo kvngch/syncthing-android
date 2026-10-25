@@ -159,7 +159,7 @@ fun FolderScreen(
     when (dialog) {
         FolderDialog.TYPE -> ChoiceDialog(
             title = R.string.folder_type,
-            choices = folderTypeChoices,
+            choices = if (form.isCreate) folderTypeChoices + receiveEncryptedChoice else folderTypeChoices,
             initial = folder.type,
             onConfirm = { type ->
                 dialog = null
@@ -296,8 +296,8 @@ private fun FolderFields(
             headlineContent = { Text(stringResource(R.string.folder_type)) },
             supportingContent = { ChoiceSummary(typeChoice) },
             leadingContent = { Icon(folderTypeIcon(folder.type), contentDescription = null) },
-            // A folder shared encrypted keeps its type.
-            modifier = Modifier.clickable(enabled = folder.type != Constants.FOLDER_TYPE_RECEIVE_ENCRYPTED) {
+            // An existing folder shared encrypted keeps its type: Syncthing refuses the change.
+            modifier = Modifier.clickable(enabled = form.isCreate || folder.type != Constants.FOLDER_TYPE_RECEIVE_ENCRYPTED) {
                 when {
                     folder.path.isNullOrEmpty() ->
                         Toast.makeText(context, R.string.folder_path_required, Toast.LENGTH_LONG).show()

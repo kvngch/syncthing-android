@@ -252,7 +252,9 @@ class DeviceActivity : SyncthingActivity() {
         if (form.isCreate) {
             // Adding a device already in the config would silently overwrite it.
             val exists = try {
-                config.getDevices(api, true).any { it.deviceID == device.deviceID }
+                // Compared the way Syncthing does: an ID typed in another form is the same device.
+                val id = device.normalizedDeviceID()
+                config.getDevices(api, true).any { it.normalizedDeviceID() == id }
             } catch (e: ConfigXml.OpenConfigException) {
                 Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show()
                 return

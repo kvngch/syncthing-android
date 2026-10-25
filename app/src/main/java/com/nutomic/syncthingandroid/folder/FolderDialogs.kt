@@ -57,7 +57,7 @@ internal val folderTypeChoices = listOf(
 )
 
 /**
- * Only set when accepting a folder shared encrypted: shown, never offered.
+ * Offered when creating a folder only: Syncthing refuses to change the type of an existing one.
  */
 internal val receiveEncryptedChoice = Choice(
     Constants.FOLDER_TYPE_RECEIVE_ENCRYPTED,

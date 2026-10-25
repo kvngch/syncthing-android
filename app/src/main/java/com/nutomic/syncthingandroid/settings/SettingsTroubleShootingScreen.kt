@@ -240,11 +240,12 @@ private fun ResetDeltasPreference() {
 }
 
 private fun validateEnvVars(input: String, context: Context): String? {
-    if (input.isEmpty()) {
+    if (input.isBlank()) {
         return input
     }
 
-    val isValid = input.split(" ").all { pair ->
+    // Empty pieces between spaces are skipped, as SyncthingRunnable reads the variables.
+    val isValid = input.split(" ").filter { it.isNotEmpty() }.all { pair ->
         pair.split("=", limit = 2).size == 2
     }
 

@@ -110,7 +110,8 @@ fun MainScreen(
     LaunchedEffect(menuKeyPresses) {
         while (true) {
             menuKeyPresses.receive()
-            if (drawerState.isOpen) drawerState.close() else drawerState.open()
+            // In a child coroutine: a drag that interrupts the animation cancels it, not this loop.
+            launch { if (drawerState.isOpen) drawerState.close() else drawerState.open() }
         }
     }
     BackHandler(enabled = drawerState.isOpen) {
