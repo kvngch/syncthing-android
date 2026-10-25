@@ -25,6 +25,7 @@ import com.nutomic.syncthingandroid.device.Discovery
 import com.nutomic.syncthingandroid.device.FoundDevice
 import com.nutomic.syncthingandroid.device.DYNAMIC_ADDRESS
 import com.nutomic.syncthingandroid.device.parseAddresses
+import com.nutomic.syncthingandroid.device.shareWith
 import com.nutomic.syncthingandroid.device.DeviceIdDialog
 import com.nutomic.syncthingandroid.model.Connection
 import com.nutomic.syncthingandroid.model.Device
@@ -262,15 +263,16 @@ class DeviceActivity : SyncthingActivity() {
             }
         }
 
-        // The folders as they are now, not as the screen read them: only those whose sharing with
-        // this device the form changes are written, in one config send.
+        // The folders as they are now, not as the screen read them: the shares changed on the screen
+        // are applied to them, and only the folders that changes are written, in one config send.
+        val shown = viewModel.folders.value.orEmpty().associateBy { it.id.orEmpty() }
         val folders = try {
             config.getFolders(api)
         } catch (e: ConfigXml.OpenConfigException) {
             Toast.makeText(this, R.string.config_read_failed, Toast.LENGTH_LONG).show()
             return
         }
-        val changed = folders.filter { folder -> applyShare(folder, device, form) }
+        val changed = folders.filter { folder -> applyShare(folder, shown[folder.id.orEmpty()], device, form) }
         if (changed.isNotEmpty()) {
             config.updateFolders(api, changed)
         }
@@ -298,21 +300,21 @@ class DeviceActivity : SyncthingActivity() {
     }
 
     /**
-     * Shares [folder] with [device] or not, as the form says. True if that changed the folder; a
-     * folder the screen has not shown is left as it is.
+     * Shares [folder] with [device] or not, as the form says, when the user changed it from what the
+     * screen showed ([shown]): a share left alone keeps any change made meanwhile, e.g. by an
+     * introducer. True if that changed the folder.
      */
-    private fun applyShare(folder: Folder, device: Device, form: DeviceForm): Boolean {
+    private fun applyShare(folder: Folder, shown: Folder?, device: Device, form: DeviceForm): Boolean {
         val share = form.shares[folder.id.orEmpty()] ?: return false
-        val current = folder.getDevice(device.deviceID)
-        if (!share.shared) {
-            folder.removeDevice(device.deviceID)
-            return current != null
-        }
-        if (current != null && current.encryptionPassword.orEmpty() == share.password) {
+        if (shown == null || share == shown.shareWith(device.deviceID) || share == folder.shareWith(device.deviceID)) {
             return false
         }
-        folder.addDevice(device)
-        folder.getDevice(device.deviceID)?.encryptionPassword = share.password
+        if (share.shared) {
+            folder.addDevice(device)
+            folder.getDevice(device.deviceID)?.encryptionPassword = share.password
+        } else {
+            folder.removeDevice(device.deviceID)
+        }
         return true
     }
 

@@ -37,6 +37,12 @@ internal fun parseAddresses(text: String): List<String> =
 data class FolderShare(val shared: Boolean, val password: String)
 
 /**
+ * How the folder is shared with the device, as the screen shows it.
+ */
+internal fun Folder.shareWith(deviceId: String?): FolderShare =
+    getDevice(deviceId).let { FolderShare(shared = it != null, password = it?.encryptionPassword.orEmpty()) }
+
+/**
  * The device being edited and what the screen tracks around it.
  *
  * @param addresses as typed, comma separated: parsed into [Device.addresses] on save, so that typing
@@ -104,10 +110,7 @@ class DeviceViewModel(private val savedState: SavedStateHandle) : ViewModel() {
                 form?.copy(
                     shares = folders.associate { folder ->
                         val id = folder.id.orEmpty()
-                        val share = form.shares[id] ?: folder.getDevice(form.device.deviceID).let {
-                            FolderShare(shared = it != null, password = it?.encryptionPassword.orEmpty())
-                        }
-                        id to share
+                        id to (form.shares[id] ?: folder.shareWith(form.device.deviceID))
                     }
                 )
             }

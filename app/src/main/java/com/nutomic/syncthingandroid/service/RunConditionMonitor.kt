@@ -491,12 +491,16 @@ class RunConditionMonitor(
      * Precondition: Object must own pref "...CustomSyncConditionsEnabled == true".
      */
     fun checkObjectSyncConditions(objectPrefixAndId: String): Boolean {
-        if (!checkConditionSyncOnPowerSource(Constants.DYN_PREF_OBJECT_SYNC_ON_POWER_SOURCE(objectPrefixAndId)).met) {
+        // The object's conditions apply as the conditions screen shows them: one never set follows
+        // the global one, with the defaults of the global checks, and a global power source or
+        // Wi-Fi list, which stops Syncthing outside of it, takes the place of the object's own.
+        val globalPowerSource = preferences.getString(Constants.PREF_POWER_SOURCE, null) ?: Constants.PowerSource.CHARGER_BATTERY
+        if (globalPowerSource == Constants.PowerSource.CHARGER_BATTERY &&
+            !checkConditionSyncOnPowerSource(Constants.DYN_PREF_OBJECT_SYNC_ON_POWER_SOURCE(objectPrefixAndId)).met
+        ) {
             logV("checkObjectSyncConditions($objectPrefixAndId): checkConditionSyncOnPowerSource")
             return false
         }
-        // A condition of the object never set follows the global one, as the conditions screen
-        // shows it. The defaults below are those of the global checks.
         val mobileData = checkConditionSyncOnMobileData(
             Constants.DYN_PREF_OBJECT_SYNC_ON_MOBILE_DATA(objectPrefixAndId),
             preferences.getBoolean(Constants.PREF_RUN_ON_MOBILE_DATA, false),
@@ -513,12 +517,15 @@ class RunConditionMonitor(
                 Constants.DYN_PREF_OBJECT_SYNC_ON_METERED_WIFI(objectPrefixAndId),
                 preferences.getBoolean(Constants.PREF_RUN_ON_METERED_WIFI, false),
             ).met &&
-            checkConditionSyncOnWhitelistedWifi(
-                Constants.DYN_PREF_OBJECT_USE_WIFI_SSID_WHITELIST(objectPrefixAndId),
-                Constants.DYN_PREF_OBJECT_SELECTED_WHITELIST_SSID(objectPrefixAndId),
-                preferences.getBoolean(Constants.PREF_USE_WIFI_SSID_WHITELIST, false),
-                preferences.getStringSet(Constants.PREF_WIFI_SSID_WHITELIST, null),
-            ).met
+            (
+                !preferences.getBoolean(Constants.PREF_USE_WIFI_SSID_WHITELIST, false) ||
+                    checkConditionSyncOnWhitelistedWifi(
+                        Constants.DYN_PREF_OBJECT_USE_WIFI_SSID_WHITELIST(objectPrefixAndId),
+                        Constants.DYN_PREF_OBJECT_SELECTED_WHITELIST_SSID(objectPrefixAndId),
+                        true,
+                        preferences.getStringSet(Constants.PREF_WIFI_SSID_WHITELIST, null),
+                    ).met
+            )
         if (onAllowedWifi) {
             logV("checkObjectSyncConditions($objectPrefixAndId): checkConditionSyncOnWifi && checkConditionSyncOnMeteredWifi && checkConditionSyncOnWhitelistedWifi")
         }
