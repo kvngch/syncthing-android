@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import com.nutomic.syncthingandroid.SyncthingApp
-import com.nutomic.syncthingandroid.activities.ShareActivity
 import com.nutomic.syncthingandroid.http.ApiRequest
 import com.nutomic.syncthingandroid.http.GetRequest
 import com.nutomic.syncthingandroid.http.PostRequest
@@ -563,6 +562,11 @@ class RestApi(
     fun updateFolders(newFolders: List<Folder>) {
         synchronized(configLock) {
             for (newFolder in newFolders) {
+                // The screens do not edit the cleanup interval, and may hold the one that
+                // triggerVersioningCleanupIfNecessary lowers for ten seconds: keep the current one.
+                loadedConfig.folders?.firstOrNull { it.id == newFolder.id }?.versioning?.let { current ->
+                    newFolder.versioning?.cleanupIntervalS = current.cleanupIntervalS
+                }
                 removeFolderInternal(newFolder.id)
                 loadedConfig.folders = (loadedConfig.folders ?: mutableListOf()).apply { add(newFolder) }
             }
@@ -576,8 +580,6 @@ class RestApi(
             // localCompletion and remoteCompletion will be updated after the ConfigSaved event.
             sendConfig()
         }
-        // Remove saved data from share activity for this folder.
-        preferences.edit { remove(ShareActivity.PREF_FOLDER_SAVED_SUBDIRECTORY + id) }
     }
 
     private fun removeFolderInternal(id: String?) {
