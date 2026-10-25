@@ -3,6 +3,7 @@ package com.nutomic.syncthingandroid.service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.edit
 import com.nutomic.syncthingandroid.SyncthingApp
@@ -76,12 +77,7 @@ class RestApi(
      */
     val apiKey: String,
     private val onApiAvailableListener: OnApiAvailableListener,
-    private val onConfigChangedListener: OnConfigChangedListener,
 ) {
-    fun interface OnConfigChangedListener {
-        fun onConfigChanged()
-    }
-
     fun interface OnApiAvailableListener {
         fun onApiAvailable()
     }
@@ -185,6 +181,11 @@ class RestApi(
     private val scope = MainScope()
     private val conflictSearch = Dispatchers.IO.limitedParallelism(1)
 
+    /**
+     * When each folder was last searched for conflict files, by folder id. Main thread only.
+     */
+    private val lastConflictSearch = HashMap<String, Long>()
+
     private val loadedConfig: Config
         get() = config ?: throw IllegalStateException("The config is not loaded yet")
 
@@ -198,7 +199,7 @@ class RestApi(
             asyncQueryConfigComplete = false
             asyncQuerySystemStatusComplete = false
         }
-        get(GetRequest.URI_VERSION) { result ->
+        getRetrying(GetRequest.URI_VERSION) { result ->
             version = SyncthingJson.parseToJsonElement(result).jsonObject["version"]?.jsonPrimitive?.contentOrNull
             updateDebugFacilitiesCache()
             synchronized(asyncQueryCompleteLock) {
@@ -206,14 +207,15 @@ class RestApi(
                 checkReadConfigFromRestApiCompleted()
             }
         }
-        get(GetRequest.URI_CONFIG) { result ->
+        getRetrying(GetRequest.URI_CONFIG) { result ->
             onReloadConfigComplete(result)
             synchronized(asyncQueryCompleteLock) {
                 asyncQueryConfigComplete = true
                 checkReadConfigFromRestApiCompleted()
             }
         }
-        getSystemStatus { info ->
+        getRetrying(GetRequest.URI_SYSTEM_STATUS) { result ->
+            val info = parseOrNull<SystemStatus>(result, "readConfigFromRestApi") ?: return@getRetrying
             localDeviceId = info.myID
             urVersionMax = info.urVersionMax
             synchronized(asyncQueryCompleteLock) {
@@ -274,7 +276,7 @@ class RestApi(
         preferences.edit { remove(Constants.PREF_VERSIONING_CLEANUP_RESTORE) }
     }
 
-    fun reloadConfig() = get(GetRequest.URI_CONFIG, onSuccess = ::onReloadConfigComplete)
+    fun reloadConfig() = getRetrying(GetRequest.URI_CONFIG, onSuccess = ::onReloadConfigComplete)
 
     private fun onReloadConfigComplete(configResult: String) {
         val raw = try {
@@ -515,17 +517,16 @@ class RestApi(
             reloadConfig()
         }
         url = webGuiUrl
-        onConfigChangedListener.onConfigChanged()
     }
 
     /**
-     * Posts shutdown request.
-     * This will cause SyncthingNative to exit and not restart.
+     * Stops this RestApi: its pending work is cancelled. SyncthingService stops the binary by
+     * SIGINT, on which Syncthing shuts down cleanly. A POST of /rest/system/shutdown would only
+     * leave after that, on the main thread, and could reach the next binary.
      */
     fun shutdown() {
         hasShutdown = true
         scope.cancel()
-        post(PostRequest.URI_SYSTEM_SHUTDOWN)
     }
 
     /**
@@ -534,16 +535,23 @@ class RestApi(
     val folders: List<Folder>
         get() {
             val folders: List<Folder> = synchronized(configLock) { loadedConfig.folders.orEmpty().deepCopy() }
-            for (folder in folders) {
-                val path = folder.path
-                if (path != null && path.startsWith("~/")) {
-                    folder.path = path.replaceFirst("~", FileUtils.getSyncthingTildeAbsolutePath())
-                }
-            }
+            folders.forEach(::expandTilde)
             return folders.sortedWith(FOLDERS_COMPARATOR)
         }
 
-    fun getFolderByID(folderId: String?): Folder? = folders.firstOrNull { it.id == folderId }
+    /**
+     * A copy of the folder, the only one copied: events look one up for each item.
+     */
+    fun getFolderByID(folderId: String?): Folder? =
+        synchronized(configLock) { loadedConfig.folders.orEmpty().firstOrNull { it.id == folderId }?.deepCopy() }
+            ?.also(::expandTilde)
+
+    private fun expandTilde(folder: Folder) {
+        val path = folder.path
+        if (path != null && path.startsWith("~/")) {
+            folder.path = path.replaceFirst("~", FileUtils.getSyncthingTildeAbsolutePath())
+        }
+    }
 
     /**
      * This is only used for new folder creation, see FolderActivity.
@@ -983,6 +991,14 @@ class RestApi(
             // We are on the way to shutdown SyncthingNative.
             return
         }
+        // The search walks the whole folder, and each device reports its completion: after
+        // changes it always runs, otherwise once a minute at most.
+        val now = SystemClock.elapsedRealtime()
+        val lastSearch = lastConflictSearch[folderId.orEmpty()]
+        if (!planOnFolderSyncCompleted && lastSearch != null && now - lastSearch < CONFLICT_SEARCH_INTERVAL_MS) {
+            return
+        }
+        lastConflictSearch[folderId.orEmpty()] = now
         scope.launch(conflictSearch) {
             if (hasShutdown) {
                 return@launch
@@ -1101,28 +1117,19 @@ class RestApi(
             }
             var configChanged = false
             for (folder in folders) {
-                val prefix = Constants.PREF_OBJECT_PREFIX_FOLDER + folder.id
-                if (!preferences.getBoolean(Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(prefix), false)) {
-                    continue
-                }
-                val syncConditionsMet = runConditionMonitor.checkObjectSyncConditions(prefix)
-                logV("applyCustomRunConditions: f(${folder.label})=${if (syncConditionsMet) "1" else "0"}")
-                if (folder.paused == syncConditionsMet) {
-                    folder.paused = !syncConditionsMet
-                    Log.d(TAG, "applyCustomRunConditions: f(${folder.label})=${if (syncConditionsMet) ">1" else ">0"}")
+                val paused = runConditionMonitor.pausedByOwnConditions(Constants.PREF_OBJECT_PREFIX_FOLDER + folder.id) ?: continue
+                if (folder.paused != paused) {
+                    folder.paused = paused
+                    Log.d(TAG, "applyCustomRunConditions: folder ${folder.label} paused=$paused")
                     configChanged = true
                 }
             }
-            for (device in devices) {
-                val prefix = Constants.PREF_OBJECT_PREFIX_DEVICE + device.deviceID
-                if (!preferences.getBoolean(Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(prefix), false)) {
-                    continue
-                }
-                val syncConditionsMet = runConditionMonitor.checkObjectSyncConditions(prefix)
-                logV("applyCustomRunConditions: d(${device.name})=${if (syncConditionsMet) "1" else "0"}")
-                if (device.paused == syncConditionsMet) {
-                    device.paused = !syncConditionsMet
-                    Log.d(TAG, "applyCustomRunConditions: d(${device.name})=${if (syncConditionsMet) ">1" else ">0"}")
+            // The local device is left alone, as config.xml does through getDevices(false).
+            for (device in devices.filter { it.deviceID != localDeviceId }) {
+                val paused = runConditionMonitor.pausedByOwnConditions(Constants.PREF_OBJECT_PREFIX_DEVICE + device.deviceID) ?: continue
+                if (device.paused != paused) {
+                    device.paused = paused
+                    Log.d(TAG, "applyCustomRunConditions: device ${device.name} paused=$paused")
                     configChanged = true
                 }
             }
@@ -1177,6 +1184,25 @@ class RestApi(
     }
 
     /**
+     * Sends a GET request, tried again a second later when it fails, a few times: the reads the
+     * app needs to follow the config. A failed read at startup left the service in STARTING, and
+     * after a ConfigSaved event, the model stale until the next one.
+     */
+    private fun getRetrying(path: String, attempt: Int = 1, onSuccess: (String) -> Unit) {
+        get(path, onError = {
+            if (attempt < READ_ATTEMPTS && !hasShutdown) {
+                // Cancelled by shutdown.
+                scope.launch {
+                    delay(1000)
+                    getRetrying(path, attempt + 1, onSuccess)
+                }
+            } else {
+                Log.w(TAG, "GET $path failed $attempt times")
+            }
+        }, onSuccess = onSuccess)
+    }
+
+    /**
      * Sends a POST request. Without [onError], failures are logged.
      */
     private fun post(
@@ -1196,6 +1222,13 @@ class RestApi(
 
     companion object {
         private const val TAG = "RestApi"
+        private const val READ_ATTEMPTS = 5
+
+        /**
+         * A folder at 100 % is searched for conflict files at most this often, unless it just
+         * received changes.
+         */
+        private const val CONFLICT_SEARCH_INTERVAL_MS = 60_000L
 
         /**
          * Intents we sent to to other apps that subscribed to us.

@@ -487,6 +487,17 @@ class RunConditionMonitor(
     }
 
     /**
+     * Whether the folder or device of [objectPrefixAndId] must be paused by its own run
+     * conditions, null if it has none. The one rule for config.xml and for the REST API.
+     */
+    fun pausedByOwnConditions(objectPrefixAndId: String): Boolean? =
+        if (preferences.getBoolean(Constants.DYN_PREF_OBJECT_CUSTOM_SYNC_CONDITIONS(objectPrefixAndId), false)) {
+            !checkObjectSyncConditions(objectPrefixAndId)
+        } else {
+            null
+        }
+
+    /**
      * Check if an object's individual sync conditions are met.
      * Precondition: Object must own pref "...CustomSyncConditionsEnabled == true".
      */

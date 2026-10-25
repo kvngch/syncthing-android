@@ -33,7 +33,6 @@ class GetRequest(
         const val URI_DB_COMPLETION = "/rest/db/completion"
         const val URI_DB_IGNORES = "/rest/db/ignores"
         const val URI_DB_STATUS = "/rest/db/status"
-        const val URI_DEVICEID = "/rest/svc/deviceid"
         const val URI_REPORT = "/rest/svc/report"
         const val URI_EVENTS = "/rest/events"
         const val URI_EVENTS_DISK = "/rest/events/disk"
