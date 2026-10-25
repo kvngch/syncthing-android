@@ -75,7 +75,7 @@ class PhotoShootActivity : ThemedActivity() {
         refreshPermissions()
     }
 
-    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+    private val requestStorage = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         refreshPermissions()
     }
 
