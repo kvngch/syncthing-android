@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Smoke test and screenshots on the CI emulator: the debug APK is installed, the onboarding is
-# passed, Syncthing must start, then one screenshot per screen.
-# Fails if the app crashed or if Syncthing never answered. Usage: captures.sh <directory of the APK>
+# passed, Syncthing must start, a photo must reach a Syncthing on the runner untouched, then one
+# screenshot per screen. Fails if the app crashed, if Syncthing never answered or if the photo did not
+# arrive untouched.
+# Usage: captures.sh <directory of the APK>
 set -uo pipefail
 PAQUET=fr.kvngch.synchro.debug
 mkdir -p captures
@@ -63,12 +65,13 @@ attendre_anr() { touche "Wait" >/dev/null && sleep 2; }
 
 retour() { adb shell input keyevent KEYCODE_BACK; sleep 2; }
 
-# Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up.
+# Onboarding: welcome, then key generation, "Continue" then "Finish" until the main screen is up,
+# or the media location dialog it opens.
 adb shell monkey -p $PAQUET -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 sleep 10
 photo 00-onboarding
 for _ in $(seq 1 30); do
-  ecran_actif | grep -q MainActivity && break
+  ecran_actif | grep -q -E 'MainActivity|GrantPermissionsActivity' && break
   attendre_anr
   touche "Continue" >/dev/null || touche "Finish" >/dev/null
   sleep 5
@@ -82,6 +85,46 @@ for _ in $(seq 1 60); do
   sleep 3
 done
 sleep 5
+
+# Sync of a photo: a Syncthing on the runner, which the emulator reaches at 10.0.2.2, receives
+# DCIM/Camera, and the photo must arrive untouched, location included. It leaves while the media
+# location dialog is still open: MediaProvider hides nothing from an app with all files access
+# (shouldBypassFuseRestrictions), ACCESS_MEDIA_LOCATION or not.
+PHOTO=.github/scripts/photo-localisee.jpg
+(
+  set -e
+  mkdir -p hote
+  V=v2.1.7
+  curl -sSfL -o hote/st.tar.gz "https://github.com/syncthing/syncthing/releases/download/$V/syncthing-linux-amd64-$V.tar.gz"
+  echo "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142  hote/st.tar.gz" | sha256sum -c --quiet
+  tar xzf hote/st.tar.gz -C hote --strip-components=1 "syncthing-linux-amd64-$V/syncthing"
+  hote/syncthing serve --home=hote/config --no-browser --no-upgrade --no-restart \
+    --gui-address=http://127.0.0.1:8390 --gui-apikey=ci > captures/syncthing-hote.txt 2>&1 &
+  trap "kill $!" EXIT
+  hote() { curl -sSf -H 'X-API-Key: ci' "http://127.0.0.1:8390/rest/$1" "${@:2}"; }
+  read -r CLE PORT < <(adb shell run-as $PAQUET cat files/config.xml | python3 -c '
+import sys, xml.etree.ElementTree as ET
+g = ET.parse(sys.stdin).find("gui")
+print(g.findtext("apikey"), g.findtext("address").rsplit(":", 1)[1])')
+  adb forward tcp:18384 tcp:"$PORT"
+  emu() { curl -sSfk -H "X-API-Key: $CLE" "https://127.0.0.1:18384/rest/$1" "${@:2}"; }
+  for _ in $(seq 1 30); do hote system/ping >/dev/null 2>&1 && break; sleep 1; done
+  ID_HOTE=$(hote system/status | jq -r .myID)
+  ID_EMU=$(emu system/status | jq -r .myID)
+  hote config/options -X PATCH -d '{"globalAnnounceEnabled":false,"localAnnounceEnabled":false,"relaysEnabled":false,"natEnabled":false,"crashReportingEnabled":false,"urAccepted":-1}'
+  hote config/devices -X POST -d "{\"deviceID\":\"$ID_EMU\",\"name\":\"emulateur\"}"
+  hote config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"$PWD/hote/recu\",\"type\":\"receiveonly\",\"devices\":[{\"deviceID\":\"$ID_EMU\"}]}"
+  emu config/devices -X POST -d "{\"deviceID\":\"$ID_HOTE\",\"name\":\"runner\",\"addresses\":[\"tcp://10.0.2.2:22000\"]}"
+  adb shell dumpsys package $PAQUET | grep "ACCESS_MEDIA_LOCATION" || true
+  adb shell mkdir -p /sdcard/DCIM/Camera
+  adb push $PHOTO /sdcard/DCIM/Camera/photo.jpg
+  emu config/folders -X POST -d "{\"id\":\"photos\",\"path\":\"/storage/emulated/0/DCIM/Camera\",\"type\":\"sendonly\",\"devices\":[{\"deviceID\":\"$ID_HOTE\"}]}"
+  for _ in $(seq 1 60); do [ -f hote/recu/photo.jpg ] && break; sleep 2; done
+  cmp $PHOTO hote/recu/photo.jpg
+)
+ENVOI=$?
+cp hote/recu/photo.jpg captures/ 2>/dev/null
+ecran_actif | grep -q GrantPermissionsActivity && touche "Allow all" >/dev/null
 
 photo 01-dossiers
 touche "Devices" && sleep 3 && photo 02-appareils
@@ -121,6 +164,7 @@ tiroir && touche "Web GUI" && sleep 15 && photo 10-interface-web
 adb logcat -d -b crash > captures/plantages.txt
 adb logcat -d -t 600 '*:W' > captures/journal.txt
 adb logcat -d -s SyncthingService:* SyncthingRunnable:* RestApi:* > captures/syncthing.txt
+adb shell run-as $PAQUET cat files/syncthing.log > captures/syncthing-binaire.txt 2>&1
 
 ECHEC=0
 if grep -q "$PAQUET" captures/plantages.txt; then
@@ -129,6 +173,10 @@ if grep -q "$PAQUET" captures/plantages.txt; then
 fi
 if [ "$EN_LIGNE" != 1 ]; then
   echo "ECHEC : l'interface web de Syncthing n'a jamais repondu, voir captures/syncthing.txt"
+  ECHEC=1
+fi
+if [ "$ENVOI" != 0 ]; then
+  echo "ECHEC : la photo n'est pas arrivee intacte sur le runner, voir captures/syncthing-hote.txt"
   ECHEC=1
 fi
 exit $ECHEC
