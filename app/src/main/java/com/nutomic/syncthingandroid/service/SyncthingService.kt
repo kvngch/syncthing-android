@@ -561,23 +561,30 @@ class SyncthingService : Service() {
      * Called on a worker thread by import and export, never on the main thread (it would
      * deadlock). Stops the binary on the main thread, where the state machine lives, and blocks
      * until it is down.
-     * Returns false if interrupted, with the binary left as it was.
+     * Returns false if interrupted, or if another import or export is in progress: both would
+     * write the same files. The binary is then left as it was.
      */
     private fun stopBinaryForConfigTransfer(): Boolean {
         val stopped = CountDownLatch(1)
+        var started = false
         scope.launch {
             runWhenNotStarting {
-                if (currentState != State.DISABLED) {
-                    // Shutdown synchronously.
-                    shutdown(State.DISABLED)
+                if (!configTransferInProgress) {
+                    if (currentState != State.DISABLED) {
+                        // Shutdown synchronously.
+                        shutdown(State.DISABLED)
+                    }
+                    configTransferInProgress = true
+                    started = true
+                } else {
+                    Log.w(TAG, "Another import or export is in progress")
                 }
-                configTransferInProgress = true
                 stopped.countDown()
             }
         }
         return try {
             stopped.await()
-            true
+            started
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
             false
