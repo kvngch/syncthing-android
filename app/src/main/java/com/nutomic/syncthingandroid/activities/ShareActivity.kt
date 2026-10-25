@@ -96,15 +96,28 @@ class ShareActivity : SyncthingActivity() {
      */
     private var subDirectoryVersion by mutableIntStateOf(0)
 
+    /**
+     * The directory picked last, until it is stored for the selected folder: after a recreation
+     * of the screen, the result comes before the folders are read again.
+     */
+    private var pickedDirectory: String? = null
+
     private val pickSubDirectory = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val folder = selectedFolder() ?: return@registerForActivityResult
         val picked = result.data?.getStringExtra(FolderPickerActivity.EXTRA_RESULT_DIRECTORY)
         if (result.resultCode == RESULT_OK && picked != null) {
-            // Only the part under the folder is shown and stored.
-            val subDirectory = picked.replace(Util.formatPath(folder.path.orEmpty()), "")
-            sharedPreferences.edit { putString(PREF_FOLDER_SAVED_SUBDIRECTORY + folder.id, subDirectory) }
-            subDirectoryVersion++
+            pickedDirectory = picked
+            storePickedDirectory()
         }
+    }
+
+    private fun storePickedDirectory() {
+        val folder = selectedFolder() ?: return
+        val picked = pickedDirectory ?: return
+        pickedDirectory = null
+        // Only the part under the folder is shown and stored.
+        val subDirectory = picked.replace(Util.formatPath(folder.path.orEmpty()), "")
+        sharedPreferences.edit { putString(PREF_FOLDER_SAVED_SUBDIRECTORY + folder.id, subDirectory) }
+        subDirectoryVersion++
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -150,6 +163,7 @@ class ShareActivity : SyncthingActivity() {
             if (read.none { it.id == selectedFolderId }) {
                 selectedFolderId = read.firstOrNull()?.id
             }
+            storePickedDirectory()
         }
     }
 
