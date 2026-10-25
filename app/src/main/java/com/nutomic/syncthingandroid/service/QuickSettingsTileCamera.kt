@@ -1,5 +1,6 @@
 package com.nutomic.syncthingandroid.service
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
@@ -24,6 +25,8 @@ class QuickSettingsTileCamera : TileService() {
      * Opens the camera and closes the quick settings panel, which a plain startActivity leaves
      * open over it: since Android 12, an app cannot close the panel itself.
      */
+    // The Intent variant, deprecated, runs below Android 14 only, where the other one does not exist.
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         val intent = Intent(applicationContext, PhotoShootActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
