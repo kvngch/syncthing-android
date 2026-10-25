@@ -86,14 +86,16 @@ class RunConditionMonitor(
 
     /**
      * Network changes of the default network. Signal strength alone changes its capabilities
-     * often: the decision is re-evaluated only when a fact the run conditions read changes.
+     * often: the decision is re-evaluated only when a fact the run conditions read changes. The
+     * network is one: going from one Wi-Fi straight to another changes no capability, but the SSID.
      */
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        private var lastFacts: List<Boolean>? = null
+        private var lastFacts: List<Any>? = null
 
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) =
             onFacts(
                 listOf(
+                    network,
                     networkCapabilities.isWifiOrEthernet(),
                     networkCapabilities.isMobile(),
                     !networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),
@@ -103,7 +105,7 @@ class RunConditionMonitor(
 
         override fun onLost(network: Network) = onFacts(null)
 
-        private fun onFacts(facts: List<Boolean>?) {
+        private fun onFacts(facts: List<Any>?) {
             if (facts != lastFacts) {
                 lastFacts = facts
                 scope.launch { updateShouldRunDecision() }
